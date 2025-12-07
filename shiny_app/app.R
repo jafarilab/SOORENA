@@ -6,6 +6,7 @@ library(shinyjs)     # for JavaScript integration (e.g., toggle dark mode)
 library(htmltools)   # for safe HTML rendering
 library(plotly)      # Creates interactive, dynamic, and web-friendly plots from ggplot or standalone
 library(ggplot2)
+library(shinycssloaders) # for loading spinners
 
 # Load CSV Data
 # Read preprocessed CSV file with PubMed preview data
@@ -57,11 +58,11 @@ df$`Mechanism Probability` <- safe_percent_column(df$`Mechanism Probability`)
 df$`Type Confidence`      <- safe_percent_column(df$`Type Confidence`)
 
 
-# replace Autoregulatory Type 'NA' value with 'non-autoregulatory'
+# replace Autoregulatory Type 'NA' and 'none' values with 'non-autoregulatory'
 df$`Autoregulatory Type` <- ifelse(
-  is.na(df$`Autoregulatory Type`) | 
+  is.na(df$`Autoregulatory Type`) |
     trimws(df$`Autoregulatory Type`) == "" |
-    df$`Autoregulatory Type` == "none",
+    tolower(trimws(df$`Autoregulatory Type`)) == "none",
   "non-autoregulatory",
   df$`Autoregulatory Type`
 )

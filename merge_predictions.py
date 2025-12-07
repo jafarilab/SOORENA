@@ -31,12 +31,21 @@ def main():
     
     # Prepare predictions
     predictions_df['is_training_data'] = False
-    
+
     # Combine all papers
     all_df = pd.concat([labeled_df, predictions_df], ignore_index=True)
-    
+    print(f"\n[DEBUG] After concat:")
+    print(f"  Total rows: {len(all_df):,}")
+    print(f"  has_mechanism==True: {all_df['has_mechanism'].sum():,}")
+    print(f"  has_mechanism==False: {(~all_df['has_mechanism']).sum():,}")
+
     # Add PubMed metadata
+    print(f"\n[DEBUG] PubMed data has {len(pubmed_df):,} rows")
     all_df = all_df.merge(pubmed_df, on='PMID', how='left')
+    print(f"\n[DEBUG] After PubMed merge:")
+    print(f"  Total rows: {len(all_df):,}")
+    print(f"  has_mechanism==True: {all_df['has_mechanism'].sum():,}")
+    print(f"  has_mechanism==False: {(~all_df['has_mechanism']).sum():,}")
     
     # Add protein info from AutoregDB
     autoreg_df['PMID'] = pd.to_numeric(
@@ -50,7 +59,11 @@ def main():
     })
     
     all_df = all_df.merge(autoreg_agg, on='PMID', how='left')
-    
+    print(f"\n[DEBUG] After AutoregDB merge:")
+    print(f"  Total rows: {len(all_df):,}")
+    print(f"  has_mechanism==True: {all_df['has_mechanism'].sum():,}")
+    print(f"  has_mechanism==False: {(~all_df['has_mechanism']).sum():,}")
+
     # Create final columns
     all_df['Protein ID'] = all_df.apply(
         lambda row: f"{row['AC'].split(', ')[0]}_{row['PMID']}" if pd.notna(row['AC']) else f"NA_{row['PMID']}",
