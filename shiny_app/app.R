@@ -272,13 +272,16 @@ ui <- navbarPage(
             downloadButton("download_csv", "Download CSV", class = "btn-primary mb-3")
         ),
         
-        # Display Table
+        # Display Table with loading spinner
         div(style = "margin: 0 30px 20px 30px;",
-            DTOutput("result_table"))
+            withSpinner(DTOutput("result_table"),
+                       type = 6,
+                       color = "#2c3e50",
+                       size = 1.5))
       )
     ),
-  
-# Tab: Ontology
+
+  # Tab: Ontology
   tabPanel(
     title = "Ontology",
     fluidPage(
@@ -567,7 +570,12 @@ ui <- navbarPage(
     fluidPage(
       header_ui,
       h2("Patch Notes"),
-      DT::dataTableOutput("patch_notes_table")
+      withSpinner(
+        DT::dataTableOutput("patch_notes_table"),
+        type = 6,
+        color = "#2c3e50",
+        size = 1.5
+      )
     )
   ),
   
@@ -595,7 +603,6 @@ ui <- navbarPage(
 
 # Define Server Logic
 server <- function(input, output, session) {
-  
 
 
   # Download csv button
@@ -829,10 +836,11 @@ output$result_table <- renderDT({
   )
 })
 
+
  
   # Patch Notes Table Data
   patch_notes_data <- data.frame(
-    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7"),
+    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8"),
     Description = c(
       paste(
         "<ul>",
@@ -884,9 +892,21 @@ output$result_table <- renderDT({
         "<li>Hid OntologyFullText column in final search table to keep interface clean</li>",
         "<li>Improved overall UI and typography for Ontology content</li>",
         "</ul>"
+      ),
+      paste(
+        "<ul>",
+        "<li>Major update aligned with the SOORENA preprint (bioRxiv, November 2025)</li>",
+        "<li>Integrated 252,880 model-inferred PubMed abstracts into searchable database</li>",
+        "<li>Removed Polarity and Polarity Score columns</li>",
+        "<li>Updated column schema: Has Mechanism, Mechanism Probability, Autoregulatory Type, Type Confidence</li>",
+        "<li>Improved table UX: sortable columns, truncation with magnifier pop-up modal, CSV export</li>",
+        "<li>Updated Ontology tab with hierarchical mechanism tree and detailed definition pages for all seven mechanism classes</li>",
+        "<li>Ontology pop-ups now show standardized definitions, relations, and references</li>",
+        "<li>Removed old Statistics tab and placeholders</li>",
+        "</ul>"
       )
     ),
-    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10"),
+    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04"),
     stringsAsFactors = FALSE
   )
   
