@@ -19,13 +19,12 @@ def main():
         print(f"   Loaded {len(existing_df):,} existing papers")
 
         # Add date columns if they don't exist
-        if 'PublicationDate' not in existing_df.columns:
-            print("   Adding PublicationDate columns to existing data...")
-            existing_df['PublicationDate'] = 'No Date'
+        if 'Year' not in existing_df.columns:
+            print("   Adding Year and Month columns to existing data...")
             existing_df['Year'] = 'Unknown'
             existing_df['Month'] = 'Unknown'
         else:
-            print("   PublicationDate columns already exist")
+            print("   Year and Month columns already exist")
 
         # Ensure PMID is string type for comparison
         existing_df['PMID'] = existing_df['PMID'].astype(str)
@@ -92,7 +91,7 @@ def main():
     # Select final columns (match existing schema + new date columns)
     new_final_df = new_df[[
         'Protein ID', 'AC', 'OS', 'PMID', 'Title', 'Abstract', 'Journal', 'Authors',
-        'PublicationDate', 'Year', 'Month',
+        'Year', 'Month',
         'Has Mechanism', 'Mechanism Probability', 'Source', 'Autoregulatory Type', 'Type Confidence'
     ]]
 
@@ -126,8 +125,8 @@ def main():
     print("=" * 80)
     print(f"\nFinal Dataset Summary:")
     print(f"  Total papers: {len(combined_df):,}")
-    print(f"  Papers with dates: {(combined_df['PublicationDate'] = 'No Date').sum():,}")
-    print(f"  Papers without dates: {(combined_df['PublicationDate'] == 'No Date').sum():,}")
+    print(f"  Papers with known dates: {(combined_df['Year'] != 'Unknown').sum():,}")
+    print(f"  Papers with unknown dates: {(combined_df['Year'] == 'Unknown').sum():,}")
     print(f"\nMechanism Distribution:")
     print(f"  With mechanisms: {(combined_df['Has Mechanism'] == 'Yes').sum():,}")
     print(f"  Without mechanisms: {(combined_df['Has Mechanism'] == 'No').sum():,}")

@@ -30,7 +30,6 @@ required_cols <- c(
   "Abstract",
   "Journal",
   "Authors",
-  "PublicationDate",
   "Year",
   "Month",
   "Source",
@@ -754,7 +753,7 @@ output$result_table <- renderDT({
   data <- filtered_data()
 
   data <- data %>% select(
-    AC, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, PublicationDate, Year, Month, Source,
+    AC, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Year, Month, Source,
     `Has Mechanism`, `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
   )
 
