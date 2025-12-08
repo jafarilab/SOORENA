@@ -910,6 +910,8 @@ server <- function(input, output, session) {
 
   output$stat_type_plot <- renderPlotly({
     data <- filtered_data()
+    # Filter out non-autoregulatory entries
+    data <- data %>% filter(`Autoregulatory Type` != "non-autoregulatory")
     type_counts <- as.data.frame(table(data$`Autoregulatory Type`))
     colnames(type_counts) <- c("Type", "Count")
     type_counts <- type_counts[order(type_counts$Count, decreasing = TRUE), ]
