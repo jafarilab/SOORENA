@@ -9,8 +9,8 @@ library(ggplot2)
 library(shinycssloaders) # for loading spinners
 
 # Load CSV Data
-# Read preprocessed CSV file with PubMed preview data
-preview_df <- read.csv("data/predictions_for_app.csv", stringsAsFactors = FALSE)
+# Read preprocessed CSV file with PubMed preview data (enriched with protein names)
+preview_df <- read.csv("data/predictions_for_app_enriched.csv", stringsAsFactors = FALSE)
 colnames(preview_df) <- gsub("\\.", " ", colnames(preview_df))
 
 
@@ -22,6 +22,8 @@ required_cols <- c(
 
   # Protein metadata
   "AC",
+  "Protein Name",
+  "Gene Name",
   "OS",
 
   # Publication metadata
@@ -1007,7 +1009,7 @@ output$result_table <- renderDT({
   data <- filtered_data()
 
   data <- data %>% select(
-    AC, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Year, Month, Source,
+    AC, `Protein Name`, `Gene Name`, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Year, Month, Source,
     `Has Mechanism`, `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
   )
 
@@ -1016,6 +1018,20 @@ output$result_table <- renderDT({
            '... <button class="btn btn-link btn-sm view-btn" data-field="AC" data-text="',
            htmltools::htmlEscape(data$AC),'">🔍</button>'),
     data$AC
+  )
+
+  data$`Protein Name` <- ifelse(!is.na(data$`Protein Name`) & nchar(data$`Protein Name`) > 50,
+    paste0(substr(data$`Protein Name`, 1, 50),
+           '... <button class="btn btn-link btn-sm view-btn" data-field="Protein Name" data-text="',
+           htmltools::htmlEscape(data$`Protein Name`),'">🔍</button>'),
+    data$`Protein Name`
+  )
+
+  data$`Gene Name` <- ifelse(!is.na(data$`Gene Name`) & nchar(data$`Gene Name`) > 30,
+    paste0(substr(data$`Gene Name`, 1, 30),
+           '... <button class="btn btn-link btn-sm view-btn" data-field="Gene Name" data-text="',
+           htmltools::htmlEscape(data$`Gene Name`),'">🔍</button>'),
+    data$`Gene Name`
   )
 
   data$`Protein ID` <- ifelse(!is.na(data$`Protein ID`) & nchar(data$`Protein ID`) > 25,

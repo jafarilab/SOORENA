@@ -136,7 +136,16 @@ def main():
     print(combined_df['Year'].value_counts().head(10).to_string())
     print("\n" + "=" * 80)
     print(" Shiny app data updated successfully")
-    print("  You can now launch the Shiny app to view the results.")
+    print("=" * 80)
+    print("\nNext steps:")
+    print("  1. (Optional) Enrich with protein names:")
+    print("     python enrich_protein_names.py \\")
+    print("       --input shiny_app/data/predictions_for_app.csv \\")
+    print("       --output shiny_app/data/predictions_for_app_enriched.csv \\")
+    print("       --cache data/protein_cache.json")
+    print("")
+    print("  2. Launch Shiny app:")
+    print("     cd shiny_app && R -e 'shiny::runApp()'")
     print("=" * 80)
 
 

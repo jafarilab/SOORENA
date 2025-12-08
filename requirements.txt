@@ -23,6 +23,9 @@ nltk>=3.9.0
 # Progress bars
 tqdm>=4.66.0
 
+# HTTP requests for UniProt API
+requests>=2.31.0
+
 # Optional: For GPU support, install PyTorch with CUDA
 # Visit: https://pytorch.org/get-started/locally/
 # For CUDA 11.8: pip install torch --index-url https://download.pytorch.org/whl/cu118
