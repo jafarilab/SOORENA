@@ -227,6 +227,48 @@ ui <- navbarPage(
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             margin: 0 0 20px 0;
           }
+          /* Statistics tab styling */
+          .filter-panel h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+          }
+          .filter-panel h3 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 600;
+          }
+          .filter-panel h4 {
+            color: #7f8c8d;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 16px;
+          }
+          .table {
+            font-size: 14px;
+            margin-top: 10px;
+          }
+          .table th {
+            background-color: #ecf0f1;
+            font-weight: 600;
+            color: #2c3e50;
+          }
+          .table-hover tbody tr:hover {
+            background-color: #f5f6f7;
+          }
+          #stat_total_papers {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            margin-top: 10px;
+          }
         "))
       ),
       
@@ -289,6 +331,83 @@ ui <- navbarPage(
                        size = 1.5))
       )
     ),
+
+  # Tab: Statistics
+  tabPanel(
+    title = "Statistics",
+    fluidPage(
+      header_ui,
+
+      # Dataset Statistics Section
+      div(class = "filter-panel", style = "margin: 30px;",
+        h2("Current Dataset Statistics"),
+        p("Statistics based on currently displayed/filtered data", style = "color: #7f8c8d; margin-bottom: 25px;"),
+        fluidRow(
+          column(4,
+            h4("Total Papers"),
+            verbatimTextOutput("stat_total_papers", placeholder = TRUE)
+          ),
+          column(4,
+            h4("Mechanism Distribution"),
+            withSpinner(plotlyOutput("stat_mechanism_plot", height = "300px"), type = 6, color = "#2c3e50")
+          ),
+          column(4,
+            h4("Source Distribution"),
+            withSpinner(plotlyOutput("stat_source_plot", height = "300px"), type = 6, color = "#2c3e50")
+          )
+        ),
+        hr(),
+        fluidRow(
+          column(6,
+            h4("Autoregulatory Types"),
+            withSpinner(plotlyOutput("stat_type_plot", height = "400px"), type = 6, color = "#2c3e50")
+          ),
+          column(6,
+            h4("Publication Year Distribution"),
+            withSpinner(plotlyOutput("stat_year_plot", height = "400px"), type = 6, color = "#2c3e50")
+          )
+        )
+      ),
+
+      # Model Performance Section
+      div(class = "filter-panel", style = "margin: 30px;",
+        h2("Model Training Performance"),
+        p("Performance metrics from the published SOORENA study", style = "color: #7f8c8d; margin-bottom: 25px;"),
+
+        # Stage 1 Performance
+        h3("Stage 1: Binary Classification (n = 600 test samples)"),
+        fluidRow(
+          column(12,
+            tableOutput("model_stage1_table")
+          )
+        ),
+
+        hr(),
+
+        # Stage 2 Overall Performance
+        h3("Stage 2: Multi-class Classification - Overall Performance"),
+        fluidRow(
+          column(12,
+            tableOutput("model_stage2_overall_table")
+          )
+        ),
+
+        hr(),
+
+        # Stage 2 Per-class Performance
+        h3("Stage 2: Per-class Performance"),
+        fluidRow(
+          column(12,
+            tableOutput("model_stage2_perclass_table")
+          )
+        ),
+
+        br(),
+        p("Source: bioRxiv preprint doi: https://doi.org/10.1101/2025.11.03.685842",
+          style = "font-style: italic; color: #666; margin-top: 20px;")
+      )
+    )
+  ),
 
   # Tab: Ontology
   tabPanel(
@@ -748,7 +867,140 @@ server <- function(input, output, session) {
     return(result)
   })
 
-  
+  # Statistics tab outputs
+  # Dataset statistics (reactive based on filtered data)
+  output$stat_total_papers <- renderText({
+    data <- filtered_data()
+    format(nrow(data), big.mark = ",")
+  })
+
+  output$stat_mechanism_plot <- renderPlotly({
+    data <- filtered_data()
+    counts <- table(data$`Has Mechanism`)
+    plot_ly(
+      labels = names(counts),
+      values = as.vector(counts),
+      type = 'pie',
+      marker = list(colors = c('#ff6b6b', '#4ecdc4')),
+      textinfo = 'label+percent',
+      textposition = 'inside'
+    ) %>%
+      layout(
+        showlegend = TRUE,
+        margin = list(l = 10, r = 10, t = 10, b = 10)
+      )
+  })
+
+  output$stat_source_plot <- renderPlotly({
+    data <- filtered_data()
+    counts <- table(data$Source)
+    plot_ly(
+      labels = names(counts),
+      values = as.vector(counts),
+      type = 'pie',
+      marker = list(colors = c('#95e1d3', '#f38181')),
+      textinfo = 'label+percent',
+      textposition = 'inside'
+    ) %>%
+      layout(
+        showlegend = TRUE,
+        margin = list(l = 10, r = 10, t = 10, b = 10)
+      )
+  })
+
+  output$stat_type_plot <- renderPlotly({
+    data <- filtered_data()
+    type_counts <- as.data.frame(table(data$`Autoregulatory Type`))
+    colnames(type_counts) <- c("Type", "Count")
+    type_counts <- type_counts[order(type_counts$Count, decreasing = TRUE), ]
+
+    plot_ly(
+      data = type_counts,
+      x = ~Count,
+      y = ~reorder(Type, Count),
+      type = 'bar',
+      orientation = 'h',
+      marker = list(color = '#667eea'),
+      text = ~Count,
+      textposition = 'outside'
+    ) %>%
+      layout(
+        yaxis = list(title = ""),
+        xaxis = list(title = "Number of Papers"),
+        margin = list(l = 200, r = 50, t = 20, b = 50)
+      )
+  })
+
+  output$stat_year_plot <- renderPlotly({
+    data <- filtered_data()
+    year_counts <- as.data.frame(table(data$Year))
+    colnames(year_counts) <- c("Year", "Count")
+    year_counts <- year_counts[year_counts$Year != "Unknown", ]
+
+    if (nrow(year_counts) > 0) {
+      year_counts$Year <- as.numeric(as.character(year_counts$Year))
+      year_counts <- year_counts[order(year_counts$Year), ]
+
+      plot_ly(
+        data = year_counts,
+        x = ~Year,
+        y = ~Count,
+        type = 'scatter',
+        mode = 'lines+markers',
+        marker = list(color = '#764ba2', size = 8),
+        line = list(color = '#764ba2', width = 3),
+        hovertemplate = paste('<b>Year:</b> %{x}<br>',
+                            '<b>Papers:</b> %{y}<br>',
+                            '<extra></extra>')
+      ) %>%
+        layout(
+          xaxis = list(title = "Publication Year"),
+          yaxis = list(title = "Number of Papers"),
+          margin = list(l = 60, r = 30, t = 20, b = 50)
+        )
+    } else {
+      plot_ly() %>%
+        layout(
+          annotations = list(
+            text = "No year data available",
+            showarrow = FALSE,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5
+          )
+        )
+    }
+  })
+
+  # Model performance tables (static)
+  output$model_stage1_table <- renderTable({
+    data.frame(
+      Metric = c("Accuracy", "Precision", "Recall", "F1 Score"),
+      Score = c("96.0%", "97.8%", "90.0%", "93.8%")
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE, width = "100%", align = 'lc')
+
+  output$model_stage2_overall_table <- renderTable({
+    data.frame(
+      Metric = c("Accuracy", "Macro Precision", "Macro Recall", "Macro F1",
+                 "Weighted Precision", "Weighted Recall", "Weighted F1"),
+      Value = c("95.5%", "94.6%", "98.1%", "96.2%", "95.9%", "95.5%", "95.5%")
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE, width = "100%", align = 'lc')
+
+  output$model_stage2_perclass_table <- renderTable({
+    data.frame(
+      Mechanism = c("Autophosphorylation", "Autoregulation", "Autocatalytic",
+                    "Autoinhibition", "Autoubiquitination", "Autolysis", "Autoinducer"),
+      Precision = c("99.0%", "92.3%", "91.7%", "94.4%", "85.9%", "100.0%", "100.0%"),
+      Recall = c("92.5%", "100.0%", "100.0%", "94.4%", "100.0%", "100.0%", "100.0%"),
+      F1_Score = c("95.6%", "96.0%", "95.6%", "94.4%", "91.9%", "100.0%", "100.0%"),
+      Support = c("107", "24", "22", "18", "17", "6", "6")
+    )
+  }, striped = TRUE, hover = TRUE, bordered = TRUE, width = "100%", align = 'lcccc')
+
+
 output$result_table <- renderDT({
   data <- filtered_data()
 
