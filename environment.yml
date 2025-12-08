@@ -25,6 +25,7 @@ dependencies:
   - tokenizers
   - safetensors
   - psutil
+  - python-dateutil
   # leave torch and protobuf out; install torch per-platform later
   - pip:
       - transformers>=4.41

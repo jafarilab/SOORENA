@@ -13,3 +13,4 @@ data/raw/
 
 # Ignore large model binaries unless needed
 models/*.pt
+data/pred/*.tsv

@@ -19,19 +19,22 @@ colnames(preview_df) <- gsub("\\.", " ", colnames(preview_df))
 required_cols <- c(
   # Unique ID
   "Protein ID",
-  
+
   # Protein metadata
   "AC",
   "OS",
-  
+
   # Publication metadata
   "PMID",
   "Title",
   "Abstract",
   "Journal",
   "Authors",
+  "PublicationDate",
+  "Year",
+  "Month",
   "Source",
-  
+
   # Mechanism info
   "Has Mechanism",
   "Mechanism Probability",
@@ -256,6 +259,13 @@ ui <- navbarPage(
         fluidRow(
           column(3, selectInput("type", "Autoregulatory Type",
                                 choices = c("All", sort(unique(na.omit(df$`Autoregulatory Type`)))),
+                                multiple = TRUE)),
+          column(3, selectInput("year", "Publication Year",
+                                choices = c("All", sort(unique(na.omit(df$Year)), decreasing = TRUE)),
+                                multiple = TRUE)),
+          column(3, selectInput("month", "Publication Month",
+                                choices = c("All", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                 multiple = TRUE))
         )
       ),
@@ -639,6 +649,8 @@ server <- function(input, output, session) {
     updateSelectInput(session, "type", selected = "All")
     updateSelectInput(session, "has_mechanism", selected = "All")
     updateSelectInput(session, "source", selected = "All")
+    updateSelectInput(session, "year", selected = "All")
+    updateSelectInput(session, "month", selected = "All")
     updateTextAreaInput(session, "search", value = "")
   })
   
@@ -706,12 +718,24 @@ server <- function(input, output, session) {
     }
     print(paste("Rows after Has Mechanism filter:", nrow(result)))
 
-    # Source filter  
+    # Source filter
     if (!is.null(input$source) && input$source != "All") {
       result <- result %>% filter(Source == input$source)
     }
     print(paste("Rows after Source filter:", nrow(result)))
-        
+
+    # Year filter
+    if (!is.null(input$year) && !"All" %in% input$year && length(input$year) > 0) {
+      result <- result %>% filter(Year %in% input$year)
+    }
+    print(paste("Rows after Year filter:", nrow(result)))
+
+    # Month filter
+    if (!is.null(input$month) && !"All" %in% input$month && length(input$month) > 0) {
+      result <- result %>% filter(Month %in% input$month)
+    }
+    print(paste("Rows after Month filter:", nrow(result)))
+
     # Title / Abstract search
     if (!is.null(input$search) && nzchar(input$search)) {
       terms <- trimws(unlist(strsplit(input$search, ",")))
@@ -730,7 +754,7 @@ output$result_table <- renderDT({
   data <- filtered_data()
 
   data <- data %>% select(
-    AC, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Source,
+    AC, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, PublicationDate, Year, Month, Source,
     `Has Mechanism`, `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
   )
 
@@ -840,7 +864,7 @@ output$result_table <- renderDT({
  
   # Patch Notes Table Data
   patch_notes_data <- data.frame(
-    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8"),
+    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9"),
     Description = c(
       paste(
         "<ul>",
@@ -904,9 +928,20 @@ output$result_table <- renderDT({
         "<li>Ontology pop-ups now show standardized definitions, relations, and references</li>",
         "<li>Removed old Statistics tab and placeholders</li>",
         "</ul>"
+      ),
+      paste(
+        "<ul>",
+        "<li>Added PublicationDate support: Year and Month columns now available</li>",
+        "<li>New Publication Year and Publication Month filter dropdowns</li>",
+        "<li>Table now displays PublicationDate, Year, and Month for all papers</li>",
+        "<li>Existing data labeled with 'No Date' / 'Unknown' until new data is added</li>",
+        "<li>Created reusable prediction pipeline (predict_new_data.py) for processing new PubMed data</li>",
+        "<li>Updated environment dependencies with python-dateutil for robust date parsing</li>",
+        "<li>Infrastructure ready to handle millions of new predictions with date metadata</li>",
+        "</ul>"
       )
     ),
-    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04"),
+    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07"),
     stringsAsFactors = FALSE
   )
   

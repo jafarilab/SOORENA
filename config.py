@@ -2,7 +2,9 @@
 DATA_DIR = "data"
 RAW_DATA_DIR = f"{DATA_DIR}/raw"
 PROCESSED_DATA_DIR = f"{DATA_DIR}/processed"
+PRED_DATA_DIR = f"{DATA_DIR}/pred"
 MODEL_DIR = "models"
+RESULTS_DIR = "results"
 
 # Raw data files
 PUBMED_FILE = f"{RAW_DATA_DIR}/pubmed.rds"
@@ -13,6 +15,10 @@ MODELING_DATASET_FILE = f"{PROCESSED_DATA_DIR}/modeling_dataset.csv"
 TRAIN_FILE = f"{PROCESSED_DATA_DIR}/train.csv"
 VAL_FILE = f"{PROCESSED_DATA_DIR}/val.csv"
 TEST_FILE = f"{PROCESSED_DATA_DIR}/test.csv"
+
+# New prediction data files
+NEW_DATA_INPUT = f"{PRED_DATA_DIR}/abstracts-authors-date.tsv"
+NEW_PREDICTIONS_OUTPUT = f"{RESULTS_DIR}/new_predictions.csv"
 
 
 # Model settings
