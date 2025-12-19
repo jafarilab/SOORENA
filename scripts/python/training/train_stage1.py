@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+# Add repository root to Python path (4 levels up from scripts/python/training/)
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader

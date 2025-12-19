@@ -1,10 +1,17 @@
+import sys
+from pathlib import Path
+
+# Add repository root to Python path (4 levels up from scripts/python/prediction/)
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
 import pandas as pd
 import os
 import re
 import argparse
 from tqdm import tqdm
-from predict import MechanismPredictor
-from prepare_data import clean_text
+from scripts.python.prediction.predict import MechanismPredictor
+from scripts.python.data_processing.prepare_data import clean_text
 
 def parse_publication_date(date_str):
     """

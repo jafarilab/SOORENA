@@ -3,10 +3,17 @@
 Enrich CSV with protein names and gene names from UniProt API.
 
 Usage:
-    python enrich_protein_names.py --input shiny_app/data/predictions_for_app.csv \
-                                   --output shiny_app/data/predictions_for_app_enriched.csv \
-                                   --cache data/protein_cache.json
+    python scripts/python/data_processing/enrich_protein_names.py \
+        --input shiny_app/data/predictions_for_app.csv \
+        --output shiny_app/data/predictions_for_app_enriched.csv \
+        --cache data/protein_cache.json
 """
+import sys
+from pathlib import Path
+
+# Add repository root to Python path (4 levels up from scripts/python/data_processing/)
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 import pandas as pd
 import requests
