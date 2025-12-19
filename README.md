@@ -91,19 +91,44 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-## 3. Quick Shiny App Launch:
+## 3. Repository Structure
 
+```
+SOORENA_2/
+├── README.md                    # This file
+├── config.py                    # Central configuration
+├── requirements.txt             # Python dependencies
+├── environment.yml              # Conda environment
+│
+├── scripts/                     # All executable scripts
+│   ├── python/                  # Python scripts
+│   │   ├── data_processing/     # Data preparation & merging
+│   │   ├── training/            # Model training & evaluation
+│   │   └── prediction/          # Prediction scripts
+│   ├── shell/                   # Shell scripts for pipelines
+│   └── r/                       # R scripts
+│
+├── notebooks/                   # Jupyter notebooks (EDA)
+├── data/                        # Datasets (raw, processed, pred)
+├── models/                      # Trained model checkpoints
+├── results/                     # Prediction outputs
+├── utils/                       # Python utilities
+├── shiny_app/                   # Interactive Shiny application
+├── assets/                      # Logos and figures
+├── reports/                     # Generated reports
+└── docs/                        # Additional documentation
+```
 
-8. Run Shiny App
+## 4. Quick Shiny App Launch
 
 ```bash
-cd ~/Desktop/SOORENA_2/shiny_app
+cd shiny_app
 Rscript -e "shiny::runApp('app.R')"
 ```
 
-## If data files are missing, follow the full pipeline below to generate them:
+**Note:** If data files are missing, follow the full pipeline below to generate them.
 
-## 4. Important: Download Large Data Files (Git LFS)
+## 5. Important: Download Large Data Files (Git LFS)
 
 This repo uses Git LFS for large datasets and prediction files.
 After cloning the repository, you must run
@@ -122,60 +147,82 @@ ls -lh data/raw
 ls -lh results
 ```
 
-### 5. Processing and Modeling Pipeline
+## 6. Processing and Modeling Pipeline
 
+All commands should be run from the repository root directory.
 
-Step 1 — Data preparation
-
-```bash
-python prepare_data.py
-```
-
-Step 2 — Train Stage 1 (binary classification)
+**Step 1 — Data preparation**
 
 ```bash
-python train_stage1.py
+python scripts/python/data_processing/prepare_data.py
 ```
 
-Step 3 — Train Stage 2 (seven-way multi-class)
+**Step 2 — Train Stage 1 (binary classification)**
 
 ```bash
-python train_stage2.py
+python scripts/python/training/train_stage1.py
 ```
 
-Step 4 — Evaluate trained models
+**Step 3 — Train Stage 2 (seven-way multi-class)**
 
 ```bash
-python evaluate.py
+python scripts/python/training/train_stage2.py
 ```
 
-
-Step 5 — Run single-paper prediction test
+**Step 4 — Evaluate trained models**
 
 ```bash
-python predict.py
+python scripts/python/training/evaluate.py
 ```
 
-Step 6 — Predict on full unlabeled PubMed subset
+**Step 5 — Run single-paper prediction test**
 
 ```bash
-python batch_predict.py
+python scripts/python/prediction/predict.py
 ```
 
-Step 7 — Merge predictions + metadata for Shiny app
+**Step 6 — Predict on full unlabeled PubMed subset**
 
 ```bash
-python merge_predictions.py
+python scripts/python/prediction/batch_predict.py
 ```
 
-Outputs:
-shiny_app/data/predictions_for_app.csv
+**Step 7 — Merge predictions + metadata for Shiny app**
 
-### 5. Shiny App (Interactive Exploration)
+```bash
+python scripts/python/data_processing/merge_predictions.py
+```
 
-To launch the interface:
+**Outputs:**
+- `shiny_app/data/predictions_for_app.csv`
+
+## 7. Prediction on New Data
+
+To run predictions on new PubMed data and update the Shiny app:
+
+```bash
+bash scripts/shell/run_new_predictions.sh
+```
+
+For detailed information, see [docs/README_PREDICTION.md](docs/README_PREDICTION.md)
+
+## 8. Protein Name Enrichment (Optional)
+
+To enrich predictions with protein names from UniProt:
+
+```bash
+bash scripts/shell/enrich_existing_data.sh
+```
+
+For detailed information, see [docs/README_ENRICHMENT.md](docs/README_ENRICHMENT.md)
+
+## 9. Shiny App (Interactive Exploration)
+
+To launch the interactive interface:
 
 ```bash
 cd shiny_app
 Rscript -e "shiny::runApp('app.R')"
 ```
+
+Open your browser and navigate to the displayed URL (typically `http://127.0.0.1:XXXX`)
