@@ -6,7 +6,7 @@
 # existing predictions for the Shiny app.
 #
 # Usage:
-#   ./run_new_predictions.sh [--test]
+#   bash scripts/shell/run_new_predictions.sh [--test]
 #
 # Options:
 #   --test    Run in test mode (only process first 100 rows)
@@ -18,6 +18,11 @@
 # ================================================================================
 
 set -e  # Exit on error
+
+# Change to repository root (2 levels up from scripts/shell/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT"
 
 # Colors for output
 RED='\033[0;31m'
@@ -75,7 +80,7 @@ echo "This may take several hours for large datasets."
 echo "Checkpoints are saved every 10,000 predictions."
 echo ""
 
-python predict_new_data.py \
+python scripts/python/prediction/predict_new_data.py \
     --input data/pred/abstracts-authors-date.tsv \
     --output results/new_predictions.csv \
     --checkpoint-interval 10000 \
@@ -93,7 +98,7 @@ echo ""
 # Step 3: Merge with existing data
 echo -e "${BLUE}[Step 3/4] Merging with existing predictions...${NC}"
 
-python merge_all_predictions.py
+python scripts/python/data_processing/merge_all_predictions.py
 
 if [ $? -ne 0 ]; then
     echo -e "${RED} Merge failed${NC}"
