@@ -9,9 +9,20 @@ library(ggplot2)
 library(shinycssloaders) # for loading spinners
 
 # Load CSV Data
-# Read preprocessed CSV file with PubMed preview data (enriched with protein names)
-preview_df <- read.csv("data/predictions_for_app_enriched.csv", stringsAsFactors = FALSE)
+# PERFORMANCE OPTIMIZATION: Load only subset to prevent browser freeze
+# Full dataset has 3.38M rows which will freeze browser
+# Loading first 100K rows for smooth performance
+INITIAL_LOAD_LIMIT <- 100000
+
+cat("Loading data with performance optimization...\n")
+cat(paste("Initial load limit:", format(INITIAL_LOAD_LIMIT, big.mark=","), "rows\n"))
+
+preview_df <- read.csv("data/predictions_for_app.csv",
+                       stringsAsFactors = FALSE,
+                       nrows = INITIAL_LOAD_LIMIT)
 colnames(preview_df) <- gsub("\\.", " ", colnames(preview_df))
+
+cat(paste("Loaded:", format(nrow(preview_df), big.mark=","), "rows successfully\n"))
 
 
 
@@ -276,7 +287,7 @@ ui <- navbarPage(
       
       # Header section
       header_ui,
-      
+
       # Search and Filter Controls
   # Search and Filter Controls
   div(class = "filter-panel",
@@ -1113,11 +1124,14 @@ output$result_table <- renderDT({
     escape = FALSE,
     options = list(
       pageLength = 10,
-      lengthMenu = c(10, 25, 50),
+      lengthMenu = c(10, 25, 50, 100),
       scrollX = TRUE,
       dom = 'tip',
       order = list(),
-      columnDefs = list(list(targets = "_all", orderSequence = c("asc","desc","")))
+      columnDefs = list(list(targets = "_all", orderSequence = c("asc","desc",""))),
+      # Performance optimization: deferred rendering for large datasets
+      deferRender = TRUE,
+      scroller = FALSE
     ),
     callback = JS("
       table.on('click', '.view-btn', function() {
