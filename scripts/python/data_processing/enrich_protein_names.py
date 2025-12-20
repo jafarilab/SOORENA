@@ -255,19 +255,43 @@ def enrich_csv(input_csv, output_csv, cache_path, checkpoint_interval=1000):
         print(f"Remaining to process: {len(df):,} rows")
         print()
 
-    # Process each row
-    print("Fetching protein information from UniProt...")
-    print("This may take several hours depending on dataset size")
-    print(f"Rate limit: {RATE_LIMIT_SECONDS} seconds per request")
+    # Count rows that need enrichment (have valid AC values)
+    def has_valid_ac(ac_val):
+        """Check if AC value is valid and needs enrichment."""
+        if pd.isna(ac_val):
+            return False
+        ac_str = str(ac_val).strip()
+        if ac_str == '' or ac_str.upper().startswith('NA'):
+            return False
+        return True
+
+    rows_with_ac = df['AC'].apply(has_valid_ac).sum()
+    rows_without_ac = len(df) - rows_with_ac
+
+    print(f"Rows WITH valid AC (need enrichment): {rows_with_ac:,}")
+    print(f"Rows WITHOUT AC (skip enrichment):    {rows_without_ac:,}")
     print()
+
+    if rows_with_ac > 0:
+        print("Fetching protein information from UniProt...")
+        print("This may take several hours depending on dataset size")
+        print(f"Rate limit: {RATE_LIMIT_SECONDS} seconds per request")
+        print(f"Estimated time: ~{rows_with_ac * RATE_LIMIT_SECONDS / 3600:.1f} hours")
+        print()
 
     protein_names = []
     gene_names = []
 
     for idx, row in tqdm(df.iterrows(), total=len(df), desc="Enriching"):
-        p_name, g_name = process_ac_column(row['AC'], cache, log_file)
-        protein_names.append(p_name)
-        gene_names.append(g_name)
+        # Skip rows without valid AC - just add empty strings (instant)
+        if not has_valid_ac(row['AC']):
+            protein_names.append('')
+            gene_names.append('')
+        else:
+            # Only fetch from UniProt for rows with valid AC
+            p_name, g_name = process_ac_column(row['AC'], cache, log_file)
+            protein_names.append(p_name)
+            gene_names.append(g_name)
 
         # Save checkpoint periodically
         if (len(protein_names) % checkpoint_interval == 0):
