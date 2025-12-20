@@ -88,7 +88,7 @@ echo.
 REM Step 3: Merge with existing data
 echo [Step 3/4] Merging with existing predictions...
 
-python merge_all_predictions.py
+python scripts/python/data_processing/merge_final_shiny_data.py
 
 if errorlevel 1 (
     echo ERROR: Merge failed

@@ -34,27 +34,12 @@ echo -e "${BLUE}SOORENA - Complete Clean Data Pipeline${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-# Step 1: Extract training samples
-echo -e "${BLUE}[Step 1/3] Extracting training samples...${NC}"
-echo "This identifies which unlabeled papers were used during training"
-echo ""
-
-python scripts/python/data_processing/extract_training_samples.py
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ Failed to extract training samples${NC}"
-    exit 1
-fi
-
-echo ""
-echo -e "${GREEN}✓ Step 1 complete${NC}"
-echo ""
-
-# Step 2: Predict on unused unlabeled papers
-echo -e "${BLUE}[Step 2/3] Predicting on ~250K unused unlabeled papers...${NC}"
+# Step 1: Predict on unused unlabeled papers
+echo -e "${BLUE}[Step 1/2] Predicting on ~250K unused unlabeled papers...${NC}"
 echo "This runs predictions on papers that were NOT used during training"
-echo "This may take several hours depending on your hardware"
+echo "Note: The stage1_unlabeled_unused.csv file is automatically created during Stage 1 training"
 echo ""
+echo "This may take several hours depending on your hardware"
 echo "Progress will be saved with checkpoints every 10,000 predictions"
 echo "You can safely interrupt (Ctrl+C) and resume later"
 echo ""
@@ -67,11 +52,11 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo -e "${GREEN}✓ Step 2 complete${NC}"
+echo -e "${GREEN}✓ Step 1 complete${NC}"
 echo ""
 
-# Step 3: Merge all data for Shiny app
-echo -e "${BLUE}[Step 3/3] Merging all data sources for Shiny app...${NC}"
+# Step 2: Merge all data for Shiny app
+echo -e "${BLUE}[Step 2/2] Merging all data sources for Shiny app...${NC}"
 echo "This combines:"
 echo "  - Labeled ground truth (1,332 papers)"
 echo "  - Training negatives (2,664 papers)"
@@ -87,7 +72,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo -e "${GREEN}✓ Step 3 complete${NC}"
+echo -e "${GREEN}✓ Step 2 complete${NC}"
 echo ""
 
 # Final summary
@@ -96,8 +81,8 @@ echo -e "${GREEN}✓ PIPELINE COMPLETE!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo "Output files created:"
-echo "  1. data/processed/unlabeled_used_in_training.csv"
-echo "  2. data/processed/unlabeled_unused_for_prediction.csv"
+echo "  1. data/processed/stage1_unlabeled_negatives.csv"
+echo "  2. data/processed/stage1_unlabeled_unused.csv"
 echo "  3. results/unused_unlabeled_predictions.csv"
 echo "  4. shiny_app/data/predictions_for_app.csv (FINAL)"
 echo ""

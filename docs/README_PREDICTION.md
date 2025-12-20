@@ -131,7 +131,7 @@ python predict_new_data.py \
   --checkpoint-interval 10000
 
 # Merge with existing data
-python merge_all_predictions.py
+python scripts/python/data_processing/merge_final_shiny_data.py
 
 # Launch Shiny app
 cd shiny_app && Rscript -e "shiny::runApp('app.R')"

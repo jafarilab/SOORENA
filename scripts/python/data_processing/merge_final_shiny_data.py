@@ -56,11 +56,11 @@ def load_labeled_papers():
 
 def load_unlabeled_training_samples():
     """Load unlabeled papers used in training (explicit negatives)."""
-    unlabeled_file = 'data/processed/unlabeled_used_in_training.csv'
+    unlabeled_file = 'data/processed/stage1_unlabeled_negatives.csv'
 
     if not os.path.exists(unlabeled_file):
         print(f"WARNING: {unlabeled_file} not found!")
-        print("Run: python scripts/python/data_processing/extract_training_samples.py")
+        print("Run: python scripts/python/training/train_stage1.py")
         return None
 
     unlabeled_df = pd.read_csv(unlabeled_file)

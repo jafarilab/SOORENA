@@ -209,7 +209,7 @@ def main():
         print(f"  {year}: {count:,}")
 
     print("\n" + "=" * 80)
-    print("Next step: Run merge_all_predictions.py to combine with existing data")
+    print("Next step: Run merge_final_shiny_data.py to combine with existing data")
     print("=" * 80)
 
 

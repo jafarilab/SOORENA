@@ -98,7 +98,7 @@ echo ""
 # Step 3: Merge with existing data
 echo -e "${BLUE}[Step 3/4] Merging with existing predictions...${NC}"
 
-python scripts/python/data_processing/merge_all_predictions.py
+python scripts/python/data_processing/merge_final_shiny_data.py
 
 if [ $? -ne 0 ]; then
     echo -e "${RED} Merge failed${NC}"

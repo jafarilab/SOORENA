@@ -44,8 +44,8 @@ When your friend sends new data, follow this workflow:
 
 ### 1. Run Prediction Pipeline (as usual)
 ```bash
-python predict_new_data.py --input data/pred/new_abstracts.tsv
-python merge_all_predictions.py
+python scripts/python/prediction/predict_new_data.py --input data/pred/new_abstracts.tsv
+python scripts/python/data_processing/merge_final_shiny_data.py
 ```
 
 This creates/updates: `shiny_app/data/predictions_for_app.csv`

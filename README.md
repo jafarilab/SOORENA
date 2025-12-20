@@ -181,20 +181,19 @@ python scripts/python/training/evaluate.py
 python scripts/python/prediction/predict.py
 ```
 
-**Step 6 — Predict on full unlabeled PubMed subset**
+**Step 6 — Run complete pipeline to create Shiny app data**
+
+This runs the full pipeline: extract training samples, predict on unused data, and merge everything.
 
 ```bash
-python scripts/python/prediction/batch_predict.py
-```
-
-**Step 7 — Merge predictions + metadata for Shiny app**
-
-```bash
-python scripts/python/data_processing/merge_predictions.py
+bash scripts/shell/run_complete_pipeline.sh
 ```
 
 **Outputs:**
-- `shiny_app/data/predictions_for_app.csv`
+- `data/processed/stage1_unlabeled_negatives.csv` - Papers used as training negatives
+- `data/processed/stage1_unlabeled_unused.csv` - Papers NOT used in training
+- `results/unused_unlabeled_predictions.csv` - Model predictions on unseen papers
+- `shiny_app/data/predictions_for_app.csv` - **Final dataset for Shiny app**
 
 ## 7. Prediction on New Data
 

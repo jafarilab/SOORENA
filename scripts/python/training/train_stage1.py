@@ -17,37 +17,59 @@ from utils.metrics import compute_binary_metrics
 
 def load_stage1_data():
     """Load and prepare Stage 1 data (binary classification)."""
+    import os
+
     # Load labeled splits
     train_df = pd.read_csv(config.TRAIN_FILE)
     val_df = pd.read_csv(config.VAL_FILE)
     test_df = pd.read_csv(config.TEST_FILE)
-    
+
     # Load full dataset to sample unlabeled
     full_df = pd.read_csv(config.MODELING_DATASET_FILE)
     unlabeled_df = full_df[~full_df['has_mechanism']].copy()
-    
+
     # Sample unlabeled for train/val/test (2:1 ratio)
     unlabeled_train = unlabeled_df.sample(n=len(train_df) * 2, random_state=config.RANDOM_SEED)
     remaining = unlabeled_df.drop(unlabeled_train.index)
-    
+
     unlabeled_val = remaining.sample(n=len(val_df) * 2, random_state=config.RANDOM_SEED)
     remaining = remaining.drop(unlabeled_val.index)
-    
+
     unlabeled_test = remaining.sample(n=len(test_df) * 2, random_state=config.RANDOM_SEED)
-    
+
+    # SAVE SAMPLED UNLABELED DATA FOR REPRODUCIBILITY
+    # This allows others to know exactly which papers were used as negative samples
+    all_unlabeled_sampled = pd.concat([unlabeled_train, unlabeled_val, unlabeled_test])
+    all_unlabeled_sampled['split'] = (['train'] * len(unlabeled_train) +
+                                      ['val'] * len(unlabeled_val) +
+                                      ['test'] * len(unlabeled_test))
+
+    sampled_file = 'data/processed/stage1_unlabeled_negatives.csv'
+    all_unlabeled_sampled.to_csv(sampled_file, index=False)
+    print(f"✓ Saved sampled unlabeled negatives to: {sampled_file}")
+    print(f"  Train: {len(unlabeled_train):,}, Val: {len(unlabeled_val):,}, Test: {len(unlabeled_test):,}")
+
+    # Also save the unused unlabeled for later prediction
+    all_sampled_pmids = set(all_unlabeled_sampled['PMID'])
+    unused_unlabeled = unlabeled_df[~unlabeled_df['PMID'].isin(all_sampled_pmids)].copy()
+    unused_file = 'data/processed/stage1_unlabeled_unused.csv'
+    unused_unlabeled.to_csv(unused_file, index=False)
+    print(f"✓ Saved unused unlabeled papers to: {unused_file}")
+    print(f"  Unused: {len(unused_unlabeled):,} (for prediction)")
+
     # Combine positive + unlabeled, add binary labels
     train_df['binary_label'] = 1
     unlabeled_train['binary_label'] = 0
     stage1_train = pd.concat([train_df, unlabeled_train]).sample(frac=1, random_state=config.RANDOM_SEED)
-    
+
     val_df['binary_label'] = 1
     unlabeled_val['binary_label'] = 0
     stage1_val = pd.concat([val_df, unlabeled_val]).sample(frac=1, random_state=config.RANDOM_SEED)
-    
+
     test_df['binary_label'] = 1
     unlabeled_test['binary_label'] = 0
     stage1_test = pd.concat([test_df, unlabeled_test]).sample(frac=1, random_state=config.RANDOM_SEED)
-    
+
     return stage1_train, stage1_val, stage1_test
 
 
