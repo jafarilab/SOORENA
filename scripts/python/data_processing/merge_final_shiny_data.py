@@ -125,6 +125,9 @@ def load_new_predictions():
 
 def merge_with_metadata(df, autoreg_df):
     """Merge predictions with AutoregDB metadata."""
+    # Ensure input df PMID is string
+    df['PMID'] = df['PMID'].astype(str)
+
     # Extract PMID from AutoregDB
     autoreg_df['PMID'] = pd.to_numeric(
         autoreg_df['RX'].str.extract(r'PubMed=(\d+)')[0],
@@ -136,7 +139,8 @@ def merge_with_metadata(df, autoreg_df):
         'AC': lambda x: ', '.join(x.dropna().astype(str).unique()),
         'OS': 'first'
     })
-    autoreg_agg['PMID'] = autoreg_agg['PMID'].astype(str)
+    # FIX: Convert float PMID to Int64 first (removes .0), then to string
+    autoreg_agg['PMID'] = autoreg_agg['PMID'].astype('Int64').astype(str)
 
     # Merge
     df = df.merge(autoreg_agg, on='PMID', how='left')

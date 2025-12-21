@@ -1,6 +1,22 @@
 #!/bin/bash
-# One-time enrichment of existing 254k rows
-# Expected runtime: 50-70 hours (can run overnight)
+# One-time enrichment of existing data with UniProt protein names
+#
+# IMPORTANT: This serial version is SLOW (~129 hours)
+# Use the parallel version instead for 100x speedup (~1-2 hours):
+#   python scripts/python/data_processing/enrich_protein_names_parallel.py \
+#     --input shiny_app/data/predictions_for_app.csv \
+#     --output shiny_app/data/predictions_for_app_enriched.csv \
+#     --cache data/protein_cache.json \
+#     --workers 20
+#
+# Expected enrichment results:
+# - UniProt ground truth: ~100% success (1,332 rows)
+# - Training negatives: ~100% success (2,664 rows)
+# - Model predictions (unused): ~12% success (30K out of 250K rows)
+# - New PubMed predictions: ~0% success (0 out of 210K rows)
+# - Total: ~34K enriched out of ~464K rows with AC values
+#
+# This is NORMAL - many AC values from papers are outdated or don't exist in UniProt
 
 # Change to repository root (2 levels up from scripts/shell/)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

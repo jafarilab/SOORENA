@@ -2,11 +2,29 @@
 """
 Enrich CSV with protein names and gene names from UniProt API.
 
+IMPORTANT NOTES:
+- Only rows with valid AC (UniProt accession) values will be enriched
+- Success rate varies by data source:
+  * UniProt ground truth: ~100% success (AC values are verified)
+  * Training negatives: ~100% success (from AutoregDB)
+  * Model predictions (unused): ~12% success (many ACs are outdated/invalid)
+  * New PubMed predictions: ~0% success (ACs may not exist in UniProt)
+- Expected enrichment: ~34K out of ~464K rows with AC values
+- Invalid/missing ACs will have empty Protein Name and Gene Name fields
+
 Usage:
+    # Serial version (slow but reliable, ~129 hours)
     python scripts/python/data_processing/enrich_protein_names.py \
         --input shiny_app/data/predictions_for_app.csv \
         --output shiny_app/data/predictions_for_app_enriched.csv \
         --cache data/protein_cache.json
+
+    # OR use parallel version (fast, ~1-2 hours with 20 workers)
+    python scripts/python/data_processing/enrich_protein_names_parallel.py \
+        --input shiny_app/data/predictions_for_app.csv \
+        --output shiny_app/data/predictions_for_app_enriched.csv \
+        --cache data/protein_cache.json \
+        --workers 20
 """
 import sys
 from pathlib import Path
