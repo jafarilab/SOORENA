@@ -31,7 +31,7 @@ cat("Database ready!\n")
 dbDisconnect(conn_info)
 
 # How many rows to fetch per page for the main table
-PAGE_SIZE <- 10000
+PAGE_SIZE <- 50
 
 # Ontology Info Table (authoritative)
 ontology_info <- list(
@@ -1201,7 +1201,31 @@ output$result_table <- renderDT({
     `Has Mechanism`, `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
   )
 
-  data$AC <- safe_cell(data$AC, 30, "AC")
+  # Add row numbers as first column
+  data <- data %>% mutate(`#` = row_number(), .before = 1)
+
+  # Make PMID a clickable link to PubMed
+  data$PMID <- ifelse(
+    !is.na(data$PMID) & data$PMID != "",
+    paste0('<a href="https://pubmed.ncbi.nlm.nih.gov/', data$PMID,
+           '" target="_blank" style="color: #0366d6; text-decoration: none;">',
+           data$PMID, '</a>'),
+    data$PMID
+  )
+
+  # Make AC a clickable link to UniProt (first AC if multiple)
+  data$AC <- ifelse(
+    !is.na(data$AC) & data$AC != "",
+    sapply(data$AC, function(ac) {
+      first_ac <- trimws(strsplit(ac, ",")[[1]][1])
+      full_ac <- safe_cell(ac, 30, "AC")
+      paste0('<a href="https://www.uniprot.org/uniprotkb/', first_ac,
+             '" target="_blank" style="color: #0366d6; text-decoration: none;">',
+             full_ac, '</a>')
+    }),
+    safe_cell(data$AC, 30, "AC")
+  )
+
   data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
   data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
   data$`Protein ID` <- safe_cell(data$`Protein ID`, 25, "Protein ID")
@@ -1258,7 +1282,10 @@ output$result_table <- renderDT({
       scrollX = TRUE,
       dom = 'tip',
       order = list(),
-      columnDefs = list(list(targets = "_all", orderSequence = c("asc","desc",""))),
+      columnDefs = list(
+        list(targets = 0, orderable = FALSE, width = "40px", className = "dt-center"),  # Row number column
+        list(targets = "_all", orderSequence = c("asc","desc",""))
+      ),
       # Server-side processing: only load current page, not all rows
       serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
       deferRender = TRUE,
