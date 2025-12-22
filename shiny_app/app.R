@@ -145,15 +145,15 @@ ui <- navbarPage(
             background-color: #f9f9f9;
           }
           :root {
-            --stats-bg: #f5f9fc;
+            --stats-bg: #f5f1e8;
             --stats-surface: #ffffff;
-            --stats-ink: #1f2d3d;
+            --stats-ink: #1a2332;
             --stats-muted: #6b7a89;
-            --stats-accent: #3498db;
-            --stats-accent-2: #e76f51;
+            --stats-accent: #d97742;
+            --stats-accent-2: #1a2332;
             --stats-accent-3: #2c3e50;
-            --stats-border: #e1e8ee;
-            --stats-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            --stats-border: #e8dcc8;
+            --stats-shadow: 0 8px 24px rgba(26, 35, 50, 0.08);
           }
           .header-section {
             background-size: 50% auto;
@@ -206,8 +206,8 @@ ui <- navbarPage(
           }
           /* Statistics tab styling */
           .filter-panel h2 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
+            color: #1a2332;
+            border-bottom: 2px solid #d97742;
             padding-bottom: 10px;
             margin-bottom: 20px;
             font-weight: 600;
@@ -238,8 +238,8 @@ ui <- navbarPage(
           }
           .stats-panel {
             position: relative;
-            background: #ebf5fb;
-            border: 1px solid #d6eaf8;
+            background: #f5f1e8;
+            border: 1px solid #e8dcc8;
             border-radius: 12px;
             padding: 24px;
             margin: 30px;
@@ -328,12 +328,16 @@ ui <- navbarPage(
             text-transform: uppercase;
             letter-spacing: 0.4px;
           }
-          .stat-card__value-large {
-            display: block;
-            margin-top: 12px;
+          .stat-value-centered {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
           }
-          .stat-card__value-large #stat_total_papers {
-            font-size: 48px;
+          .stat-value-centered #stat_total_papers {
+            font-size: 56px;
             font-weight: 700;
             color: var(--stats-ink);
             line-height: 1;
@@ -491,10 +495,8 @@ ui <- navbarPage(
         ),
         div(class = "stats-grid stats-grid--top",
           div(class = "stat-card stat-card--chart",
-            div(class = "stat-card__header",
-              h4("Total Matching Papers", class = "stat-card__title"),
-              span(class = "stat-card__value-large", textOutput("stat_total_papers", inline = TRUE))
-            )
+            h4("Total Matching Papers", class = "stat-card__title"),
+            div(class = "stat-value-centered", textOutput("stat_total_papers", inline = TRUE))
           ),
           div(class = "stat-card stat-card--chart",
             div(class = "stat-card__header",
@@ -1307,7 +1309,7 @@ server <- function(input, output, session) {
     res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
     res$label <- factor(res$label, levels = c("Yes", "No", "Unknown"))
     res <- res[order(res$label), ]
-    color_map <- c("Yes" = "#3498db", "No" = "#e76f51", "Unknown" = "#94a3b8")
+    color_map <- c("Yes" = "#d97742", "No" = "#1a2332", "Unknown" = "#94a3b8")
 
     plot_ly(
       labels = res$label,
@@ -1345,7 +1347,7 @@ server <- function(input, output, session) {
     res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
     res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
     res <- res[order(res$label), ]
-    color_map <- c("UniProt" = "#3498db", "Non-UniProt" = "#5dade2", "Unknown" = "#94a3b8")
+    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
 
     plot_ly(
       labels = res$label,
@@ -1390,7 +1392,7 @@ server <- function(input, output, session) {
       y = ~reorder(Type, Count),
       type = 'bar',
       orientation = 'h',
-      marker = list(color = '#3498db'),
+      marker = list(color = '#d97742'),
       text = ~format(Count, big.mark = ","),
       textposition = 'outside',
       hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>"
@@ -1455,7 +1457,7 @@ server <- function(input, output, session) {
           marker = list(
             size = ~Size,
             color = ~Count,
-            colorscale = list(c(0, "#ebf5fb"), c(1, "#3498db")),
+            colorscale = list(c(0, "#fef5f0"), c(1, "#d97742")),
             showscale = TRUE,
             line = list(color = "rgba(0, 0, 0, 0.15)", width = 1)
           ),
@@ -1510,7 +1512,7 @@ server <- function(input, output, session) {
       y = ~reorder(label, n),
       type = 'bar',
       orientation = 'h',
-      marker = list(color = '#4e7ac7'),
+      marker = list(color = '#d97742'),
       text = ~format(n, big.mark = ","),
       textposition = 'outside',
       hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>"
