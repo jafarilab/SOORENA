@@ -1688,13 +1688,19 @@ output$result_table <- renderDT({
       dom = 't',  # Only show table (no info text at bottom)
       order = list(),
       columnDefs = list(
-        list(targets = 0, orderable = FALSE, width = "40px", className = "dt-center"),  # Row number column
-        list(targets = "_all", orderSequence = c("asc","desc",""))
+        list(targets = 0, orderable = FALSE, width = "40px", className = "dt-center"),  # Row number column - centered
+        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
       ),
       # Server-side processing: only load current page, not all rows
       serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
       deferRender = TRUE,
-      scroller = FALSE
+      scroller = FALSE,
+      # Center column headers
+      initComplete = JS(
+        "function(settings, json) {",
+        "  $(this.api().table().header()).find('th').css('text-align', 'center');",
+        "}"
+      )
     ),
     callback = JS("
       table.on('click', '.view-btn', function() {
