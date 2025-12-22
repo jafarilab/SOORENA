@@ -1276,11 +1276,12 @@ output$result_table <- renderDT({
   datatable(
     data,
     escape = FALSE,
+    rownames = FALSE,  # Disable built-in row numbers (we have our own # column)
     options = list(
-      pageLength = 25,
-      lengthMenu = c(10, 25, 50, 100),
+      pageLength = 50,  # Show all 50 loaded rows at once
+      lengthMenu = c(25, 50),  # Only allow 25 or 50 since we load 50 max
       scrollX = TRUE,
-      dom = 'tip',
+      dom = 't',  # Only show table (no info text at bottom)
       order = list(),
       columnDefs = list(
         list(targets = 0, orderable = FALSE, width = "40px", className = "dt-center"),  # Row number column
