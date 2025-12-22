@@ -1263,7 +1263,7 @@ server <- function(input, output, session) {
     query <- paste(
       "SELECT *",
       filters$where,
-      "ORDER BY Title IS NULL, PMID",
+      "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, PMID",
       "LIMIT ? OFFSET ?"
     )
     params <- c(filters$params, page_size(), offset)
