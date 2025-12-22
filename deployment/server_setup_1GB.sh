@@ -55,18 +55,20 @@ echo "======================================================================"
 echo "Step 2: Updating System"
 echo "======================================================================"
 sudo apt update
-sudo apt upgrade -y
+sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
 
 echo ""
 echo "======================================================================"
 echo "Step 3: Installing R"
 echo "======================================================================"
-# Add R repository
+# Add R repository with proper key
 sudo apt install -y software-properties-common dirmngr
-wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marmoset.gpg | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
 
-# Add R to sources
-sudo add-apt-repository -y "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
+# Add the R GPG key properly
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marmoset.gpg | sudo gpg --dearmor -o /usr/share/keyrings/r-project.gpg
+
+# Add R repository with signed-by
+echo "deb [signed-by=/usr/share/keyrings/r-project.gpg] https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" | sudo tee /etc/apt/sources.list.d/r-project.list
 
 # Install R
 sudo apt update
@@ -80,7 +82,7 @@ echo ""
 echo "======================================================================"
 echo "Step 4: Installing System Dependencies for R Packages"
 echo "======================================================================"
-sudo apt install -y \
+sudo DEBIAN_FRONTEND=noninteractive apt install -y \
   libcurl4-openssl-dev \
   libssl-dev \
   libxml2-dev \

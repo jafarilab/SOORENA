@@ -1,8 +1,22 @@
 # Ignore OS files
 .DS_Store
+**/.DS_Store
 __pycache__/
+**/__pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore temporary files
+*.tmp
+*.bak
+*.log
 
 # Ignore secrets/keys
 *.key
