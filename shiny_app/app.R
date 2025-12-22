@@ -820,24 +820,52 @@ server <- function(input, output, session) {
     }, character(1))
   }
 
-  # Populate filter dropdowns on demand (server-side)
-  observe({
-    # Only load unique values when user focuses on dropdown
+  # Populate filter dropdowns once at startup with top N most common values
+  # This prevents loading thousands of options which causes app freeze
+  observeEvent(session$clientData, once = TRUE, {
+    # Load top 100 most common journals
+    top_journals <- dbGetQuery(conn,
+      "SELECT Journal, COUNT(*) as n FROM predictions
+       WHERE Journal IS NOT NULL
+       GROUP BY Journal
+       ORDER BY n DESC
+       LIMIT 100")$Journal
+
     updateSelectizeInput(session, "journal",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT Journal FROM predictions WHERE Journal IS NOT NULL ORDER BY Journal")$Journal),
-      server = TRUE)
+      choices = c("All" = "All", top_journals),
+      server = FALSE)
+
+    # Load top 100 most common organisms (OS has 9000+ unique values!)
+    top_os <- dbGetQuery(conn,
+      "SELECT OS, COUNT(*) as n FROM predictions
+       WHERE OS IS NOT NULL
+       GROUP BY OS
+       ORDER BY n DESC
+       LIMIT 100")$OS
 
     updateSelectizeInput(session, "os",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT OS FROM predictions WHERE OS IS NOT NULL ORDER BY OS")$OS),
-      server = TRUE)
+      choices = c("All" = "All", top_os),
+      server = FALSE)
+
+    # Load all autoregulatory types (only ~10 values)
+    all_types <- dbGetQuery(conn,
+      "SELECT DISTINCT Autoregulatory_Type FROM predictions
+       WHERE Autoregulatory_Type IS NOT NULL
+       ORDER BY Autoregulatory_Type")$Autoregulatory_Type
 
     updateSelectizeInput(session, "type",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT Autoregulatory_Type FROM predictions WHERE Autoregulatory_Type IS NOT NULL ORDER BY Autoregulatory_Type")$Autoregulatory_Type),
-      server = TRUE)
+      choices = c("All" = "All", all_types),
+      server = FALSE)
+
+    # Load all years (only ~50 values)
+    all_years <- dbGetQuery(conn,
+      "SELECT DISTINCT Year FROM predictions
+       WHERE Year IS NOT NULL
+       ORDER BY Year DESC")$Year
 
     updateSelectizeInput(session, "year",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT Year FROM predictions WHERE Year IS NOT NULL ORDER BY Year DESC")$Year),
-      server = TRUE)
+      choices = c("All" = "All", all_years),
+      server = FALSE)
   })
 
   # Reset pagination whenever filters change
