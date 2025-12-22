@@ -1305,7 +1305,7 @@ output$result_table <- renderDT({
 
   # Patch Notes Table Data
   patch_notes_data <- data.frame(
-    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9"),
+    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10"),
     Description = c(
       paste(
         "<ul>",
@@ -1372,17 +1372,21 @@ output$result_table <- renderDT({
       ),
       paste(
         "<ul>",
-        "<li>Added PublicationDate support: Year and Month columns now available</li>",
         "<li>New Publication Year and Publication Month filter dropdowns</li>",
-        "<li>Table now displays PublicationDate, Year, and Month for all papers</li>",
+        "<li>Table now displays Year, and Month for all papers</li>",
         "<li>Existing data labeled with 'No Date' / 'Unknown' until new data is added</li>",
-        "<li>Created reusable prediction pipeline (predict_new_data.py) for processing new PubMed data</li>",
-        "<li>Updated environment dependencies with python-dateutil for robust date parsing</li>",
-        "<li>Infrastructure ready to handle millions of new predictions with date metadata</li>",
+        "</ul>"
+      ),
+      paste(
+        "<ul>",
+        "<li>Data refresh: loaded ~3.37M predictions into SQLite for full searchability</li>",
+        "<li>Pagination: added rows-per-page selector (25/50/100/500) wired to SQL LIMIT/OFFSET and DataTable page length</li>",
+        "<li>Pagination messaging: page status now clamps to available pages; removed table info banner</li>",
+        "<li>UI layout: consolidated pagination controls with Download CSV aligned on the right for cleaner toolbar</li>",
         "</ul>"
       )
     ),
-    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07"),
+    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08"),
     stringsAsFactors = FALSE
   )
 
