@@ -21,3 +21,4 @@ results/new_predictions.csv
 shiny_app/data/predictions_for_app.csv
 shiny_app/data/predictions_for_app_enriched.csv
 results/*_checkpoint.csv
+shiny_app/data/predictions.db

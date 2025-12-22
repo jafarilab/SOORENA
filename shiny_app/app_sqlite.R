@@ -25,6 +25,13 @@ conn <- dbConnect(RSQLite::SQLite(), DB_PATH)
 total_rows <- dbGetQuery(conn, "SELECT COUNT(*) as count FROM predictions")$count
 cat(paste("Connected to database with", format(total_rows, big.mark=","), "rows\n"))
 
+# Get unique filter values from database
+cat("Loading filter options from database...\n")
+unique_journals <- dbGetQuery(conn, "SELECT DISTINCT Journal FROM predictions WHERE Journal IS NOT NULL ORDER BY Journal")$Journal
+unique_os <- dbGetQuery(conn, "SELECT DISTINCT OS FROM predictions WHERE OS IS NOT NULL ORDER BY OS")$OS
+unique_types <- dbGetQuery(conn, "SELECT DISTINCT Autoregulatory_Type FROM predictions WHERE Autoregulatory_Type IS NOT NULL ORDER BY Autoregulatory_Type")$Autoregulatory_Type
+unique_years <- dbGetQuery(conn, "SELECT DISTINCT Year FROM predictions WHERE Year IS NOT NULL ORDER BY Year DESC")$Year
+
 cat("Database ready!\n")
 
 # Ontology Info Table (authoritative)
@@ -243,29 +250,25 @@ ui <- navbarPage(
           column(3, textInput("protein_id", "Protein ID", placeholder = "Search protein ID...")),
           column(3, textInput("ac", "AC", placeholder = "Search AC...")),
           column(3, selectInput("has_mechanism", "Has Mechanism", choices = c("All", "Yes", "No"))),
-          column(3, selectizeInput("os", "OS",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select OS...')))
+          column(3, selectInput("os", "OS",
+                                choices = c("All", unique_os),
+                                multiple = TRUE))
         ),
         fluidRow(
           column(3, textInput("pmid", "PMID", placeholder = "Search PMID...")),
           column(3, textInput("author", "Author", placeholder = "Search author...")),
-          column(3, selectizeInput("journal", "Journal",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select journal...'))),
+          column(3, selectInput("journal", "Journal",
+                                choices = c("All", unique_journals),
+                                multiple = TRUE)),
           column(3, selectInput("source", "Data Source", choices = c("All", "UniProt", "Non-UniProt")))
         ),
         fluidRow(
-          column(3, selectizeInput("type", "Autoregulatory Type",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select type...'))),
-          column(3, selectizeInput("year", "Publication Year",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select year...'))),
+          column(3, selectInput("type", "Autoregulatory Type",
+                                choices = c("All", unique_types),
+                                multiple = TRUE)),
+          column(3, selectInput("year", "Publication Year",
+                                choices = c("All", unique_years),
+                                multiple = TRUE)),
           column(3, selectInput("month", "Publication Month",
                                 choices = c("All", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
@@ -287,9 +290,6 @@ ui <- navbarPage(
 
         # Display Table with loading spinner
         div(style = "margin: 0 30px 20px 30px;",
-            # Info message about row counts
-            div(style = "margin-bottom: 10px; padding: 10px; background-color: #e8f4f8; border-left: 4px solid #3498db; border-radius: 4px;",
-                uiOutput("table_info_message")),
             withSpinner(DTOutput("result_table"),
                        type = 6,
                        color = "#2c3e50",
@@ -697,26 +697,6 @@ ui <- navbarPage(
 # Define Server Logic
 server <- function(input, output, session) {
 
-  # Populate filter dropdowns on demand (server-side)
-  observe({
-    # Only load unique values when user focuses on dropdown
-    updateSelectizeInput(session, "journal",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT Journal FROM predictions WHERE Journal IS NOT NULL ORDER BY Journal")$Journal),
-      server = TRUE)
-
-    updateSelectizeInput(session, "os",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT OS FROM predictions WHERE OS IS NOT NULL ORDER BY OS")$OS),
-      server = TRUE)
-
-    updateSelectizeInput(session, "type",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT Autoregulatory_Type FROM predictions WHERE Autoregulatory_Type IS NOT NULL ORDER BY Autoregulatory_Type")$Autoregulatory_Type),
-      server = TRUE)
-
-    updateSelectizeInput(session, "year",
-      choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT Year FROM predictions WHERE Year IS NOT NULL ORDER BY Year DESC")$Year),
-      server = TRUE)
-  })
-
   # Download csv button
   output$download_csv <- downloadHandler(
     filename = function() {
@@ -759,103 +739,9 @@ server <- function(input, output, session) {
     updateTextAreaInput(session, "search", value = "")
   })
 
-  # Get total count of matching rows (for "Showing X of Y" display)
-  total_count <- reactive({
-    # Build same query but use COUNT(*) instead of SELECT *
-    query <- "SELECT COUNT(*) as count FROM predictions WHERE 1=1"
-    params <- list()
-
-    # Journal filter
-    if (!is.null(input$journal) && !"All" %in% input$journal && length(input$journal) > 0) {
-      placeholders <- paste(rep("?", length(input$journal)), collapse = ",")
-      query <- paste(query, "AND Journal IN (", placeholders, ")")
-      params <- c(params, as.list(input$journal))
-    }
-
-    # Type filter
-    if (!is.null(input$type) && !"All" %in% input$type && length(input$type) > 0) {
-      placeholders <- paste(rep("?", length(input$type)), collapse = ",")
-      query <- paste(query, "AND Autoregulatory_Type IN (", placeholders, ")")
-      params <- c(params, as.list(input$type))
-    }
-
-    # OS filter
-    if (!is.null(input$os) && !"All" %in% input$os && length(input$os) > 0) {
-      placeholders <- paste(rep("?", length(input$os)), collapse = ",")
-      query <- paste(query, "AND OS IN (", placeholders, ")")
-      params <- c(params, as.list(input$os))
-    }
-
-    # AC search
-    if (!is.null(input$ac) && nzchar(input$ac)) {
-      query <- paste(query, "AND AC LIKE ?")
-      params <- c(params, paste0("%", input$ac, "%"))
-    }
-
-    # Protein ID search
-    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
-      query <- paste(query, "AND Protein_ID LIKE ?")
-      params <- c(params, paste0("%", input$protein_id, "%"))
-    }
-
-    # PMID search
-    if (!is.null(input$pmid) && nzchar(input$pmid)) {
-      query <- paste(query, "AND PMID LIKE ?")
-      params <- c(params, paste0("%", input$pmid, "%"))
-    }
-
-    # Author search
-    if (!is.null(input$author) && nzchar(input$author)) {
-      query <- paste(query, "AND Authors LIKE ?")
-      params <- c(params, paste0("%", input$author, "%"))
-    }
-
-    # Has Mechanism filter
-    if (!is.null(input$has_mechanism) && input$has_mechanism != "All") {
-      query <- paste(query, "AND Has_Mechanism = ?")
-      params <- c(params, input$has_mechanism)
-    }
-
-    # Source filter
-    if (!is.null(input$source) && input$source != "All") {
-      query <- paste(query, "AND Source = ?")
-      params <- c(params, input$source)
-    }
-
-    # Year filter
-    if (!is.null(input$year) && !"All" %in% input$year && length(input$year) > 0) {
-      placeholders <- paste(rep("?", length(input$year)), collapse = ",")
-      query <- paste(query, "AND Year IN (", placeholders, ")")
-      params <- c(params, as.list(input$year))
-    }
-
-    # Month filter
-    if (!is.null(input$month) && !"All" %in% input$month && length(input$month) > 0) {
-      placeholders <- paste(rep("?", length(input$month)), collapse = ",")
-      query <- paste(query, "AND Month IN (", placeholders, ")")
-      params <- c(params, as.list(input$month))
-    }
-
-    # Title / Abstract search
-    if (!is.null(input$search) && nzchar(input$search)) {
-      query <- paste(query, "AND (Title LIKE ? OR Abstract LIKE ?)")
-      search_pattern <- paste0("%", input$search, "%")
-      params <- c(params, search_pattern, search_pattern)
-    }
-
-    # Execute COUNT query
-    if (length(params) > 0) {
-      count_result <- dbGetQuery(conn, query, params = params)
-    } else {
-      count_result <- dbGetQuery(conn, query)
-    }
-
-    return(count_result$count)
-  })
-
-  # Filtering Logic - Build SQL query dynamically with LIMIT
+  # Filtering Logic - Build SQL query dynamically
   filtered_data <- reactive({
-    # Start with base query - LIMIT to 10000 rows for performance
+    # Start with base query
     query <- "SELECT * FROM predictions WHERE 1=1"
     params <- list()
 
@@ -937,10 +823,6 @@ server <- function(input, output, session) {
       params <- c(params, search_pattern, search_pattern)
     }
 
-    # IMPORTANT: Always limit to prevent loading too many rows at once
-    # Load maximum 10,000 rows for performance (DT will paginate)
-    query <- paste(query, "LIMIT 10000")
-
     # Execute query
     if (length(params) > 0) {
       result <- dbGetQuery(conn, query, params = params)
@@ -963,26 +845,6 @@ server <- function(input, output, session) {
     }
 
     return(result)
-  })
-
-  # Info message about loaded rows
-  output$table_info_message <- renderUI({
-    data <- filtered_data()
-    total <- total_count()
-    loaded <- nrow(data)
-
-    if (loaded < total) {
-      HTML(paste0(
-        "<b>Showing first ", format(loaded, big.mark = ","), " of ",
-        format(total, big.mark = ","), " total rows</b><br>",
-        "<small>Apply filters to narrow results and see all matching rows. ",
-        "Statistics tab shows data from all ", format(total, big.mark = ","), " rows.</small>"
-      ))
-    } else {
-      HTML(paste0(
-        "<b>Showing all ", format(loaded, big.mark = ","), " matching rows</b>"
-      ))
-    }
   })
 
   # Statistics tab outputs
@@ -1228,14 +1090,13 @@ output$result_table <- renderDT({
     data,
     escape = FALSE,
     options = list(
-      pageLength = 25,
+      pageLength = 10,
       lengthMenu = c(10, 25, 50, 100),
       scrollX = TRUE,
       dom = 'tip',
       order = list(),
       columnDefs = list(list(targets = "_all", orderSequence = c("asc","desc",""))),
-      # Server-side processing: only load current page, not all rows
-      serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
+      # Performance optimization: deferred rendering for large datasets
       deferRender = TRUE,
       scroller = FALSE
     ),
