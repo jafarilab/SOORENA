@@ -965,12 +965,18 @@ server <- function(input, output, session) {
   # Info message about loaded rows
   output$table_info_message <- renderUI({
     data <- filtered_data()
-    total <- total_count()
+    total <- as.numeric(total_count()[1])
     loaded <- nrow(data)
+    start_row <- if (loaded > 0) ((current_page() - 1) * PAGE_SIZE + 1) else 0
+    end_row <- if (loaded > 0) min(start_row + loaded - 1, total) else 0
+
+    if (loaded == 0 || is.na(total) || total <= 0) {
+      return(HTML("<b>No rows match the current filters.</b>"))
+    }
 
     if (loaded < total) {
       HTML(paste0(
-        "<b>Showing first ", format(loaded, big.mark = ","), " of ",
+        "<b>Showing rows ", format(start_row, big.mark = ","), "–", format(end_row, big.mark = ","), " of ",
         format(total, big.mark = ","), " total rows</b><br>",
         "<small>Apply filters to narrow results and see all matching rows. ",
         "Statistics tab shows data from all ", format(total, big.mark = ","), " rows.</small>"
@@ -1005,9 +1011,15 @@ server <- function(input, output, session) {
   })
 
   output$page_status <- renderText({
-    total <- total_count()
-    max_page <- max(ceiling(total / PAGE_SIZE), 1)
-    paste0("Page ", current_page(), " of ", max_page)
+    total <- as.numeric(total_count()[1])
+
+    if (is.na(total) || total <= 0) {
+      return("No results to display")
+    }
+
+    max_page <- ceiling(total / PAGE_SIZE)
+    page <- min(current_page(), max_page)
+    paste0("Page ", page, " of ", max_page)
   })
 
   # Statistics tab outputs
