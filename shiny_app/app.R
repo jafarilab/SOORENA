@@ -145,13 +145,13 @@ ui <- navbarPage(
             background-color: #f9f9f9;
           }
           :root {
-            --stats-bg: #f5faf9;
+            --stats-bg: #f5f9fc;
             --stats-surface: #ffffff;
             --stats-ink: #1f2d3d;
             --stats-muted: #6b7a89;
-            --stats-accent: #2a9d8f;
+            --stats-accent: #3498db;
             --stats-accent-2: #e76f51;
-            --stats-accent-3: #4e7ac7;
+            --stats-accent-3: #2c3e50;
             --stats-border: #e1e8ee;
             --stats-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
           }
@@ -238,26 +238,12 @@ ui <- navbarPage(
           }
           .stats-panel {
             position: relative;
-            background: linear-gradient(180deg, #f8fcfb 0%, #f1f6f7 100%);
-            border: 1px solid var(--stats-border);
-            border-radius: 16px;
+            background: #ebf5fb;
+            border: 1px solid #d6eaf8;
+            border-radius: 12px;
             padding: 24px;
             margin: 30px;
-            box-shadow: var(--stats-shadow);
-            overflow: hidden;
-          }
-          .stats-panel::after {
-            content: \"\";
-            position: absolute;
-            inset: 0;
-            background:
-              radial-gradient(circle at 10% 10%, rgba(42, 157, 143, 0.12), transparent 45%),
-              radial-gradient(circle at 90% 20%, rgba(231, 111, 81, 0.12), transparent 45%),
-              radial-gradient(circle at 20% 90%, rgba(78, 122, 199, 0.08), transparent 40%);
-            pointer-events: none;
-          }
-          .stats-panel > * {
-            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
           }
           .stats-panel--compact {
             max-width: 1100px;
@@ -1319,7 +1305,7 @@ server <- function(input, output, session) {
     res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
     res$label <- factor(res$label, levels = c("Yes", "No", "Unknown"))
     res <- res[order(res$label), ]
-    color_map <- c("Yes" = "#2a9d8f", "No" = "#e76f51", "Unknown" = "#94a3b8")
+    color_map <- c("Yes" = "#3498db", "No" = "#e76f51", "Unknown" = "#94a3b8")
 
     plot_ly(
       labels = res$label,
@@ -1357,7 +1343,7 @@ server <- function(input, output, session) {
     res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
     res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
     res <- res[order(res$label), ]
-    color_map <- c("UniProt" = "#4e7ac7", "Non-UniProt" = "#2a9d8f", "Unknown" = "#94a3b8")
+    color_map <- c("UniProt" = "#3498db", "Non-UniProt" = "#5dade2", "Unknown" = "#94a3b8")
 
     plot_ly(
       labels = res$label,
@@ -1402,7 +1388,7 @@ server <- function(input, output, session) {
       y = ~reorder(Type, Count),
       type = 'bar',
       orientation = 'h',
-      marker = list(color = '#2a9d8f'),
+      marker = list(color = '#3498db'),
       text = ~format(Count, big.mark = ","),
       textposition = 'outside',
       hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>"
@@ -1467,7 +1453,7 @@ server <- function(input, output, session) {
           marker = list(
             size = ~Size,
             color = ~Count,
-            colorscale = list(c(0, "#e0f2f1"), c(1, "#2a9d8f")),
+            colorscale = list(c(0, "#ebf5fb"), c(1, "#3498db")),
             showscale = TRUE,
             line = list(color = "rgba(0, 0, 0, 0.15)", width = 1)
           ),
