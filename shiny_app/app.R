@@ -140,6 +140,7 @@ ui <- navbarPage(
     fluidPage(
       useShinyjs(),
       tags$head(
+        tags$meta(name = "viewport", content = "width=device-width, initial-scale=1"),
         tags$style(HTML("
           body {
             background-color: #f9f9f9;
@@ -383,13 +384,81 @@ ui <- navbarPage(
             margin-bottom: 0;
           }
           @media (max-width: 768px) {
+            .header-section {
+              flex-direction: column;
+              align-items: center;
+              gap: 12px;
+              margin: 12px;
+              padding: 16px;
+              text-align: center;
+            }
+            .app-title {
+              flex-direction: column;
+              font-size: 32px;
+            }
+            .app-title img {
+              height: 64px;
+              margin: 0 0 8px 0;
+            }
+            .header-logos {
+              flex-wrap: wrap;
+              justify-content: center;
+              gap: 12px;
+            }
+            .header-logos img {
+              height: 56px;
+            }
+            .filter-panel {
+              margin: 12px;
+              padding: 16px;
+            }
+            .table-toolbar {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 12px;
+            }
+            .table-toolbar__left {
+              flex-wrap: wrap;
+            }
+            .table-toolbar__download {
+              width: 100%;
+            }
+            .table-toolbar-wrap {
+              margin: 0 12px 16px 12px !important;
+            }
+            .dataTables_wrapper {
+              padding: 12px;
+            }
             .stats-header {
               flex-direction: column;
               align-items: flex-start;
             }
             .stats-panel {
-              margin: 20px;
-              padding: 20px;
+              margin: 12px;
+              padding: 16px;
+            }
+            .stats-grid {
+              gap: 20px;
+            }
+            .stat-value-centered #stat_total_papers {
+              font-size: 36px;
+            }
+            .navbar .navbar-nav > li > a {
+              padding: 10px 12px;
+            }
+            .table {
+              font-size: 12px;
+            }
+          }
+          @media (max-width: 480px) {
+            .app-title {
+              font-size: 28px;
+            }
+            .header-logos img {
+              height: 48px;
+            }
+            .stats-title {
+              font-size: 20px;
             }
           }
           @keyframes statsFadeUp {
@@ -456,10 +525,12 @@ ui <- navbarPage(
   ),
 
         # Display Table with loading spinner
-        div(style = "margin: 0 30px 20px 30px;",
+        div(class = "table-toolbar-wrap", style = "margin: 0 30px 20px 30px;",
             div(
+              class = "table-toolbar",
               style = "display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;",
               div(
+                class = "table-toolbar__left",
                 style = "display: flex; align-items: center; gap: 10px;",
                 selectInput("rows_per_page", "Rows per page",
                             choices = PAGE_SIZE_OPTIONS,
@@ -469,7 +540,7 @@ ui <- navbarPage(
                 actionButton("next_page", "Next", class = "btn-default"),
                 textOutput("page_status", inline = TRUE)
               ),
-              downloadButton("download_csv", "Download CSV", class = "btn-primary mb-0")
+              downloadButton("download_csv", "Download CSV", class = "btn-primary mb-0 table-toolbar__download")
             ),
             withSpinner(DTOutput("result_table"),
                        type = 6,
@@ -1808,7 +1879,8 @@ output$result_table <- renderDT({
       patch_notes_data,
       options = list(
         pageLength = 10,
-        autoWidth = TRUE
+        autoWidth = FALSE,
+        scrollX = TRUE
       ),
       escape = FALSE,   # <-- allow HTML rendering
       rownames = FALSE
