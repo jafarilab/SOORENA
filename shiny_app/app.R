@@ -879,19 +879,6 @@ ui <- navbarPage(
           hr(style = "margin: 40px 0; border-top: 2px solid #e0e0e0;"),
 
           # Classification Pipeline - professional colors
-          h3("SOORENA Classification Pipeline", style = "color: #2c3e50;"),
-          div(style = "background: #34495e; padding: 25px; border-radius: 8px; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.15);",
-              p(style = "font-size: 16px; margin-bottom: 15px;", "This ontology is implemented through a two-stage deep learning classification system:"),
-              tags$ol(style = "line-height: 2.2; font-size: 15px;",
-                tags$li(tags$b("Stage 1 - Binary Classification:"), " Identifies papers describing autoregulatory mechanisms (96.0% accuracy, 93.8% F1)"),
-                tags$li(tags$b("Stage 2 - Multi-class Classification:"), " Categorizes mechanisms into 7 types using weighted cross-entropy loss to handle class imbalance (95.5% accuracy, 96.2% macro F1)")
-              ),
-              div(style = "background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.2);",
-                p(style = "margin: 5px 0;", tags$b("Base Model:"), " PubMedBERT"),
-                p(style = "margin: 5px 0;", tags$b("Training Data:"), " 1,332 manually curated papers"),
-                p(style = "margin: 5px 0;", tags$b("Total Database:"), " 254,212 analyzed papers")
-              )
-          )
       )
     )
   ),
