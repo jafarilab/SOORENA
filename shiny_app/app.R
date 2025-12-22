@@ -1689,6 +1689,7 @@ output$result_table <- renderDT({
       order = list(),
       columnDefs = list(
         list(targets = 0, orderable = FALSE, width = "40px", className = "dt-center"),  # Row number column - centered
+        list(targets = c(11, 12, 13, 14, 15, 16, 17), className = "dt-center"),  # Year, Month, Source, Has Mechanism, Mechanism Probability, Autoregulatory Type, Type Confidence - centered
         list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
       ),
       # Server-side processing: only load current page, not all rows
