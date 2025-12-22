@@ -462,8 +462,13 @@ ui <- navbarPage(
             .stat-card__meta {
               font-size: 10px;
             }
+            .stat-value-centered {
+              position: static;
+              transform: none;
+              margin-top: 8px;
+            }
             .stat-value-centered #stat_total_papers {
-              font-size: 36px;
+              font-size: 28px;
             }
             .navbar .navbar-nav > li > a {
               padding: 10px 12px;
@@ -473,6 +478,18 @@ ui <- navbarPage(
             }
             .plotly, .plot-container, .js-plotly-plot, .html-widget {
               width: 100% !important;
+            }
+            #stat_mechanism_plot,
+            #stat_source_plot {
+              height: 220px !important;
+            }
+            #stat_type_plot,
+            #stat_year_plot,
+            #stat_journal_plot {
+              height: 260px !important;
+            }
+            .modebar {
+              display: none !important;
             }
             .ontology-panel {
               margin: 12px !important;
@@ -493,9 +510,20 @@ ui <- navbarPage(
               margin: 12px 0 !important;
               padding: 16px !important;
             }
+            .ontology-tree-lines {
+              margin-left: 16px !important;
+            }
+            .ontology-tree-node {
+              margin-left: 14px !important;
+              padding: 10px 12px !important;
+            }
             .mechanism-box {
               margin: 18px 0 !important;
               padding: 16px !important;
+            }
+            .stats-table-card {
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
             }
             .team-grid {
               gap: 16px !important;
@@ -763,12 +791,12 @@ ui <- navbarPage(
             ),
 
             # Tree with vertical line
-            div(style = "margin-left: 30px; border-left: 3px solid #d97742; padding-left: 0px;",
+            div(class = "ontology-tree-lines", style = "margin-left: 30px; border-left: 3px solid #d97742; padding-left: 0px;",
 
               # Branch 1
               div(style = "margin: 15px 0; position: relative;",
                 div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
-                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-catalytic chemistry"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
                     tags$a(href = '#autocatalytic', class = 'tree-link', style = "font-size: 14px;", "→ Autocatalytic Reaction")
@@ -779,7 +807,7 @@ ui <- navbarPage(
               # Branch 2
               div(style = "margin: 15px 0; position: relative;",
                 div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
-                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Protein self-modification (post-translational)"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
                     div(tags$a(href = '#autophosphorylation', class = 'tree-link', style = "font-size: 14px;", "→ Autophosphorylation")),
@@ -791,7 +819,7 @@ ui <- navbarPage(
               # Branch 3
               div(style = "margin: 15px 0; position: relative;",
                 div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
-                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Intrinsic regulatory control"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
                     div(tags$a(href = '#autoregulation', class = 'tree-link', style = "font-size: 14px;", "→ Autoregulation of Gene Expression")),
@@ -803,7 +831,7 @@ ui <- navbarPage(
               # Branch 4
               div(style = "margin: 15px 0; position: relative;",
                 div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
-                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-degradation and lysis"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
                     tags$a(href = '#autolysis', class = 'tree-link', style = "font-size: 14px;", "→ Autolysis")
@@ -814,7 +842,7 @@ ui <- navbarPage(
               # Branch 5
               div(style = "margin: 15px 0; position: relative;",
                 div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
-                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Population-level self-signaling"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
                     tags$a(href = '#autoinducer', class = 'tree-link', style = "font-size: 14px;", "→ Autoinducer Molecules in Quorum Sensing")
@@ -1173,6 +1201,23 @@ server <- function(input, output, session) {
     if (is.null(size) || is.na(size)) DEFAULT_PAGE_SIZE else size
   })
 
+  is_mobile_output <- function(output_id) {
+    width <- session$clientData[[paste0("output_", output_id, "_width")]]
+    if (is.null(width)) {
+      width <- session$clientData$client_width
+    }
+    !is.null(width) && width < 520
+  }
+
+  truncate_label <- function(x, max_chars = 20) {
+    x <- as.character(x)
+    ifelse(nchar(x) > max_chars, paste0(substr(x, 1, max_chars - 3), "..."), x)
+  }
+
+  apply_plotly_config <- function(p, is_mobile) {
+    plotly::config(p, displayModeBar = !is_mobile, displaylogo = FALSE, responsive = TRUE)
+  }
+
   # Build WHERE clause and parameter list based on current filters
   build_filter_query <- function() {
     query <- "FROM predictions WHERE 1=1"
@@ -1464,6 +1509,7 @@ server <- function(input, output, session) {
   })
 
   output$stat_mechanism_plot <- renderPlotly({
+    is_mobile <- is_mobile_output("stat_mechanism_plot")
     filters <- build_filter_query()
     query <- paste(
       "SELECT Has_Mechanism AS label, COUNT(*) as n",
@@ -1482,8 +1528,10 @@ server <- function(input, output, session) {
     res$label <- factor(res$label, levels = c("Yes", "No", "Unknown"))
     res <- res[order(res$label), ]
     color_map <- c("Yes" = "#d97742", "No" = "#1a2332", "Unknown" = "#94a3b8")
+    text_info <- if (is_mobile) "percent" else "label+percent"
+    text_size <- if (is_mobile) 10 else 12
 
-    plot_ly(
+    p <- plot_ly(
       labels = res$label,
       values = res$n,
       text = format(res$n, big.mark = ","),
@@ -1491,17 +1539,20 @@ server <- function(input, output, session) {
       hole = 0.55,
       sort = FALSE,
       marker = list(colors = unname(color_map[as.character(res$label)])),
-      textinfo = 'label+percent',
+      textinfo = text_info,
       textposition = 'inside',
-      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>"
+      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
+      textfont = list(size = text_size)
     ) %>%
       layout(
         showlegend = FALSE,
         margin = list(l = 10, r = 10, t = 10, b = 10)
       )
+    apply_plotly_config(p, is_mobile)
   })
 
   output$stat_source_plot <- renderPlotly({
+    is_mobile <- is_mobile_output("stat_source_plot")
     filters <- build_filter_query()
     query <- paste(
       "SELECT Source AS label, COUNT(*) as n",
@@ -1520,8 +1571,10 @@ server <- function(input, output, session) {
     res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
     res <- res[order(res$label), ]
     color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
+    text_info <- if (is_mobile) "percent" else "label+percent"
+    text_size <- if (is_mobile) 10 else 12
 
-    plot_ly(
+    p <- plot_ly(
       labels = res$label,
       values = res$n,
       text = format(res$n, big.mark = ","),
@@ -1529,17 +1582,20 @@ server <- function(input, output, session) {
       hole = 0.55,
       sort = FALSE,
       marker = list(colors = unname(color_map[as.character(res$label)])),
-      textinfo = 'label+percent',
+      textinfo = text_info,
       textposition = 'inside',
-      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>"
+      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
+      textfont = list(size = text_size)
     ) %>%
       layout(
         showlegend = FALSE,
         margin = list(l = 10, r = 10, t = 10, b = 10)
       )
+    apply_plotly_config(p, is_mobile)
   })
 
   output$stat_type_plot <- renderPlotly({
+    is_mobile <- is_mobile_output("stat_type_plot")
     filters <- build_filter_query()
     query <- paste(
       "SELECT Autoregulatory_Type AS type, COUNT(*) as n",
@@ -1557,26 +1613,36 @@ server <- function(input, output, session) {
     }
     colnames(res) <- c("Type", "Count")
     type_counts <- res[order(res$Count, decreasing = TRUE), ]
+    type_counts$TypeLabel <- if (is_mobile) truncate_label(type_counts$Type, 18) else type_counts$Type
+    text_position <- if (is_mobile) "none" else "outside"
+    left_margin <- if (is_mobile) 90 else 180
+    right_margin <- if (is_mobile) 16 else 40
+    bottom_margin <- if (is_mobile) 40 else 50
+    tick_size <- if (is_mobile) 10 else 12
+    x_title <- if (is_mobile) "" else "Number of Papers"
 
-    plot_ly(
+    p <- plot_ly(
       data = type_counts,
       x = ~Count,
-      y = ~reorder(Type, Count),
+      y = ~reorder(TypeLabel, Count),
       type = 'bar',
       orientation = 'h',
       marker = list(color = '#d97742'),
       text = ~format(Count, big.mark = ","),
-      textposition = 'outside',
-      hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>"
+      textposition = text_position,
+      hovertemplate = "<b>%{customdata}</b><br>Papers: %{text}<extra></extra>",
+      customdata = ~Type
     ) %>%
       layout(
-        yaxis = list(title = "", automargin = TRUE),
-        xaxis = list(title = "Number of Papers"),
-        margin = list(l = 180, r = 40, t = 10, b = 50)
+        yaxis = list(title = "", automargin = TRUE, tickfont = list(size = tick_size)),
+        xaxis = list(title = x_title, tickfont = list(size = tick_size)),
+        margin = list(l = left_margin, r = right_margin, t = 10, b = bottom_margin)
       )
+    apply_plotly_config(p, is_mobile)
   })
 
   output$stat_year_plot <- renderPlotly({
+    is_mobile <- is_mobile_output("stat_year_plot")
     filters <- build_filter_query()
     query <- paste(
       "SELECT Year AS year, COUNT(*) as n",
@@ -1600,7 +1666,7 @@ server <- function(input, output, session) {
         arrange(Year)
 
       if (nrow(year_counts) == 0) {
-        plot_ly() %>%
+        p <- plot_ly() %>%
           layout(
             annotations = list(
               text = "No year data available",
@@ -1619,7 +1685,7 @@ server <- function(input, output, session) {
           10
         }
 
-        plot_ly(
+        p <- plot_ly(
           data = year_counts,
           x = ~Year,
           y = 0,
@@ -1630,20 +1696,25 @@ server <- function(input, output, session) {
             size = ~Size,
             color = ~Count,
             colorscale = list(c(0, "#fef5f0"), c(1, "#d97742")),
-            showscale = TRUE,
+            showscale = !is_mobile,
             line = list(color = "rgba(0, 0, 0, 0.15)", width = 1)
           ),
           hovertemplate = "<b>Year:</b> %{x}<br><b>Papers:</b> %{text}<extra></extra>"
         ) %>%
           layout(
-            xaxis = list(title = "Publication Year", tickangle = -45),
+            xaxis = list(
+              title = if (is_mobile) "" else "Publication Year",
+              tickangle = if (is_mobile) -30 else -45,
+              tickfont = list(size = if (is_mobile) 10 else 12)
+            ),
             yaxis = list(title = "", showticklabels = FALSE, showgrid = FALSE, zeroline = FALSE),
-            margin = list(l = 40, r = 20, t = 10, b = 80),
+            margin = list(l = if (is_mobile) 20 else 40, r = if (is_mobile) 10 else 20, t = 10, b = if (is_mobile) 60 else 80),
             showlegend = FALSE
           )
       }
+      return(apply_plotly_config(p, is_mobile))
     } else {
-      plot_ly() %>%
+      p <- plot_ly() %>%
         layout(
           annotations = list(
             text = "No year data available",
@@ -1654,10 +1725,13 @@ server <- function(input, output, session) {
             y = 0.5
           )
         )
+      return(apply_plotly_config(p, is_mobile))
     }
   })
 
   output$stat_journal_plot <- renderPlotly({
+    is_mobile <- is_mobile_output("stat_journal_plot")
+    limit_n <- if (is_mobile) 6 else 10
     filters <- build_filter_query()
     query <- paste(
       "SELECT Journal AS label, COUNT(*) as n",
@@ -1665,7 +1739,7 @@ server <- function(input, output, session) {
       "AND Journal IS NOT NULL AND trim(Journal) != ''",
       "GROUP BY Journal",
       "ORDER BY n DESC",
-      "LIMIT 10"
+      "LIMIT", limit_n
     )
     res <- if (length(filters$params) > 0) {
       dbGetQuery(conn, query, params = filters$params)
@@ -1677,23 +1751,32 @@ server <- function(input, output, session) {
     }
     res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
     res <- res[order(res$n, decreasing = TRUE), ]
+    res$label_short <- if (is_mobile) truncate_label(res$label, 22) else res$label
+    text_position <- if (is_mobile) "none" else "outside"
+    left_margin <- if (is_mobile) 110 else 220
+    right_margin <- if (is_mobile) 16 else 40
+    bottom_margin <- if (is_mobile) 40 else 50
+    tick_size <- if (is_mobile) 10 else 12
+    x_title <- if (is_mobile) "" else "Number of Papers"
 
-    plot_ly(
+    p <- plot_ly(
       data = res,
       x = ~n,
-      y = ~reorder(label, n),
+      y = ~reorder(label_short, n),
       type = 'bar',
       orientation = 'h',
       marker = list(color = '#d97742'),
       text = ~format(n, big.mark = ","),
-      textposition = 'outside',
-      hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>"
+      textposition = text_position,
+      hovertemplate = "<b>%{customdata}</b><br>Papers: %{text}<extra></extra>",
+      customdata = ~label
     ) %>%
       layout(
-        xaxis = list(title = "Number of Papers"),
-        yaxis = list(title = "", automargin = TRUE),
-        margin = list(l = 220, r = 40, t = 10, b = 50)
+        xaxis = list(title = x_title, tickfont = list(size = tick_size)),
+        yaxis = list(title = "", automargin = TRUE, tickfont = list(size = tick_size)),
+        margin = list(l = left_margin, r = right_margin, t = 10, b = bottom_margin)
       )
+    apply_plotly_config(p, is_mobile)
   })
 
   # Model performance tables (static)
