@@ -605,37 +605,88 @@ ui <- navbarPage(
 
           # Ontology Tree
           h3("Hierarchical Structure", style = "color: #1a2332; margin-top: 40px; font-weight: 600;"),
+
           div(style = "
-            background: #f5f1e8;
-            padding: 25px;
+            background: #ffffff;
+            padding: 30px;
             border-radius: 8px;
             border: 2px solid #e8dcc8;
-            margin: 20px 0;",
-            tags$pre(style = "
-              color: #1a2332;
-              font-size: 15px;
-              line-height: 2.2;
-              font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-              margin: 0;
-              font-weight: 500;",
-              HTML("Self-directed biochemical processes
-│
-├─── Self-catalytic chemistry
-│    └─── <a href='#autocatalytic' class='tree-link'>Autocatalytic Reaction</a>
-│
-├─── Protein self-modification (post-translational)
-│    ├─── <a href='#autophosphorylation' class='tree-link'>Autophosphorylation</a>
-│    └─── <a href='#autoubiquitination' class='tree-link'>Autoubiquitination</a>
-│
-├─── Intrinsic regulatory control
-│    ├─── <a href='#autoregulation' class='tree-link'>Autoregulation of Gene Expression</a>
-│    └─── <a href='#autoinhibition' class='tree-link'>Autoinhibition within Proteins</a>
-│
-├─── Self-degradation and lysis
-│    └─── <a href='#autolysis' class='tree-link'>Autolysis</a>
-│
-└─── Population-level self-signaling
-     └─── <a href='#autoinducer' class='tree-link'>Autoinducer Molecules in Quorum Sensing</a>")
+            margin: 20px 0;
+            font-family: 'Segoe UI', Arial, sans-serif;",
+
+            # Root
+            div(style = "margin-bottom: 25px;",
+              div(style = "
+                background: #1a2332;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 16px;
+                display: inline-block;",
+                "Self-directed biochemical processes"
+              )
+            ),
+
+            # Tree with vertical line
+            div(style = "margin-left: 30px; border-left: 3px solid #d97742; padding-left: 0px;",
+
+              # Branch 1
+              div(style = "margin: 15px 0; position: relative;",
+                div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
+                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                  div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-catalytic chemistry"),
+                  div(style = "margin-left: 15px; margin-top: 8px;",
+                    tags$a(href = '#autocatalytic', class = 'tree-link', style = "font-size: 14px;", "→ Autocatalytic Reaction")
+                  )
+                )
+              ),
+
+              # Branch 2
+              div(style = "margin: 15px 0; position: relative;",
+                div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
+                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                  div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Protein self-modification (post-translational)"),
+                  div(style = "margin-left: 15px; margin-top: 8px;",
+                    div(tags$a(href = '#autophosphorylation', class = 'tree-link', style = "font-size: 14px;", "→ Autophosphorylation")),
+                    div(tags$a(href = '#autoubiquitination', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoubiquitination"))
+                  )
+                )
+              ),
+
+              # Branch 3
+              div(style = "margin: 15px 0; position: relative;",
+                div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
+                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                  div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Intrinsic regulatory control"),
+                  div(style = "margin-left: 15px; margin-top: 8px;",
+                    div(tags$a(href = '#autoregulation', class = 'tree-link', style = "font-size: 14px;", "→ Autoregulation of Gene Expression")),
+                    div(tags$a(href = '#autoinhibition', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoinhibition within Proteins"))
+                  )
+                )
+              ),
+
+              # Branch 4
+              div(style = "margin: 15px 0; position: relative;",
+                div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
+                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                  div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-degradation and lysis"),
+                  div(style = "margin-left: 15px; margin-top: 8px;",
+                    tags$a(href = '#autolysis', class = 'tree-link', style = "font-size: 14px;", "→ Autolysis")
+                  )
+                )
+              ),
+
+              # Branch 5
+              div(style = "margin: 15px 0; position: relative;",
+                div(style = "position: absolute; left: -3px; top: 12px; width: 25px; height: 3px; background: #d97742;"),
+                div(style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
+                  div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Population-level self-signaling"),
+                  div(style = "margin-left: 15px; margin-top: 8px;",
+                    tags$a(href = '#autoinducer', class = 'tree-link', style = "font-size: 14px;", "→ Autoinducer Molecules in Quorum Sensing")
+                  )
+                )
+              )
             )
           ),
 
