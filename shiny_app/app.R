@@ -573,13 +573,13 @@ ui <- navbarPage(
       tags$head(
         tags$style(HTML("
           .tree-link {
-            color: #2c3e50;
+            color: #1a2332;
             text-decoration: none;
             cursor: pointer;
             font-weight: 500;
           }
           .tree-link:hover {
-            color: #3498db;
+            color: #d97742;
             text-decoration: underline;
           }
           .mechanism-box {
@@ -592,27 +592,27 @@ ui <- navbarPage(
          padding: 30px;
          background: #ffffff;
          border-radius: 12px;
-         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
          margin: 30px;
          font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
          line-height: 1.8;
          font-size: 15px;",
 
-          h2("Autoregulatory Mechanisms Ontology", style = "color: #2c3e50; font-weight: 700; margin-bottom: 20px;"),
+          h2("Autoregulatory Mechanisms Ontology", style = "color: #1a2332; font-weight: 700; margin-bottom: 10px; border-bottom: 3px solid #d97742; padding-bottom: 10px;"),
 
-          p(style = "font-size: 16px; color: #555;",
+          p(style = "font-size: 16px; color: #555; margin-top: 20px;",
             "A structured classification of self-directed biochemical processes identified and categorized by the SOORENA pipeline."),
 
-          # Ontology Tree - FIXED with better contrast and clickable links
-          h3("Hierarchical Structure", style = "color: #2c3e50; margin-top: 30px;"),
+          # Ontology Tree
+          h3("Hierarchical Structure", style = "color: #1a2332; margin-top: 40px; font-weight: 600;"),
           div(style = "
-            background: #f8f9fa;
+            background: #f5f1e8;
             padding: 25px;
             border-radius: 8px;
-            border: 2px solid #dee2e6;
+            border: 2px solid #e8dcc8;
             margin: 20px 0;",
             tags$pre(style = "
-              color: #2c3e50;
+              color: #1a2332;
               font-size: 15px;
               line-height: 2.2;
               font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
@@ -639,15 +639,15 @@ ui <- navbarPage(
             )
           ),
 
-          hr(style = "margin: 40px 0; border-top: 2px solid #e0e0e0;"),
+          hr(style = "margin: 40px 0; border-top: 2px solid #e8dcc8;"),
 
-          # Detailed Mechanism Descriptions with MUTED PROFESSIONAL COLORS
-          h3("Mechanism Definitions with Ontology Relations and Citations", style = "color: #2c3e50;"),
+          # Detailed Mechanism Descriptions
+          h3("Mechanism Definitions with Ontology Relations and Citations", style = "color: #1a2332; font-weight: 600;"),
 
           # 1. Autocatalytic Reaction
           div(id = "autocatalytic", class = "mechanism-box",
-              style = "margin: 30px 0; padding: 25px; background: #fef9e7; border-radius: 8px; border-left: 5px solid #d4af37; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("1. Autocatalytic Reaction", style = "color: #7d6608; margin-bottom: 15px; font-weight: 600;"),
+              style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("1. Autocatalytic Reaction", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A chemical reaction in which its product or intermediate accelerates the same reaction. Supports nonlinear self-reinforcement and chemical self-organization."),
 
@@ -671,8 +671,8 @@ ui <- navbarPage(
 
           # 2. Autophosphorylation
           div(id = "autophosphorylation", class = "mechanism-box",
-              style = "margin: 30px 0; padding: 25px; background: #edf4f7; border-radius: 8px; border-left: 5px solid #2c5aa0; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("2. Autophosphorylation", style = "color: #1e3a5f; margin-bottom: 15px; font-weight: 600;"),
+              style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("2. Autophosphorylation", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A protein kinase phosphorylates its own amino acid residues (cis or trans), tuning its conformation, catalytic activity, localization, and signaling dynamics."),
 
@@ -697,8 +697,8 @@ ui <- navbarPage(
 
           # 3. Autoubiquitination
           div(id = "autoubiquitination", class = "mechanism-box",
-              style = "margin: 30px 0; padding: 25px; background: #f4f0f7; border-radius: 8px; border-left: 5px solid #6c4a8e; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("3. Autoubiquitination", style = "color: #4a2c5f; margin-bottom: 15px; font-weight: 600;"),
+              style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("3. Autoubiquitination", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "An E3 ubiquitin ligase attaches ubiquitin to itself, altering its stability, proteasomal targeting, and signaling functions depending on chain type and site."),
 
@@ -723,8 +723,8 @@ ui <- navbarPage(
 
           # 4. Autoregulation
           div(id = "autoregulation", class = "mechanism-box",
-              style = "margin: 30px 0; padding: 25px; background: #eef7ee; border-radius: 8px; border-left: 5px solid #4a7c59; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("4. Autoregulation of Gene Expression", style = "color: #2d5f3a; margin-bottom: 15px; font-weight: 600;"),
+              style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("4. Autoregulation of Gene Expression", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A gene product regulates transcription of the same gene through positive or negative feedback, tuning gene expression dynamics, noise, and homeostasis."),
 
@@ -749,8 +749,8 @@ ui <- navbarPage(
 
           # 5. Autoinducer
           div(id = "autoinducer", class = "mechanism-box",
-              style = "margin: 30px 0; padding: 25px; background: #eef7f5; border-radius: 8px; border-left: 5px solid #2a7a6b; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("5. Autoinducer Molecules in Quorum Sensing", style = "color: #1a5447; margin-bottom: 15px; font-weight: 600;"),
+              style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("5. Autoinducer Molecules in Quorum Sensing", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Small diffusible molecules synthesized and detected by bacteria. Their accumulation with increasing cell density triggers coordinated community-wide transcriptional changes."),
 
@@ -775,8 +775,8 @@ ui <- navbarPage(
 
           # 6. Autoinhibition
           div(id = "autoinhibition", class = "mechanism-box",
-              style = "margin: 30px 0; padding: 25px; background: #fdf1f1; border-radius: 8px; border-left: 5px solid #a94442; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("6. Autoinhibition within Proteins", style = "color: #6f2c2c; margin-bottom: 15px; font-weight: 600;"),
+              style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("6. Autoinhibition within Proteins", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Intrinsic structural interactions prevent inappropriate activation of a protein, maintaining it in an inactive state until relieved by ligand binding, structural rearrangement, or post-translational modification."),
 
@@ -801,8 +801,8 @@ ui <- navbarPage(
 
           # 7. Autolysis
           div(id = "autolysis", class = "mechanism-box",
-              style = "margin: 30px 0; padding: 25px; background: #f5f6f7; border-radius: 8px; border-left: 5px solid #5a6c7d; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("7. Autolysis", style = "color: #34495e; margin-bottom: 15px; font-weight: 600;"),
+              style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("7. Autolysis", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Self-degradation mediated by endogenous lytic enzymes, occurring during programmed cell death, post-mortem breakdown, or engineered microbial lysis systems."),
 
