@@ -143,6 +143,17 @@ ui <- navbarPage(
           body {
             background-color: #f9f9f9;
           }
+          :root {
+            --stats-bg: #f5faf9;
+            --stats-surface: #ffffff;
+            --stats-ink: #1f2d3d;
+            --stats-muted: #6b7a89;
+            --stats-accent: #2a9d8f;
+            --stats-accent-2: #e76f51;
+            --stats-accent-3: #4e7ac7;
+            --stats-border: #e1e8ee;
+            --stats-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+          }
           .header-section {
             background-size: 50% auto;
             background-position: center;
@@ -224,15 +235,165 @@ ui <- navbarPage(
           .table-hover tbody tr:hover {
             background-color: #f5f6f7;
           }
+          .stats-panel {
+            position: relative;
+            background: linear-gradient(180deg, #f8fcfb 0%, #f1f6f7 100%);
+            border: 1px solid var(--stats-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 30px;
+            box-shadow: var(--stats-shadow);
+            overflow: hidden;
+          }
+          .stats-panel::after {
+            content: \"\";
+            position: absolute;
+            inset: 0;
+            background:
+              radial-gradient(circle at 10% 10%, rgba(42, 157, 143, 0.12), transparent 45%),
+              radial-gradient(circle at 90% 20%, rgba(231, 111, 81, 0.12), transparent 45%),
+              radial-gradient(circle at 20% 90%, rgba(78, 122, 199, 0.08), transparent 40%);
+            pointer-events: none;
+          }
+          .stats-panel > * {
+            position: relative;
+          }
+          .stats-panel--compact {
+            max-width: 1100px;
+            margin: 30px auto;
+          }
+          .stats-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+          }
+          .stats-title {
+            color: var(--stats-ink);
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+          }
+          .stats-subtitle {
+            color: var(--stats-muted);
+            margin: 0;
+            font-size: 14px;
+          }
+          .stats-pill {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(42, 157, 143, 0.12);
+            color: var(--stats-accent);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            white-space: nowrap;
+          }
+          .stats-grid {
+            display: grid;
+            gap: 16px;
+          }
+          .stats-grid--top {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          }
+          .stats-grid--two {
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          }
+          .stats-grid--one {
+            grid-template-columns: 1fr;
+          }
+          .stat-card {
+            background: var(--stats-surface);
+            border: 1px solid var(--stats-border);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: var(--stats-shadow);
+            animation: statsFadeUp 0.6s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+          }
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+          }
+          .stat-card--kpi {
+            border-left: 4px solid var(--stats-accent);
+            background: linear-gradient(135deg, #ffffff 0%, #f4fbf9 100%);
+          }
+          .stat-card__header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+          }
+          .stat-card__title {
+            color: var(--stats-ink);
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+          }
+          .stat-card__meta {
+            color: var(--stats-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+          }
+          .stat-label {
+            color: var(--stats-muted);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+          }
+          .stat-value {
+            margin-top: 8px;
+            margin-bottom: 6px;
+          }
           #stat_total_papers {
-            font-size: 32px;
-            font-weight: bold;
-            color: #2c3e50;
-            text-align: center;
-            padding: 20px;
-            background-color: #ecf0f1;
-            border-radius: 8px;
-            margin-top: 10px;
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--stats-ink);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+          }
+          .stat-meta {
+            color: var(--stats-muted);
+            font-size: 12px;
+          }
+          .chart-note {
+            color: var(--stats-muted);
+            font-size: 12px;
+            margin: -4px 0 8px 0;
+          }
+          .stats-note {
+            color: var(--stats-muted);
+            font-size: 13px;
+            margin-top: 16px;
+            font-style: italic;
+          }
+          .stats-table-card .table {
+            margin-bottom: 0;
+          }
+          @media (max-width: 768px) {
+            .stats-header {
+              flex-direction: column;
+              align-items: flex-start;
+            }
+            .stats-panel {
+              margin: 20px;
+              padding: 20px;
+            }
+          }
+          @keyframes statsFadeUp {
+            from {
+              opacity: 0;
+              transform: translateY(8px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
         "))
       ),
@@ -317,72 +478,82 @@ ui <- navbarPage(
       header_ui,
 
       # Dataset Statistics Section
-      div(class = "filter-panel", style = "margin: 30px;",
-        h2("Current Dataset Statistics"),
-        p("Statistics based on currently displayed/filtered data", style = "color: #7f8c8d; margin-bottom: 25px;"),
-        fluidRow(
-          column(4,
-            h4("Total Papers"),
-            verbatimTextOutput("stat_total_papers", placeholder = TRUE)
+      div(class = "stats-panel",
+        div(class = "stats-header",
+          div(
+            h2("Dataset Statistics", class = "stats-title"),
+            p("Based on current filters", class = "stats-subtitle")
           ),
-          column(4,
-            h4("Mechanism Distribution"),
-            withSpinner(plotlyOutput("stat_mechanism_plot", height = "300px"), type = 6, color = "#2c3e50")
+          div(class = "stats-pill", "Live filtered view")
+        ),
+        div(class = "stats-grid stats-grid--top",
+          div(class = "stat-card stat-card--kpi",
+            div(class = "stat-label", "Total matching papers"),
+            div(class = "stat-value", textOutput("stat_total_papers", inline = TRUE)),
+            div(class = "stat-meta", "Updates as filters change")
           ),
-          column(4,
-            h4("Source Distribution"),
-            withSpinner(plotlyOutput("stat_source_plot", height = "300px"), type = 6, color = "#2c3e50")
+          div(class = "stat-card stat-card--chart",
+            div(class = "stat-card__header",
+              h4("Has Mechanism", class = "stat-card__title"),
+              span(class = "stat-card__meta", "Yes vs No")
+            ),
+            withSpinner(plotlyOutput("stat_mechanism_plot", height = "230px"), type = 6, color = "#2c3e50")
+          ),
+          div(class = "stat-card stat-card--chart",
+            div(class = "stat-card__header",
+              h4("Source Mix", class = "stat-card__title"),
+              span(class = "stat-card__meta", "UniProt vs Non-UniProt")
+            ),
+            withSpinner(plotlyOutput("stat_source_plot", height = "230px"), type = 6, color = "#2c3e50")
           )
         ),
-        hr(),
-        fluidRow(
-          column(6,
-            h4("Autoregulatory Types"),
-            withSpinner(plotlyOutput("stat_type_plot", height = "400px"), type = 6, color = "#2c3e50")
+        div(class = "stats-grid stats-grid--two",
+          div(class = "stat-card stat-card--wide",
+            h4("Autoregulatory Types", class = "stat-card__title"),
+            withSpinner(plotlyOutput("stat_type_plot", height = "340px"), type = 6, color = "#2c3e50")
           ),
-          column(6,
-            h4("Publication Year Distribution"),
-            withSpinner(plotlyOutput("stat_year_plot", height = "400px"), type = 6, color = "#2c3e50")
+          div(class = "stat-card stat-card--wide",
+            div(class = "stat-card__header",
+              h4("Publication Timeline", class = "stat-card__title"),
+              span(class = "stat-card__meta", "Bubble size shows paper count")
+            ),
+            div(class = "chart-note", "Bubble size reflects paper count; color deepens with volume."),
+            withSpinner(plotlyOutput("stat_year_plot", height = "340px"), type = 6, color = "#2c3e50")
+          )
+        ),
+        div(class = "stats-grid stats-grid--one",
+          div(class = "stat-card stat-card--wide",
+            h4("Top Journals", class = "stat-card__title"),
+            withSpinner(plotlyOutput("stat_journal_plot", height = "320px"), type = 6, color = "#2c3e50")
           )
         )
       ),
 
       # Model Performance Section
-      div(class = "filter-panel", style = "margin: 30px;",
-        h2("Model Training Performance"),
-        p("Performance metrics from the published SOORENA study", style = "color: #7f8c8d; margin-bottom: 25px;"),
-
-        # Stage 1 Performance
-        h3("Stage 1: Binary Classification (n = 600 test samples)"),
-        fluidRow(
-          column(12,
-            tableOutput("model_stage1_table")
-          )
+      div(class = "stats-panel stats-panel--compact",
+        div(class = "stats-header",
+          div(
+            h2("Model Training Performance", class = "stats-title"),
+            p("Performance metrics from the published SOORENA study", class = "stats-subtitle")
+          ),
+          div(class = "stats-pill", "Model benchmarks")
         ),
-
-        hr(),
-
-        # Stage 2 Overall Performance
-        h3("Stage 2: Multi-class Classification - Overall Performance"),
-        fluidRow(
-          column(12,
+        div(class = "stats-grid stats-grid--two",
+          div(class = "stat-card stats-table-card",
+            h4("Stage 1: Binary Classification (n = 600 test samples)", class = "stat-card__title"),
+            tableOutput("model_stage1_table")
+          ),
+          div(class = "stat-card stats-table-card",
+            h4("Stage 2: Multi-class - Overall Performance", class = "stat-card__title"),
             tableOutput("model_stage2_overall_table")
           )
         ),
-
-        hr(),
-
-        # Stage 2 Per-class Performance
-        h3("Stage 2: Per-class Performance"),
-        fluidRow(
-          column(12,
-            tableOutput("model_stage2_perclass_table")
-          )
+        div(class = "stat-card stats-table-card", style = "margin-top: 16px;",
+          h4("Stage 2: Per-class Performance", class = "stat-card__title"),
+          tableOutput("model_stage2_perclass_table")
         ),
-
-        br(),
         p("Source: bioRxiv preprint doi: https://doi.org/10.1101/2025.11.03.685842",
-          style = "font-style: italic; color: #666; margin-top: 20px;")
+          class = "stats-note")
       )
     )
   ),
@@ -703,7 +874,7 @@ ui <- navbarPage(
         tags$li("Payman Nickchi – University of British Columbia (Mentor)")
       )
     )
-  ),
+  )
 )
 
 
@@ -1005,7 +1176,8 @@ server <- function(input, output, session) {
   # Statistics tab outputs
   # Dataset statistics (reactive based on filtered data)
   output$stat_total_papers <- renderText({
-    total <- total_count()
+    total <- as.numeric(total_count()[1])
+    if (is.na(total)) total <- 0
     format(total, big.mark = ",")
   })
 
@@ -1024,17 +1196,25 @@ server <- function(input, output, session) {
     if (nrow(res) == 0) {
       res <- data.frame(label = character(0), n = numeric(0))
     }
-    counts <- setNames(res$n, ifelse(is.na(res$label) | res$label == "", "Unknown", res$label))
+    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
+    res$label <- factor(res$label, levels = c("Yes", "No", "Unknown"))
+    res <- res[order(res$label), ]
+    color_map <- c("Yes" = "#2a9d8f", "No" = "#e76f51", "Unknown" = "#94a3b8")
+
     plot_ly(
-      labels = names(counts),
-      values = as.vector(counts),
+      labels = res$label,
+      values = res$n,
+      text = format(res$n, big.mark = ","),
       type = 'pie',
-      marker = list(colors = c('#ff6b6b', '#4ecdc4')),
+      hole = 0.55,
+      sort = FALSE,
+      marker = list(colors = unname(color_map[as.character(res$label)])),
       textinfo = 'label+percent',
-      textposition = 'inside'
+      textposition = 'inside',
+      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>"
     ) %>%
       layout(
-        showlegend = TRUE,
+        showlegend = FALSE,
         margin = list(l = 10, r = 10, t = 10, b = 10)
       )
   })
@@ -1054,17 +1234,25 @@ server <- function(input, output, session) {
     if (nrow(res) == 0) {
       res <- data.frame(label = character(0), n = numeric(0))
     }
-    counts <- setNames(res$n, ifelse(is.na(res$label) | res$label == "", "Unknown", res$label))
+    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
+    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
+    res <- res[order(res$label), ]
+    color_map <- c("UniProt" = "#4e7ac7", "Non-UniProt" = "#2a9d8f", "Unknown" = "#94a3b8")
+
     plot_ly(
-      labels = names(counts),
-      values = as.vector(counts),
+      labels = res$label,
+      values = res$n,
+      text = format(res$n, big.mark = ","),
       type = 'pie',
-      marker = list(colors = c('#95e1d3', '#f38181')),
+      hole = 0.55,
+      sort = FALSE,
+      marker = list(colors = unname(color_map[as.character(res$label)])),
       textinfo = 'label+percent',
-      textposition = 'inside'
+      textposition = 'inside',
+      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>"
     ) %>%
       layout(
-        showlegend = TRUE,
+        showlegend = FALSE,
         margin = list(l = 10, r = 10, t = 10, b = 10)
       )
   })
@@ -1094,14 +1282,15 @@ server <- function(input, output, session) {
       y = ~reorder(Type, Count),
       type = 'bar',
       orientation = 'h',
-      marker = list(color = '#667eea'),
-      text = ~Count,
-      textposition = 'outside'
+      marker = list(color = '#2a9d8f'),
+      text = ~format(Count, big.mark = ","),
+      textposition = 'outside',
+      hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>"
     ) %>%
       layout(
-        yaxis = list(title = ""),
+        yaxis = list(title = "", automargin = TRUE),
         xaxis = list(title = "Number of Papers"),
-        margin = list(l = 200, r = 50, t = 20, b = 50)
+        margin = list(l = 180, r = 40, t = 10, b = 50)
       )
   })
 
@@ -1122,26 +1311,55 @@ server <- function(input, output, session) {
     year_counts <- res
 
     if (nrow(year_counts) > 0) {
-      year_counts$Year <- as.numeric(as.character(year_counts$Year))
-      year_counts <- year_counts[order(year_counts$Year), ]
+      year_counts$Year <- suppressWarnings(as.numeric(as.character(year_counts$Year)))
+      current_year <- as.numeric(format(Sys.Date(), "%Y"))
+      year_counts <- year_counts %>%
+        filter(!is.na(Year) & Year >= 1800 & Year <= current_year) %>%
+        arrange(Year)
 
-      plot_ly(
-        data = year_counts,
-        x = ~Year,
-        y = ~Count,
-        type = 'scatter',
-        mode = 'lines+markers',
-        marker = list(color = '#764ba2', size = 8),
-        line = list(color = '#764ba2', width = 3),
-        hovertemplate = paste('<b>Year:</b> %{x}<br>',
-                            '<b>Papers:</b> %{y}<br>',
-                            '<extra></extra>')
-      ) %>%
-        layout(
-          xaxis = list(title = "Publication Year"),
-          yaxis = list(title = "Number of Papers"),
-          margin = list(l = 60, r = 30, t = 20, b = 50)
-        )
+      if (nrow(year_counts) == 0) {
+        plot_ly() %>%
+          layout(
+            annotations = list(
+              text = "No year data available",
+              showarrow = FALSE,
+              xref = "paper",
+              yref = "paper",
+              x = 0.5,
+              y = 0.5
+            )
+          )
+      } else {
+        max_count <- max(year_counts$Count)
+        year_counts$Size <- if (max_count > 0) {
+          10 + (sqrt(year_counts$Count) / sqrt(max_count)) * 30
+        } else {
+          10
+        }
+
+        plot_ly(
+          data = year_counts,
+          x = ~Year,
+          y = 0,
+          type = 'scatter',
+          mode = 'markers',
+          text = ~format(Count, big.mark = ","),
+          marker = list(
+            size = ~Size,
+            color = ~Count,
+            colorscale = list(c(0, "#e0f2f1"), c(1, "#2a9d8f")),
+            showscale = TRUE,
+            line = list(color = "rgba(0, 0, 0, 0.15)", width = 1)
+          ),
+          hovertemplate = "<b>Year:</b> %{x}<br><b>Papers:</b> %{text}<extra></extra>"
+        ) %>%
+          layout(
+            xaxis = list(title = "Publication Year", tickangle = -45),
+            yaxis = list(title = "", showticklabels = FALSE, showgrid = FALSE, zeroline = FALSE),
+            margin = list(l = 40, r = 20, t = 10, b = 80),
+            showlegend = FALSE
+          )
+      }
     } else {
       plot_ly() %>%
         layout(
@@ -1155,6 +1373,45 @@ server <- function(input, output, session) {
           )
         )
     }
+  })
+
+  output$stat_journal_plot <- renderPlotly({
+    filters <- build_filter_query()
+    query <- paste(
+      "SELECT Journal AS label, COUNT(*) as n",
+      filters$where,
+      "AND Journal IS NOT NULL AND trim(Journal) != ''",
+      "GROUP BY Journal",
+      "ORDER BY n DESC",
+      "LIMIT 10"
+    )
+    res <- if (length(filters$params) > 0) {
+      dbGetQuery(conn, query, params = filters$params)
+    } else {
+      dbGetQuery(conn, query)
+    }
+    if (nrow(res) == 0) {
+      res <- data.frame(label = character(0), n = numeric(0))
+    }
+    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
+    res <- res[order(res$n, decreasing = TRUE), ]
+
+    plot_ly(
+      data = res,
+      x = ~n,
+      y = ~reorder(label, n),
+      type = 'bar',
+      orientation = 'h',
+      marker = list(color = '#4e7ac7'),
+      text = ~format(n, big.mark = ","),
+      textposition = 'outside',
+      hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>"
+    ) %>%
+      layout(
+        xaxis = list(title = "Number of Papers"),
+        yaxis = list(title = "", automargin = TRUE),
+        margin = list(l = 220, r = 40, t = 10, b = 50)
+      )
   })
 
   # Model performance tables (static)
