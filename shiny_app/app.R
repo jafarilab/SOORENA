@@ -31,7 +31,8 @@ cat("Database ready!\n")
 dbDisconnect(conn_info)
 
 # How many rows to fetch per page for the main table
-PAGE_SIZE <- 50
+DEFAULT_PAGE_SIZE <- 50
+PAGE_SIZE_OPTIONS <- c(25, 50, 100, 500)
 
 # Ontology Info Table (authoritative)
 ontology_info <- list(
@@ -292,13 +293,17 @@ ui <- navbarPage(
         ),
 
         # Display Table with loading spinner
-        div(style = "margin: 0 30px 20px 30px;",
+            div(style = "margin: 0 30px 20px 30px;",
             # Info message about row counts
             div(style = "margin-bottom: 10px; padding: 10px; background-color: #e8f4f8; border-left: 4px solid #3498db; border-radius: 4px;",
                 uiOutput("table_info_message")),
             div(style = "display: flex; gap: 10px; align-items: center; margin-bottom: 10px;",
-                actionButton("prev_page", "Previous 50", class = "btn-default"),
-                actionButton("next_page", "Next 50", class = "btn-default"),
+                selectInput("rows_per_page", "Rows per page",
+                            choices = PAGE_SIZE_OPTIONS,
+                            selected = DEFAULT_PAGE_SIZE,
+                            width = "130px"),
+                actionButton("prev_page", "Previous", class = "btn-default"),
+                actionButton("next_page", "Next", class = "btn-default"),
                 textOutput("page_status", inline = TRUE)
             ),
             withSpinner(DTOutput("result_table"),
@@ -713,6 +718,10 @@ server <- function(input, output, session) {
 
   # Track current page for server-side pagination
   current_page <- reactiveVal(1)
+  page_size <- reactive({
+    size <- as.numeric(input$rows_per_page)
+    if (is.null(size) || is.na(size)) DEFAULT_PAGE_SIZE else size
+  })
 
   # Build WHERE clause and parameter list based on current filters
   build_filter_query <- function() {
@@ -871,7 +880,7 @@ server <- function(input, output, session) {
   # Reset pagination whenever filters change
   observeEvent(list(input$journal, input$type, input$os, input$ac, input$protein_id,
                     input$pmid, input$author, input$has_mechanism, input$source,
-                    input$year, input$month, input$search), {
+                    input$year, input$month, input$search, input$rows_per_page), {
     current_page(1)
   })
 
@@ -934,14 +943,14 @@ server <- function(input, output, session) {
   # Filtering Logic - Build SQL query dynamically with LIMIT
   filtered_data <- reactive({
     filters <- build_filter_query()
-    offset <- (current_page() - 1) * PAGE_SIZE
+    offset <- (current_page() - 1) * page_size()
     query <- paste(
       "SELECT *",
       filters$where,
       "ORDER BY Title IS NULL, PMID",
       "LIMIT ? OFFSET ?"
     )
-    params <- c(filters$params, PAGE_SIZE, offset)
+    params <- c(filters$params, page_size(), offset)
 
     result <- dbGetQuery(conn, query, params = params)
 
@@ -967,7 +976,7 @@ server <- function(input, output, session) {
     data <- filtered_data()
     total <- as.numeric(total_count()[1])
     loaded <- nrow(data)
-    start_row <- if (loaded > 0) ((current_page() - 1) * PAGE_SIZE + 1) else 0
+    start_row <- if (loaded > 0) ((current_page() - 1) * page_size() + 1) else 0
     end_row <- if (loaded > 0) min(start_row + loaded - 1, total) else 0
 
     if (loaded == 0 || is.na(total) || total <= 0) {
@@ -990,7 +999,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$next_page, {
     req(total_count())
-    max_page <- max(ceiling(total_count() / PAGE_SIZE), 1)
+    max_page <- max(ceiling(total_count() / page_size()), 1)
     if (current_page() < max_page) {
       current_page(current_page() + 1)
     }
@@ -1004,7 +1013,7 @@ server <- function(input, output, session) {
 
   observe({
     total <- total_count()
-    max_page <- max(ceiling(total / PAGE_SIZE), 1)
+    max_page <- max(ceiling(total / page_size()), 1)
     if (current_page() > max_page) {
       current_page(max_page)
     }
@@ -1017,7 +1026,7 @@ server <- function(input, output, session) {
       return("No results to display")
     }
 
-    max_page <- ceiling(total / PAGE_SIZE)
+    max_page <- ceiling(total / page_size())
     page <- min(current_page(), max_page)
     paste0("Page ", page, " of ", max_page)
   })
@@ -1297,8 +1306,8 @@ output$result_table <- renderDT({
     escape = FALSE,
     rownames = FALSE,  # Disable built-in row numbers (we have our own # column)
     options = list(
-      pageLength = 50,  # Show all 50 loaded rows at once
-      lengthMenu = c(25, 50),  # Only allow 25 or 50 since we load 50 max
+      pageLength = page_size(),  # Show all loaded rows for current page size
+      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
       scrollX = TRUE,
       dom = 't',  # Only show table (no info text at bottom)
       order = list(),
