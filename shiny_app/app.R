@@ -1228,7 +1228,14 @@ output$result_table <- renderDT({
 
   data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
   data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
-  data$`Protein ID` <- safe_cell(data$`Protein ID`, 25, "Protein ID")
+
+  # Clean up Protein ID: hide "NA_####" entries (show blank instead)
+  data$`Protein ID` <- ifelse(
+    grepl("^NA_", data$`Protein ID`),
+    "",  # Show blank for NA_#### entries
+    safe_cell(data$`Protein ID`, 25, "Protein ID")
+  )
+
   data$OS <- safe_cell(data$OS, 40, "OS")
   data$Title <- safe_cell(data$Title, 50, "Title")
   data$Abstract <- safe_cell(data$Abstract, 50, "Abstract")
