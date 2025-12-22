@@ -1,17 +1,40 @@
 # SOORENA Deployment Files
 
-This directory contains deployment scripts and documentation for the SOORENA Shiny application on Oracle Cloud.
+This directory contains deployment scripts and documentation for the SOORENA Shiny application.
+
+## 🌐 Hosting Options
+
+### Option 1: Oracle Cloud (FREE)
+- **Cost**: $0 - Always Free tier
+- **Setup**: More complex (firewall rules, iptables)
+- **Performance**: 1 GB RAM (slower but works)
+- See: [1GB_RAM_INSTRUCTIONS.md](1GB_RAM_INSTRUCTIONS.md)
+
+### Option 2: Digital Ocean (PAID - Recommended)
+- **Cost**: $12-24/month (may have free credits)
+- **Setup**: Simple and straightforward
+- **Performance**: Better (2-4 GB RAM recommended)
+- See: [DIGITALOCEAN_INSTRUCTIONS.md](DIGITALOCEAN_INSTRUCTIONS.md)
+
+---
 
 ## 📁 Files
 
 ### Documentation
 - **`README.md`** - This file
-- **`1GB_RAM_INSTRUCTIONS.md`** - Setup guide for VM.Standard.E2.1.Micro instances
+- **`1GB_RAM_INSTRUCTIONS.md`** - Oracle Cloud setup guide (1GB RAM instance)
+- **`DIGITALOCEAN_INSTRUCTIONS.md`** - Digital Ocean setup guide
 
-### Deployment Scripts
-- **`server_setup_1GB.sh`** - Server configuration script (run on Oracle Cloud VM)
-- **`deploy_to_oracle.sh`** - Full deployment script (run locally)
-- **`update_app.sh`** - Quick update script for app.R changes only
+### Oracle Cloud Scripts
+- **`server_setup_1GB.sh`** - Oracle Cloud server configuration
+- **`deploy_to_oracle.sh`** - Oracle Cloud deployment
+
+### Digital Ocean Scripts
+- **`server_setup_digitalocean.sh`** - Digital Ocean server configuration
+- **`deploy_to_digitalocean.sh`** - Digital Ocean deployment
+
+### Shared Scripts
+- **`update_app.sh`** - Quick update for app.R changes only
 
 ## 🚀 Deployment Instructions
 

@@ -4,6 +4,14 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
+# Ignore secrets/keys
+*.key
+*.pem
+*.p12
+*.pfx
+.env
+.env.*
+
 # Ignore only raw scratch data
 data/raw/
 
