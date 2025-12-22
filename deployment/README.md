@@ -2,23 +2,23 @@
 
 This directory contains deployment scripts and documentation for the SOORENA Shiny application.
 
-## 🌐 Hosting Options
+## Hosting Options
 
-### Option 1: Oracle Cloud (FREE)
-- **Cost**: $0 - Always Free tier
-- **Setup**: More complex (firewall rules, iptables)
-- **Performance**: 1 GB RAM (slower but works)
+### Option 1: Oracle Cloud
+- **Resource Requirements**: 1 GB RAM minimum
+- **Setup Complexity**: More complex (firewall rules, iptables)
+- **Performance**: Lower performance, suitable for testing
 - See: [1GB_RAM_INSTRUCTIONS.md](1GB_RAM_INSTRUCTIONS.md)
 
-### Option 2: Digital Ocean (PAID - Recommended)
-- **Cost**: $12-24/month (may have free credits)
-- **Setup**: Simple and straightforward
-- **Performance**: Better (2-4 GB RAM recommended)
-- See: [DIGITALOCEAN_INSTRUCTIONS.md](DIGITALOCEAN_INSTRUCTIONS.md)
+### Option 2: DigitalOcean
+- **Resource Requirements**: 2-4 GB RAM recommended
+- **Setup Complexity**: Simple and straightforward
+- **Performance**: Better performance for production use
+- Technical documentation available
 
 ---
 
-## 📁 Files
+## Files
 
 ### Documentation
 - **`README.md`** - This file
@@ -36,7 +36,7 @@ This directory contains deployment scripts and documentation for the SOORENA Shi
 ### Shared Scripts
 - **`update_app.sh`** - Quick update for app.R changes only
 
-## 🚀 Deployment Instructions
+## Deployment Instructions
 
 ### Initial Setup
 
@@ -57,7 +57,7 @@ For app.R changes only:
 ./update_app.sh
 ```
 
-## 🛠️ Scripts Usage
+## Scripts Usage
 
 ### server_setup.sh
 **Purpose**: Install R, Shiny Server, and all dependencies on your Oracle Cloud VM
@@ -137,20 +137,17 @@ cd /Users/halao/Desktop/SOORENA_2/deployment
 
 ---
 
-## 💰 Cost
+## Resource Requirements
 
-**Completely FREE** with Oracle Cloud Always Free tier.
+Oracle Cloud Always Free tier specifications:
 
-Your setup uses:
 - **Compute**: 2 OCPUs, 12 GB RAM (Ampere A1 Flex)
 - **Storage**: ~56 GB (OS + database + app)
 - **Bandwidth**: Minimal (research database, not high traffic)
 
-**All within the Always Free limits. No hidden costs.**
-
 ---
 
-## 🎯 Typical Workflow
+## Typical Workflow
 
 ### Initial Deployment
 1. Create Oracle Cloud account
@@ -173,7 +170,7 @@ Your setup uses:
 
 ---
 
-## 📊 Server Specifications
+## Server Specifications
 
 Your Oracle Cloud VM:
 - **OS**: Ubuntu 22.04 LTS
@@ -191,7 +188,7 @@ Perfect for:
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
 1. **SSH Key**: Keep your private key secure
    - Don't commit it to git
@@ -210,7 +207,7 @@ Perfect for:
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### App won't load
 1. Check Shiny Server status:
@@ -239,7 +236,7 @@ Perfect for:
 
 ---
 
-## 📞 Need Help?
+## Support
 
 1. Check the detailed guide: [oracle_cloud_setup.md](oracle_cloud_setup.md)
 2. Check server logs for errors
@@ -248,7 +245,7 @@ Perfect for:
 
 ---
 
-## ✅ Pre-Deployment Checklist
+## Pre-Deployment Checklist
 
 Before running deployment scripts, verify:
 
@@ -264,18 +261,14 @@ Before running deployment scripts, verify:
 
 ---
 
-## 🎉 Success Indicators
+## Success Indicators
 
 Your deployment is successful when:
-- ✓ You can access `http://YOUR_IP:3838/soorena/` in browser
-- ✓ Dashboard loads with all tabs working
-- ✓ Data Explorer shows records
-- ✓ Statistics charts display correctly
-- ✓ Filters work properly
-- ✓ Team photos appear on About Us page
-- ✓ No errors in browser console
-- ✓ No errors in Shiny Server logs
-
----
-
-**Happy Deploying! 🚀**
+- You can access `http://YOUR_IP:3838/soorena/` in browser
+- Dashboard loads with all tabs working
+- Data Explorer shows records
+- Statistics charts display correctly
+- Filters work properly
+- Team photos appear on About Us page
+- No errors in browser console
+- No errors in Shiny Server logs

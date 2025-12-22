@@ -279,19 +279,20 @@ For detailed information, see [docs/README_SHINY_APP.md](docs/README_SHINY_APP.m
 
 The SOORENA Shiny application can be deployed to cloud platforms for public access.
 
-### DigitalOcean Deployment (Recommended)
+### DigitalOcean Deployment
 
-**Advantages:**
+**Technical Advantages:**
 - Simple setup with no complex firewall configuration
 - Better performance and faster network speeds
 - Root access by default
-- Predictable pricing ($12-24/month)
+
+**Resource Requirements:**
+- Recommended: 4 GB RAM / 2 vCPUs
+- Minimum: 2 GB RAM / 1 vCPU
 
 **Quick Start:**
 
 1. Create a Droplet (Ubuntu 22.04/24.04 LTS)
-   - Recommended: 4 GB RAM / 2 vCPUs ($24/month)
-   - Minimum: 2 GB RAM / 1 vCPU ($12/month)
 
 2. SSH into your droplet:
    ```bash
@@ -319,24 +320,24 @@ The SOORENA Shiny application can be deployed to cloud platforms for public acce
    http://YOUR_DROPLET_IP:3838/soorena/
    ```
 
-**Detailed Guide:** [deployment/DIGITALOCEAN_INSTRUCTIONS.md](deployment/DIGITALOCEAN_INSTRUCTIONS.md)
-
 ---
 
-### Oracle Cloud Deployment (Free Tier)
+### Oracle Cloud Deployment
 
-**Advantages:**
-- Free tier with generous limits (Always Free resources)
-- Good for testing and low-traffic deployments
+**Technical Advantages:**
+- Free tier with generous resource limits
+- Suitable for testing and low-traffic deployments
 
-**Disadvantages:**
-- More complex firewall configuration
+**Technical Considerations:**
+- More complex firewall configuration required
 - Lower performance compared to DigitalOcean
+
+**Resource Requirements:**
+- Minimum: VM.Standard.E2.1.Micro (1 GB RAM)
 
 **Quick Start:**
 
 1. Create a Compute Instance (Ubuntu 22.04)
-   - Shape: VM.Standard.E2.1.Micro (1 GB RAM - Always Free)
 
 2. Configure firewall (VCN Security Lists + instance firewall)
 
@@ -366,7 +367,7 @@ All deployment-related files are in the [deployment/](deployment/) directory:
 - [update_app.sh](deployment/update_app.sh) - Quick app updates (no full redeployment)
 
 For step-by-step instructions, see:
-- [deployment/INSTRUCTIONS_FOR_FRIEND.md](deployment/INSTRUCTIONS_FOR_FRIEND.md) - User-friendly guide for non-technical users
+- [deployment/README.md](deployment/README.md) - Deployment overview and technical documentation
 - [deployment/USING_EXISTING_DROPLET.md](deployment/USING_EXISTING_DROPLET.md) - Reusing existing infrastructure
 
 ---
@@ -392,10 +393,15 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 ## Technology Stack
 
 **Languages:** Python 3.11+, R 4.x, Bash
+
 **ML Framework:** PyTorch, Transformers (HuggingFace)
+
 **Model:** PubMedBERT (microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext)
+
 **Web Framework:** R Shiny
+
 **Database:** SQLite
+
 **Deployment:** DigitalOcean, Oracle Cloud, Shiny Server
 
 ---
@@ -456,25 +462,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## Citation
-
-If you use this work in your research, please cite:
-
-```bibtex
-@software{soorena2024,
-  title={SOORENA: Self-lOOp containing or autoREgulatory Nodes in biological network Analysis},
-  author={Your Name},
-  year={2024},
-  url={https://github.com/halaarar/SOORENA_2}
-}
-```
-
----
 
 ## Contact
 
 For questions or feedback, please open an issue on GitHub.
 
 ---
-
-**Ready to explore autoregulatory mechanisms in biological networks!**

@@ -67,16 +67,16 @@ This directory contains all processed datasets used for training, validation, te
 
 ## Important Notes
 
-### 🎯 For Reproducibility
+### For Reproducibility
 
-**All sampling uses `RANDOM_SEED=42`** - This ensures:
+All sampling uses `RANDOM_SEED=42`. This ensures:
 - The exact same papers are selected every time
 - Training is reproducible
 - Results can be verified by others
 
-### 📊 Stage 1 Sampling Strategy
+### Stage 1 Sampling Strategy
 
-Stage 1 trains a **binary classifier** (has mechanism vs. no mechanism):
+Stage 1 trains a binary classifier (has mechanism vs. no mechanism):
 
 - **Positive examples**: 1,332 labeled papers (known mechanisms)
 - **Negative examples**: 2,664 unlabeled papers (sampled at 2:1 ratio)
@@ -84,29 +84,29 @@ Stage 1 trains a **binary classifier** (has mechanism vs. no mechanism):
 
 The 2:1 ratio balances the classes while maintaining enough positive examples.
 
-### 🔍 Which Files to Use?
+### Which Files to Use?
 
 **For Training:**
-- ✅ Use `train.csv`, `val.csv`, `test.csv`
-- ✅ Use `stage1_unlabeled_negatives.csv` (generated during `train_stage1.py`)
+- Use `train.csv`, `val.csv`, `test.csv`
+- Use `stage1_unlabeled_negatives.csv` (generated during `train_stage1.py`)
 
 **For Prediction:**
-- ✅ Use `stage1_unlabeled_unused.csv` - These papers were NEVER seen during training
-- ❌ Don't predict on `stage1_unlabeled_negatives.csv` - Already used in training (data leakage!)
+- Use `stage1_unlabeled_unused.csv` - These papers were NEVER seen during training
+- Do not predict on `stage1_unlabeled_negatives.csv` - Already used in training (data leakage)
 
 **For Analysis:**
-- ✅ Use `modeling_dataset.csv` - Complete overview of all available data
-- ✅ Use evaluation CSVs - Check model performance
+- Use `modeling_dataset.csv` - Complete overview of all available data
+- Use evaluation CSVs - Check model performance
 
-### 🗑️ Can I Delete Any Files?
+### File Management
 
-**Keep These:**
+**Essential Files:**
 - `modeling_dataset.csv` - Master source
 - `train.csv`, `val.csv`, `test.csv` - Ground truth
 - `stage1_unlabeled_negatives.csv` - Documents training negatives
 - `stage1_unlabeled_unused.csv` - For predictions
 
-**Optional (can regenerate):**
+**Can be Regenerated:**
 - `stage1_test_eval.csv` - Run `evaluate.py` to recreate
 - `stage2_test_eval.csv` - Run `evaluate.py` to recreate
 
@@ -176,10 +176,16 @@ wc -l data/processed/*.csv
 
 ---
 
-## Questions?
+## Frequently Asked Questions
 
-- **"Why so many unlabeled papers?"** - We have 252K unlabeled papers but only used 2,664 for training. The rest (~250K) are for testing model predictions on truly unseen data.
+**Why so many unlabeled papers?**
 
-- **"Can I retrain with different ratios?"** - Yes! Change the sampling in `train_stage1.py` (line 32-36), but remember to update `RANDOM_SEED` for reproducibility.
+We have 252K unlabeled papers but only used 2,664 for training. The rest (~250K) are for testing model predictions on truly unseen data.
 
-- **"Where are the 3M new predictions?"** - Those are in `data/pred/` (input) and `results/` (output), not in this directory.
+**Can I retrain with different ratios?**
+
+Yes. Change the sampling in `train_stage1.py` (line 32-36), but remember to update `RANDOM_SEED` for reproducibility.
+
+**Where are the 3M new predictions?**
+
+Those are in `data/pred/` (input) and `results/` (output), not in this directory.

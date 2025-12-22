@@ -1,12 +1,12 @@
-# Using an Existing Digital Ocean Droplet
+# Using Existing Cloud Infrastructure
 
-If your friend already has a droplet running, you can use it! No need to create a new one.
+This guide explains how to deploy SOORENA on existing cloud infrastructure.
 
 ---
 
 ## Requirements Check
 
-Ask your friend to check if their existing droplet meets these requirements:
+Verify your existing infrastructure meets these requirements:
 
 ### Minimum Requirements:
 - ✅ **OS**: Ubuntu 20.04, 22.04, or 24.04 (preferred)
@@ -36,55 +36,55 @@ Should show at least 10 GB available
 
 ---
 
-## Can We Share the Droplet?
+## Shared Infrastructure Compatibility
 
-**YES!** Your app can run alongside their existing apps/websites. Here's how:
+SOORENA can run alongside existing applications. Here's how:
 
-### If they're running other web apps:
-- Your app runs on **port 3838**
-- Their apps probably run on port 80 (HTTP) or 443 (HTTPS)
-- No conflict! Both can run simultaneously
+### If running other web applications:
+- SOORENA runs on **port 3838**
+- Other apps typically run on port 80 (HTTP) or 443 (HTTPS)
+- No conflict - applications can run simultaneously
 
-### If they're using it for something else:
-- As long as it's not using port 3838, you're fine
+### Port availability check:
+- Verify port 3838 is available
 - Check with: `sudo netstat -tulpn | grep 3838`
-- If nothing shows up, port 3838 is free!
+- If no output, port 3838 is available
 
 ---
 
-## Installation on Existing Droplet
+## Installation on Existing Infrastructure
 
-### Step 1: Get Access
+### Step 1: Obtain Access
 
-Your friend gives you:
-1. **Droplet IP address**
-2. **SSH access** (either add your SSH key or give you the password)
+Required information:
+1. **Instance IP address**
+2. **SSH access** (SSH key or password)
 
-### Step 2: SSH In
+### Step 2: Connect via SSH
 
 ```bash
-ssh root@DROPLET_IP
+ssh root@INSTANCE_IP
 ```
 
 ### Step 3: Run Setup Script
 
 Copy and run the setup script:
 ```bash
-# From your Mac, copy the script to the droplet
-scp /Users/halao/Desktop/SOORENA_2/deployment/server_setup_digitalocean.sh root@DROPLET_IP:~/
+# From your local machine, copy the script
+scp /path/to/SOORENA_2/deployment/server_setup_digitalocean.sh root@INSTANCE_IP:~/
 
-# SSH into the droplet
-ssh root@DROPLET_IP
+# SSH into the instance
+ssh root@INSTANCE_IP
 
 # Run the setup script
 bash server_setup_digitalocean.sh
 ```
 
-### Step 4: Deploy Your App
+### Step 4: Deploy Application
 
-Exit SSH and run deployment from your Mac:
+Exit SSH and run deployment from local machine:
 ```bash
-cd /Users/halao/Desktop/SOORENA_2/deployment
+cd /path/to/SOORENA_2/deployment
 ./deploy_to_digitalocean.sh
 ```
 
@@ -100,125 +100,125 @@ The setup script will install:
 
 **Total disk space used**: ~8-10 GB
 
-**These will NOT affect their existing apps:**
-- Shiny Server runs on port 3838 (separate from their apps)
-- R is just a programming language (won't interfere)
-- Your database is in `/srv/shiny-server/soorena/` (isolated)
+**Impact on existing applications:**
+- Shiny Server runs on port 3838 (separate port)
+- R installation does not interfere with existing software
+- Database stored in `/srv/shiny-server/soorena/` (isolated directory)
 
 ---
 
-## Accessing Both Apps
+## Accessing Applications
 
 After installation:
 
-**Their existing apps**: Still work normally
-- Example: `http://DROPLET_IP/` or their domain
+**Existing applications**: Continue functioning normally
+- Example: `http://INSTANCE_IP/` or configured domain
 
-**Your SOORENA app**:
-- Example: `http://DROPLET_IP:3838/soorena/`
+**SOORENA application**:
+- Example: `http://INSTANCE_IP:3838/soorena/`
 
-Both run side-by-side with no conflicts!
+Both run concurrently without conflicts.
 
 ---
 
-## When You CANNOT Use an Existing Droplet
+## When New Infrastructure is Required
 
-You'll need a new droplet if:
+Create new infrastructure if:
 
-❌ **Not enough RAM**: Less than 2 GB
+**Insufficient RAM**: Less than 2 GB
 - Check with: `free -h`
-- Solution: Ask them to resize it, or create a new one
+- Solution: Resize instance or create new infrastructure
 
-❌ **Not enough disk space**: Less than 10 GB free
+**Insufficient disk space**: Less than 10 GB free
 - Check with: `df -h /`
-- Solution: Ask them to resize it, or create a new one
+- Solution: Resize storage or create new infrastructure
 
-❌ **Wrong OS**: Not Ubuntu (e.g., CentOS, Debian, etc.)
+**Incompatible OS**: Not Ubuntu (e.g., CentOS, Debian)
 - Check with: `lsb_release -a`
-- Solution: Create a new droplet with Ubuntu 22.04 or 24.04
+- Solution: Create new instance with Ubuntu 22.04 or 24.04
 
-❌ **Port 3838 already in use**: Something else using port 3838
+**Port conflict**: Port 3838 already in use
 - Check with: `sudo netstat -tulpn | grep 3838`
-- Solution: Either stop the conflicting service or create a new droplet
+- Solution: Stop conflicting service or create new infrastructure
 
-❌ **They don't want to give you access**: Understandable!
-- Solution: They create a new droplet just for you
+**Access restrictions**: Cannot obtain necessary access
+- Solution: Create dedicated infrastructure
 
 ---
 
-## Message to Send Your Friend
+## Infrastructure Verification
 
-```
-Hey! I checked and I can actually use your existing droplet if:
+To verify existing infrastructure compatibility, run:
 
-1. It has at least 2 GB RAM (4 GB is better)
-2. It has at least 10 GB free disk space
-3. It's running Ubuntu 20.04, 22.04, or 24.04
-4. You're comfortable giving me SSH access
+```bash
+# Check RAM
+free -h
 
-My app will run on port 3838, so it won't interfere with anything you have running.
+# Check disk space
+df -h
 
-Can you check these specs for me?
-- Run: free -h (to check RAM)
-- Run: df -h (to check disk space)
-- Run: lsb_release -a (to check OS)
+# Check OS version
+lsb_release -a
 
-If it meets these requirements, we can use your existing droplet!
-If not, we'll need to create a new one.
+# Check port availability
+sudo netstat -tulpn | grep 3838
 ```
 
----
-
-## Sharing Cost
-
-If using their existing droplet:
-
-**Good news**: No extra cost!
-- Digital Ocean charges by droplet size, not by apps
-- Your app shares the existing droplet's resources
-- No additional monthly charge
-
-**Optional**: You could offer to:
-- Split the monthly cost with them
-- Pay them a portion (e.g., $5-10/month)
-- Cover any upgrade costs if they need to resize for you
+If all requirements are met, proceed with installation. Otherwise, create new infrastructure.
 
 ---
 
-## Best Practice: Separate Droplet vs Shared
+## Resource Sharing
 
-### Use Existing Droplet If:
-✅ They have plenty of spare resources (RAM/disk)
-✅ Their apps are low-traffic
-✅ They're comfortable sharing
-✅ You want to save money
+When using existing infrastructure:
 
-### Create New Droplet If:
-✅ Their droplet is near capacity
-✅ They prefer separation/isolation
-✅ You want full control
-✅ You need guaranteed performance
+- Cloud providers charge by instance size, not by applications
+- SOORENA shares existing instance resources
+- No additional infrastructure charges
 
-**My recommendation**: If they have a 4+ GB droplet with space, share it. If they have a 1-2 GB droplet, create a new one.
+Resource requirements:
+- ~8-10 GB disk space
+- Shared RAM and CPU resources
+- Minimal network bandwidth
 
 ---
 
-## Quick Decision Tree
+## Infrastructure Decision Matrix
+
+### Use Existing Infrastructure If:
+- Adequate spare resources (RAM/disk)
+- Low-traffic applications
+- Shared access is acceptable
+- Resource optimization is desired
+
+### Create New Infrastructure If:
+- Instance near capacity
+- Isolation preferred
+- Full control required
+- Guaranteed performance needed
+
+**Technical Recommendation**:
+- 4+ GB instance with adequate free space: Suitable for sharing
+- 1-2 GB instance: Create dedicated infrastructure
+
+---
+
+## Decision Tree
 
 ```
-Does friend have existing droplet?
+Existing infrastructure available?
 │
-├─ NO → Create new droplet (see INSTRUCTIONS_FOR_FRIEND.md)
+├─ NO → Create new infrastructure (see DEPLOYMENT_GUIDE.md)
 │
-└─ YES → Check specs:
+└─ YES → Check specifications:
     │
-    ├─ Has 4+ GB RAM & 15+ GB free → Use existing! (Perfect)
+    ├─ 4+ GB RAM & 15+ GB free → Use existing (Optimal)
     │
-    ├─ Has 2-4 GB RAM & 10+ GB free → Use existing (will work)
+    ├─ 2-4 GB RAM & 10+ GB free → Use existing (Acceptable)
     │
-    └─ Less than 2 GB RAM or < 10 GB free → Create new droplet
+    └─ Less than 2 GB RAM or < 10 GB free → Create new infrastructure
 ```
 
 ---
 
-**Bottom line**: Most likely you can use their existing droplet! Just need to verify the specs first.
+Verify specifications before proceeding with installation.

@@ -71,7 +71,7 @@ The script will:
 7. ✓ Configure firewall
 8. ✓ Optimize Shiny Server for low memory
 
-☕ This is a good time for coffee! It takes 15-20 minutes on 1 GB RAM.
+Note: This process takes 15-20 minutes on 1 GB RAM.
 
 ---
 
@@ -96,7 +96,7 @@ cd /Users/halao/Desktop/SOORENA_2/deployment
 
 Enter your IP and SSH key path when prompted.
 
-⚠️ **Database upload will take 10-20 minutes** (6.1 GB file)
+**Note:** Database upload will take 10-20 minutes (6.1 GB file)
 
 ---
 
@@ -104,17 +104,17 @@ Enter your IP and SSH key path when prompted.
 
 ### What to Expect:
 
-✅ **Will work** - Your app will function correctly
-⚠️ **Slower** - First load takes 30-60 seconds
-⚠️ **Limited concurrent users** - Best for 1-3 users at a time
-✅ **Stable** - Once loaded, queries are reasonably fast
+- **Functionality** - App will function correctly
+- **Performance** - First load takes 30-60 seconds
+- **Concurrency** - Best for 1-3 users at a time
+- **Stability** - Once loaded, queries are reasonably fast
 
-### Optimization Applied:
+### Optimizations Applied:
 
-- ✓ 4 GB swap space added
-- ✓ Shiny Server configured for low memory
-- ✓ R packages installed carefully to avoid crashes
-- ✓ Database uses SQLite (very memory efficient)
+- 4 GB swap space added
+- Shiny Server configured for low memory
+- R packages installed carefully to avoid crashes
+- Database uses SQLite (very memory efficient)
 
 ---
 
@@ -185,10 +185,8 @@ When you get Ampere:
 
 ## Next Steps
 
-1. ✅ Configure firewall (port 3838) in Oracle Cloud Console
-2. ✅ SSH into server
-3. ✅ Run `server_setup_1GB.sh`
-4. ✅ Deploy app with `deploy_to_oracle.sh`
-5. ✅ Access your app!
-
-**You're almost there!** 🚀
+1. Configure firewall (port 3838) in Oracle Cloud Console
+2. SSH into server
+3. Run `server_setup_1GB.sh`
+4. Deploy app with `deploy_to_oracle.sh`
+5. Access your app
