@@ -225,36 +225,3 @@ Rscript -e "shiny::runApp('app.R')"
 ```
 
 Open your browser and navigate to the displayed URL (typically `http://127.0.0.1:XXXX`)
-
-## 10. Reproducibility
-
-To reproduce the datasets and app artifacts from scratch:
-
-1. Create the environment as described in Section 2.
-2. Ensure raw data is available in `data/raw/`:
-   - `pubmed.rds`
-   - `autoregulatoryDB.rds`
-3. Run the full pipeline:
-
-```bash
-bash scripts/shell/run_complete_pipeline.sh
-```
-
-4. Build the SQLite database used by the Shiny app:
-
-```bash
-python scripts/python/data_processing/create_sqlite_db.py
-```
-
-**Notes:**
-- Reproducible sampling uses `RANDOM_SEED` from `config.py` (default: 42).
-- Stage 1 training saves the sampled negatives and unused papers to
-  `data/processed/stage1_unlabeled_negatives.csv` and
-  `data/processed/stage1_unlabeled_unused.csv` for exact re-runs.
-
-## 11. App Patch Notes
-
-### 0.0.10
-- Updated the Statistics tabs design and added new tables
-- Refined the ontology design
-- Updated the About Us section
