@@ -9,6 +9,7 @@ __pycache__/
 *.pem
 *.p12
 *.pfx
+*.pub
 .env
 .env.*
 
