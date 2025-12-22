@@ -8,6 +8,7 @@ library(htmltools)   # for safe HTML rendering
 library(plotly)      # Creates interactive, dynamic, and web-friendly plots from ggplot or standalone
 library(ggplot2)
 library(shinycssloaders) # for loading spinners
+library(rsconnect)  # for deploying the app to shinyapps.io
 
 # Connect to SQLite Database
 cat("Connecting to SQLite database...\n")
@@ -293,7 +294,10 @@ ui <- navbarPage(
           }
           .stats-grid {
             display: grid;
-            gap: 16px;
+            gap: 44px;
+          }
+          .stats-grid + .stats-grid {
+            margin-top: 22px;
           }
           .stats-grid--top {
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -309,17 +313,26 @@ ui <- navbarPage(
             border: 1px solid var(--stats-border);
             border-radius: 14px;
             padding: 16px;
-            box-shadow: var(--stats-shadow);
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
             animation: statsFadeUp 0.6s ease;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            z-index: 0;
           }
           .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+            border-color: rgba(42, 157, 143, 0.35);
+            z-index: 2;
           }
           .stat-card--kpi {
             border-left: 4px solid var(--stats-accent);
             background: linear-gradient(135deg, #ffffff 0%, #f4fbf9 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 6px;
           }
           .stat-card__header {
             display: flex;
@@ -349,9 +362,12 @@ ui <- navbarPage(
           .stat-value {
             margin-top: 8px;
             margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
           #stat_total_papers {
-            font-size: 38px;
+            font-size: 44px;
             font-weight: 700;
             color: var(--stats-ink);
             line-height: 1;
