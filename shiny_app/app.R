@@ -305,6 +305,7 @@ ui <- navbarPage(
             transition: box-shadow 0.2s ease, border-color 0.2s ease;
             position: relative;
             z-index: 0;
+            min-width: 0;
           }
           .stat-card:hover {
             box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
@@ -383,6 +384,16 @@ ui <- navbarPage(
           .stats-table-card .table {
             margin-bottom: 0;
           }
+          .plotly, .plot-container, .js-plotly-plot, .html-widget {
+            max-width: 100%;
+          }
+          .ontology-panel {
+            overflow-x: hidden;
+          }
+          .ontology-tree {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
           @media (max-width: 768px) {
             .header-section {
               flex-direction: column;
@@ -440,6 +451,17 @@ ui <- navbarPage(
             .stats-grid {
               gap: 20px;
             }
+            .stats-grid--top,
+            .stats-grid--two,
+            .stats-grid--one {
+              grid-template-columns: 1fr;
+            }
+            .stat-card__title {
+              font-size: 14px;
+            }
+            .stat-card__meta {
+              font-size: 10px;
+            }
             .stat-value-centered #stat_total_papers {
               font-size: 36px;
             }
@@ -448,6 +470,47 @@ ui <- navbarPage(
             }
             .table {
               font-size: 12px;
+            }
+            .plotly, .plot-container, .js-plotly-plot, .html-widget {
+              width: 100% !important;
+            }
+            .ontology-panel {
+              margin: 12px !important;
+              padding: 16px !important;
+              font-size: 14px !important;
+              line-height: 1.6 !important;
+            }
+            .ontology-panel h2 {
+              font-size: 20px !important;
+            }
+            .ontology-panel h3 {
+              font-size: 16px !important;
+            }
+            .ontology-panel h4 {
+              font-size: 16px !important;
+            }
+            .ontology-tree {
+              margin: 12px 0 !important;
+              padding: 16px !important;
+            }
+            .mechanism-box {
+              margin: 18px 0 !important;
+              padding: 16px !important;
+            }
+            .team-grid {
+              gap: 16px !important;
+            }
+            .team-card {
+              flex: 1 1 100% !important;
+              max-width: 320px;
+              width: 100%;
+              margin: 0 auto;
+            }
+            .about-hero {
+              margin: 24px 0 32px 0 !important;
+            }
+            .about-description {
+              margin: 0 auto 32px auto !important;
             }
           }
           @media (max-width: 480px) {
@@ -659,7 +722,7 @@ ui <- navbarPage(
         "))
       ),
 
-      div(style = "
+      div(class = "ontology-panel", style = "
          padding: 30px;
          background: #ffffff;
          border-radius: 12px;
@@ -677,7 +740,7 @@ ui <- navbarPage(
           # Ontology Tree
           h3("Hierarchical Structure", style = "color: #1a2332; margin-top: 40px; font-weight: 600;"),
 
-          div(style = "
+          div(class = "ontology-tree", style = "
             background: #ffffff;
             padding: 30px;
             border-radius: 8px;
@@ -974,11 +1037,11 @@ ui <- navbarPage(
   # Tab: About Us
   tabPanel(
     title = "About Us",
-    fluidPage(
+    fluidPage(class = "about-page",
       header_ui,
 
       # Page Title
-      div(
+      div(class = "about-hero",
         style = "text-align: center; margin: 40px 0 60px 0;",
         h1("About SOORENA", style = "font-size: 2.5em; font-weight: 600; color: #2c3e50; margin-bottom: 15px;"),
         p("Self-lOOp containing or autoREgulatory Nodes in biological network Analysis",
@@ -986,7 +1049,7 @@ ui <- navbarPage(
       ),
 
       # Project Description
-      div(
+      div(class = "about-description",
         style = "max-width: 900px; margin: 0 auto 60px auto; padding: 0 20px;",
         p("SOORENA is a comprehensive database for exploring autoregulatory mechanisms in proteins.
           Our machine learning-powered platform analyzes millions of scientific publications to identify
@@ -996,22 +1059,22 @@ ui <- navbarPage(
       ),
 
       # Team Section Header
-      div(
+      div(class = "about-team-header",
         style = "text-align: center; margin: 60px 0 40px 0;",
         h2("Project Contributors", style = "font-size: 2em; font-weight: 600; color: #2c3e50; margin-bottom: 10px;"),
         div(style = "width: 80px; height: 4px; background: #3498db; margin: 0 auto;")
       ),
 
       # Team Members Grid
-      div(
+      div(class = "about-team-grid",
         style = "max-width: 1200px; margin: 0 auto; padding: 0 20px;",
 
         # Row 1: Hala and Mohieddin
-        div(
+        div(class = "team-grid",
           style = "display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-bottom: 40px;",
 
           # Hala Arar
-          div(
+          div(class = "team-card",
             style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
             div(
               style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
@@ -1026,7 +1089,7 @@ ui <- navbarPage(
           ),
 
           # Mohieddin Jafari
-          div(
+          div(class = "team-card",
             style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
             div(
               style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
@@ -1043,11 +1106,11 @@ ui <- navbarPage(
         ),
 
         # Row 2: Payman and Jehad
-        div(
+        div(class = "team-grid",
           style = "display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;",
 
           # Payman Nickchi
-          div(
+          div(class = "team-card",
             style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
             div(
               style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
@@ -1062,7 +1125,7 @@ ui <- navbarPage(
           ),
 
           # Jehad Aldahdooh
-          div(
+          div(class = "team-card",
             style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
             div(
               style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
