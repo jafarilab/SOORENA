@@ -297,8 +297,8 @@ ui <- navbarPage(
             div(style = "margin-bottom: 10px; padding: 10px; background-color: #e8f4f8; border-left: 4px solid #3498db; border-radius: 4px;",
                 uiOutput("table_info_message")),
             div(style = "display: flex; gap: 10px; align-items: center; margin-bottom: 10px;",
-                actionButton("prev_page", "Previous 10k", class = "btn-default"),
-                actionButton("next_page", "Next 10k", class = "btn-default"),
+                actionButton("prev_page", "Previous 50", class = "btn-default"),
+                actionButton("next_page", "Next 50", class = "btn-default"),
                 textOutput("page_status", inline = TRUE)
             ),
             withSpinner(DTOutput("result_table"),
