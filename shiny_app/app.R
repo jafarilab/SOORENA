@@ -877,18 +877,122 @@ ui <- navbarPage(
     title = "About Us",
     fluidPage(
       header_ui,
-      h2("Project Contributors"),
-      tags$ul(
-        tags$li("Alexandra Zhou – University of British Columbia"),
-        tags$li("Hala Arar – University of British Columbia"),
-        tags$li("Mingyang Zhang – University of British Columbia"),
-        tags$li("Zheng He – University of British Columbia")
+
+      # Page Title
+      div(
+        style = "text-align: center; margin: 40px 0 60px 0;",
+        h1("About SOORENA", style = "font-size: 2.5em; font-weight: 600; color: #2c3e50; margin-bottom: 15px;"),
+        p("Self-lOOp containing or autoREgulatory Nodes in biological network Analysis",
+          style = "font-size: 1.2em; color: #7f8c8d; font-style: italic;")
       ),
-      h2("Mentor & Partner"),
-      tags$ul(
-        tags$li("Mohieddin Jafari – University of Helsinki (Partner)"),
-        tags$li("Payman Nickchi – University of British Columbia (Mentor)")
-      )
+
+      # Project Description
+      div(
+        style = "max-width: 900px; margin: 0 auto 60px auto; padding: 0 20px;",
+        p("SOORENA is a comprehensive database for exploring autoregulatory mechanisms in proteins.
+          Our machine learning-powered platform analyzes millions of scientific publications to identify
+          and classify autoregulatory protein mechanisms, providing researchers with unprecedented access
+          to this critical biological information.",
+          style = "font-size: 1.1em; line-height: 1.8; color: #34495e; text-align: center;")
+      ),
+
+      # Team Section Header
+      div(
+        style = "text-align: center; margin: 60px 0 40px 0;",
+        h2("Project Contributors", style = "font-size: 2em; font-weight: 600; color: #2c3e50; margin-bottom: 10px;"),
+        div(style = "width: 80px; height: 4px; background: #3498db; margin: 0 auto;")
+      ),
+
+      # Team Members Grid
+      div(
+        style = "max-width: 1200px; margin: 0 auto; padding: 0 20px;",
+
+        # Row 1: Hala and Mohieddin
+        div(
+          style = "display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-bottom: 40px;",
+
+          # Hala Arar
+          div(
+            style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
+            div(
+              style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
+              tags$img(src = "images/team/hala_arar.jpg",
+                      style = "width: 100%; height: 100%; object-fit: cover;",
+                      alt = "Hala Arar")
+            ),
+            h3("Hala Arar", style = "font-size: 1.4em; font-weight: 600; color: #2c3e50; margin: 15px 0 10px 0;"),
+            p("Department of Statistics", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("University of British Columbia", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("Vancouver, BC, Canada", style = "font-size: 0.9em; color: #95a5a6; margin: 5px 0;")
+          ),
+
+          # Mohieddin Jafari
+          div(
+            style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
+            div(
+              style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
+              tags$img(src = "images/team/mohieddin_jafari.jpg",
+                      style = "width: 100%; height: 100%; object-fit: cover;",
+                      alt = "Mohieddin Jafari")
+            ),
+            h3("Mohieddin Jafari", style = "font-size: 1.4em; font-weight: 600; color: #2c3e50; margin: 15px 0 10px 0;"),
+            p("Department of Biochemistry and Developmental Biology", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("University of Helsinki, Finland", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("Faculty of Medicine and Health Technology, Tampere University, Finland", style = "font-size: 0.9em; color: #95a5a6; margin: 5px 0;"),
+            p("Tampere Institute for Advanced Study, Finland", style = "font-size: 0.9em; color: #95a5a6; margin: 5px 0;")
+          )
+        ),
+
+        # Row 2: Payman and Jehad
+        div(
+          style = "display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;",
+
+          # Payman Nickchi
+          div(
+            style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
+            div(
+              style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
+              tags$img(src = "images/team/payman_nickchi.jpg",
+                      style = "width: 100%; height: 100%; object-fit: cover;",
+                      alt = "Payman Nickchi")
+            ),
+            h3("Payman Nickchi", style = "font-size: 1.4em; font-weight: 600; color: #2c3e50; margin: 15px 0 10px 0;"),
+            p("Department of Statistics", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("University of British Columbia", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("Vancouver, BC, Canada", style = "font-size: 0.9em; color: #95a5a6; margin: 5px 0;")
+          ),
+
+          # Jehad Aldahdooh
+          div(
+            style = "flex: 0 1 280px; text-align: center; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;",
+            div(
+              style = "width: 180px; height: 180px; margin: 0 auto 20px auto; border-radius: 50%; overflow: hidden; border: 4px solid #3498db;",
+              tags$img(src = "images/team/jehad_aldahdooh.jpg",
+                      style = "width: 100%; height: 100%; object-fit: cover;",
+                      alt = "Jehad Aldahdooh")
+            ),
+            h3("Jehad Aldahdooh", style = "font-size: 1.4em; font-weight: 600; color: #2c3e50; margin: 15px 0 10px 0;"),
+            p("Research Programs Unit", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("University of Helsinki", style = "font-size: 0.95em; color: #7f8c8d; margin: 5px 0;"),
+            p("Helsinki, Finland", style = "font-size: 0.9em; color: #95a5a6; margin: 5px 0;")
+          )
+        )
+      ),
+
+      # Acknowledgements Section
+      div(
+        style = "max-width: 900px; margin: 80px auto 40px auto; padding: 30px; background: #f8f9fa; border-radius: 10px;",
+        h3("Acknowledgements", style = "font-size: 1.6em; font-weight: 600; color: #2c3e50; margin-bottom: 20px; text-align: center;"),
+        p("We would like to thank the following individuals for their valuable contributions to this project:",
+          style = "font-size: 1.05em; color: #34495e; text-align: center; margin-bottom: 15px;"),
+        div(
+          style = "text-align: center; font-size: 1.05em; color: #7f8c8d; line-height: 1.8;",
+          p("Zheng He • Yining Zhou • Mingyang Zhang", style = "margin: 10px 0;")
+        )
+      ),
+
+      # Footer spacing
+      div(style = "height: 60px;")
     )
   )
 )
