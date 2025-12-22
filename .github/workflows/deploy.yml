@@ -1,0 +1,39 @@
+name: Deploy Shiny App
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      APP_DIR: /srv/shiny-server/soorena
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DO_SSH_KEY }}
+
+      - name: Add host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DO_HOST }} >> ~/.ssh/known_hosts
+
+      # Note: This does not upload the SQLite database (predictions.db).
+      - name: Sync app files
+        run: |
+          rsync -avz shiny_app/app.R ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:${APP_DIR}/
+          rsync -avz --delete shiny_app/www/ ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:${APP_DIR}/www/
+
+      - name: Fix permissions and restart Shiny Server
+        run: |
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} "chown -R shiny:shiny ${APP_DIR} && chmod -R 755 ${APP_DIR} && systemctl restart shiny-server"
