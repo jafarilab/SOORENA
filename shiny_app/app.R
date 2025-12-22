@@ -287,21 +287,21 @@ ui <- navbarPage(
     )
   ),
 
-        # Download Button
-        div(style = "margin: 0 30px;",
-            downloadButton("download_csv", "Download CSV", class = "btn-primary mb-3")
-        ),
-
         # Display Table with loading spinner
         div(style = "margin: 0 30px 20px 30px;",
-            div(style = "display: flex; gap: 10px; align-items: center; margin-bottom: 10px;",
+            div(
+              style = "display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;",
+              div(
+                style = "display: flex; align-items: center; gap: 10px;",
                 selectInput("rows_per_page", "Rows per page",
                             choices = PAGE_SIZE_OPTIONS,
                             selected = DEFAULT_PAGE_SIZE,
-                            width = "130px"),
+                            width = "140px"),
                 actionButton("prev_page", "Previous", class = "btn-default"),
                 actionButton("next_page", "Next", class = "btn-default"),
                 textOutput("page_status", inline = TRUE)
+              ),
+              downloadButton("download_csv", "Download CSV", class = "btn-primary mb-0")
             ),
             withSpinner(DTOutput("result_table"),
                        type = 6,
