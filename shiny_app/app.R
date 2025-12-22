@@ -19,13 +19,19 @@ if (!file.exists(DB_PATH)) {
 }
 
 # Create database connection
-conn <- dbConnect(RSQLite::SQLite(), DB_PATH)
+conn_info <- dbConnect(RSQLite::SQLite(), DB_PATH)
 
 # Get total row count
-total_rows <- dbGetQuery(conn, "SELECT COUNT(*) as count FROM predictions")$count
+total_rows <- dbGetQuery(conn_info, "SELECT COUNT(*) as count FROM predictions")$count
 cat(paste("Connected to database with", format(total_rows, big.mark=","), "rows\n"))
 
 cat("Database ready!\n")
+
+# Close the initial info connection; each Shiny session will open its own
+dbDisconnect(conn_info)
+
+# How many rows to fetch per page for the main table
+PAGE_SIZE <- 10000
 
 # Ontology Info Table (authoritative)
 ontology_info <- list(
@@ -290,6 +296,11 @@ ui <- navbarPage(
             # Info message about row counts
             div(style = "margin-bottom: 10px; padding: 10px; background-color: #e8f4f8; border-left: 4px solid #3498db; border-radius: 4px;",
                 uiOutput("table_info_message")),
+            div(style = "display: flex; gap: 10px; align-items: center; margin-bottom: 10px;",
+                actionButton("prev_page", "Previous 10k", class = "btn-default"),
+                actionButton("next_page", "Next 10k", class = "btn-default"),
+                textOutput("page_status", inline = TRUE)
+            ),
             withSpinner(DTOutput("result_table"),
                        type = 6,
                        color = "#2c3e50",
@@ -697,6 +708,118 @@ ui <- navbarPage(
 # Define Server Logic
 server <- function(input, output, session) {
 
+  # Open a per-session database connection
+  conn <- dbConnect(RSQLite::SQLite(), DB_PATH)
+
+  # Track current page for server-side pagination
+  current_page <- reactiveVal(1)
+
+  # Build WHERE clause and parameter list based on current filters
+  build_filter_query <- function() {
+    query <- "FROM predictions WHERE 1=1"
+    params <- list()
+
+    # Journal filter
+    if (!is.null(input$journal) && !"All" %in% input$journal && length(input$journal) > 0) {
+      placeholders <- paste(rep("?", length(input$journal)), collapse = ",")
+      query <- paste(query, "AND Journal IN (", placeholders, ")")
+      params <- c(params, as.list(input$journal))
+    }
+
+    # Type filter
+    if (!is.null(input$type) && !"All" %in% input$type && length(input$type) > 0) {
+      placeholders <- paste(rep("?", length(input$type)), collapse = ",")
+      query <- paste(query, "AND Autoregulatory_Type IN (", placeholders, ")")
+      params <- c(params, as.list(input$type))
+    }
+
+    # OS filter
+    if (!is.null(input$os) && !"All" %in% input$os && length(input$os) > 0) {
+      placeholders <- paste(rep("?", length(input$os)), collapse = ",")
+      query <- paste(query, "AND OS IN (", placeholders, ")")
+      params <- c(params, as.list(input$os))
+    }
+
+    # AC search
+    if (!is.null(input$ac) && nzchar(input$ac)) {
+      query <- paste(query, "AND AC LIKE ?")
+      params <- c(params, paste0("%", input$ac, "%"))
+    }
+
+    # Protein ID search
+    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
+      query <- paste(query, "AND Protein_ID LIKE ?")
+      params <- c(params, paste0("%", input$protein_id, "%"))
+    }
+
+    # PMID search
+    if (!is.null(input$pmid) && nzchar(input$pmid)) {
+      query <- paste(query, "AND PMID LIKE ?")
+      params <- c(params, paste0("%", input$pmid, "%"))
+    }
+
+    # Author search
+    if (!is.null(input$author) && nzchar(input$author)) {
+      query <- paste(query, "AND Authors LIKE ?")
+      params <- c(params, paste0("%", input$author, "%"))
+    }
+
+    # Has Mechanism filter
+    if (!is.null(input$has_mechanism) && input$has_mechanism != "All") {
+      query <- paste(query, "AND Has_Mechanism = ?")
+      params <- c(params, input$has_mechanism)
+    }
+
+    # Source filter
+    if (!is.null(input$source) && input$source != "All") {
+      query <- paste(query, "AND Source = ?")
+      params <- c(params, input$source)
+    }
+
+    # Year filter
+    if (!is.null(input$year) && !"All" %in% input$year && length(input$year) > 0) {
+      placeholders <- paste(rep("?", length(input$year)), collapse = ",")
+      query <- paste(query, "AND Year IN (", placeholders, ")")
+      params <- c(params, as.list(input$year))
+    }
+
+    # Month filter
+    if (!is.null(input$month) && !"All" %in% input$month && length(input$month) > 0) {
+      placeholders <- paste(rep("?", length(input$month)), collapse = ",")
+      query <- paste(query, "AND Month IN (", placeholders, ")")
+      params <- c(params, as.list(input$month))
+    }
+
+    # Title / Abstract search
+    if (!is.null(input$search) && nzchar(input$search)) {
+      query <- paste(query, "AND (Title LIKE ? OR Abstract LIKE ?)")
+      search_pattern <- paste0("%", input$search, "%")
+      params <- c(params, search_pattern, search_pattern)
+    }
+
+    list(where = query, params = params)
+  }
+
+  # Simple helper to safely truncate and escape text while keeping the magnifier button
+  safe_cell <- function(text, max_chars, field) {
+    vapply(seq_along(text), function(i) {
+      val <- text[i]
+      if (is.na(val) || trimws(val) == "") return("—")
+      trimmed <- trimws(val)
+      escaped_full <- htmltools::htmlEscape(trimmed)
+      if (nchar(trimmed) > max_chars) {
+        truncated <- htmltools::htmlEscape(substr(trimmed, 1, max_chars))
+        paste0(
+          truncated, "... ",
+          '<button class=\"btn btn-link btn-sm view-btn\" data-field=\"', field,
+          '\" data-text=\"', escaped_full, '\">🔍</button>'
+        )
+      } else {
+        escaped_full
+      }
+    }, character(1))
+  }
+
   # Populate filter dropdowns on demand (server-side)
   observe({
     # Only load unique values when user focuses on dropdown
@@ -715,6 +838,13 @@ server <- function(input, output, session) {
     updateSelectizeInput(session, "year",
       choices = c("All" = "All", dbGetQuery(conn, "SELECT DISTINCT Year FROM predictions WHERE Year IS NOT NULL ORDER BY Year DESC")$Year),
       server = TRUE)
+  })
+
+  # Reset pagination whenever filters change
+  observeEvent(list(input$journal, input$type, input$os, input$ac, input$protein_id,
+                    input$pmid, input$author, input$has_mechanism, input$source,
+                    input$year, input$month, input$search), {
+    current_page(1)
   })
 
   # Download csv button
@@ -761,91 +891,11 @@ server <- function(input, output, session) {
 
   # Get total count of matching rows (for "Showing X of Y" display)
   total_count <- reactive({
-    # Build same query but use COUNT(*) instead of SELECT *
-    query <- "SELECT COUNT(*) as count FROM predictions WHERE 1=1"
-    params <- list()
+    filters <- build_filter_query()
+    query <- paste("SELECT COUNT(*) as count", filters$where)
 
-    # Journal filter
-    if (!is.null(input$journal) && !"All" %in% input$journal && length(input$journal) > 0) {
-      placeholders <- paste(rep("?", length(input$journal)), collapse = ",")
-      query <- paste(query, "AND Journal IN (", placeholders, ")")
-      params <- c(params, as.list(input$journal))
-    }
-
-    # Type filter
-    if (!is.null(input$type) && !"All" %in% input$type && length(input$type) > 0) {
-      placeholders <- paste(rep("?", length(input$type)), collapse = ",")
-      query <- paste(query, "AND Autoregulatory_Type IN (", placeholders, ")")
-      params <- c(params, as.list(input$type))
-    }
-
-    # OS filter
-    if (!is.null(input$os) && !"All" %in% input$os && length(input$os) > 0) {
-      placeholders <- paste(rep("?", length(input$os)), collapse = ",")
-      query <- paste(query, "AND OS IN (", placeholders, ")")
-      params <- c(params, as.list(input$os))
-    }
-
-    # AC search
-    if (!is.null(input$ac) && nzchar(input$ac)) {
-      query <- paste(query, "AND AC LIKE ?")
-      params <- c(params, paste0("%", input$ac, "%"))
-    }
-
-    # Protein ID search
-    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
-      query <- paste(query, "AND Protein_ID LIKE ?")
-      params <- c(params, paste0("%", input$protein_id, "%"))
-    }
-
-    # PMID search
-    if (!is.null(input$pmid) && nzchar(input$pmid)) {
-      query <- paste(query, "AND PMID LIKE ?")
-      params <- c(params, paste0("%", input$pmid, "%"))
-    }
-
-    # Author search
-    if (!is.null(input$author) && nzchar(input$author)) {
-      query <- paste(query, "AND Authors LIKE ?")
-      params <- c(params, paste0("%", input$author, "%"))
-    }
-
-    # Has Mechanism filter
-    if (!is.null(input$has_mechanism) && input$has_mechanism != "All") {
-      query <- paste(query, "AND Has_Mechanism = ?")
-      params <- c(params, input$has_mechanism)
-    }
-
-    # Source filter
-    if (!is.null(input$source) && input$source != "All") {
-      query <- paste(query, "AND Source = ?")
-      params <- c(params, input$source)
-    }
-
-    # Year filter
-    if (!is.null(input$year) && !"All" %in% input$year && length(input$year) > 0) {
-      placeholders <- paste(rep("?", length(input$year)), collapse = ",")
-      query <- paste(query, "AND Year IN (", placeholders, ")")
-      params <- c(params, as.list(input$year))
-    }
-
-    # Month filter
-    if (!is.null(input$month) && !"All" %in% input$month && length(input$month) > 0) {
-      placeholders <- paste(rep("?", length(input$month)), collapse = ",")
-      query <- paste(query, "AND Month IN (", placeholders, ")")
-      params <- c(params, as.list(input$month))
-    }
-
-    # Title / Abstract search
-    if (!is.null(input$search) && nzchar(input$search)) {
-      query <- paste(query, "AND (Title LIKE ? OR Abstract LIKE ?)")
-      search_pattern <- paste0("%", input$search, "%")
-      params <- c(params, search_pattern, search_pattern)
-    }
-
-    # Execute COUNT query
-    if (length(params) > 0) {
-      count_result <- dbGetQuery(conn, query, params = params)
+    if (length(filters$params) > 0) {
+      count_result <- dbGetQuery(conn, query, params = filters$params)
     } else {
       count_result <- dbGetQuery(conn, query)
     }
@@ -855,98 +905,17 @@ server <- function(input, output, session) {
 
   # Filtering Logic - Build SQL query dynamically with LIMIT
   filtered_data <- reactive({
-    # Start with base query - LIMIT to 10000 rows for performance
-    query <- "SELECT * FROM predictions WHERE 1=1"
-    params <- list()
+    filters <- build_filter_query()
+    offset <- (current_page() - 1) * PAGE_SIZE
+    query <- paste(
+      "SELECT *",
+      filters$where,
+      "ORDER BY Title IS NULL, PMID",
+      "LIMIT ? OFFSET ?"
+    )
+    params <- c(filters$params, PAGE_SIZE, offset)
 
-    # Journal filter
-    if (!is.null(input$journal) && !"All" %in% input$journal && length(input$journal) > 0) {
-      placeholders <- paste(rep("?", length(input$journal)), collapse = ",")
-      query <- paste(query, "AND Journal IN (", placeholders, ")")
-      params <- c(params, as.list(input$journal))
-    }
-
-    # Type filter
-    if (!is.null(input$type) && !"All" %in% input$type && length(input$type) > 0) {
-      placeholders <- paste(rep("?", length(input$type)), collapse = ",")
-      query <- paste(query, "AND Autoregulatory_Type IN (", placeholders, ")")
-      params <- c(params, as.list(input$type))
-    }
-
-    # OS filter
-    if (!is.null(input$os) && !"All" %in% input$os && length(input$os) > 0) {
-      placeholders <- paste(rep("?", length(input$os)), collapse = ",")
-      query <- paste(query, "AND OS IN (", placeholders, ")")
-      params <- c(params, as.list(input$os))
-    }
-
-    # AC search
-    if (!is.null(input$ac) && nzchar(input$ac)) {
-      query <- paste(query, "AND AC LIKE ?")
-      params <- c(params, paste0("%", input$ac, "%"))
-    }
-
-    # Protein ID search
-    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
-      query <- paste(query, "AND Protein_ID LIKE ?")
-      params <- c(params, paste0("%", input$protein_id, "%"))
-    }
-
-    # PMID search
-    if (!is.null(input$pmid) && nzchar(input$pmid)) {
-      query <- paste(query, "AND PMID LIKE ?")
-      params <- c(params, paste0("%", input$pmid, "%"))
-    }
-
-    # Author search
-    if (!is.null(input$author) && nzchar(input$author)) {
-      query <- paste(query, "AND Authors LIKE ?")
-      params <- c(params, paste0("%", input$author, "%"))
-    }
-
-    # Has Mechanism filter
-    if (!is.null(input$has_mechanism) && input$has_mechanism != "All") {
-      query <- paste(query, "AND Has_Mechanism = ?")
-      params <- c(params, input$has_mechanism)
-    }
-
-    # Source filter
-    if (!is.null(input$source) && input$source != "All") {
-      query <- paste(query, "AND Source = ?")
-      params <- c(params, input$source)
-    }
-
-    # Year filter
-    if (!is.null(input$year) && !"All" %in% input$year && length(input$year) > 0) {
-      placeholders <- paste(rep("?", length(input$year)), collapse = ",")
-      query <- paste(query, "AND Year IN (", placeholders, ")")
-      params <- c(params, as.list(input$year))
-    }
-
-    # Month filter
-    if (!is.null(input$month) && !"All" %in% input$month && length(input$month) > 0) {
-      placeholders <- paste(rep("?", length(input$month)), collapse = ",")
-      query <- paste(query, "AND Month IN (", placeholders, ")")
-      params <- c(params, as.list(input$month))
-    }
-
-    # Title / Abstract search
-    if (!is.null(input$search) && nzchar(input$search)) {
-      query <- paste(query, "AND (Title LIKE ? OR Abstract LIKE ?)")
-      search_pattern <- paste0("%", input$search, "%")
-      params <- c(params, search_pattern, search_pattern)
-    }
-
-    # IMPORTANT: Always limit to prevent loading too many rows at once
-    # Load maximum 10,000 rows for performance (DT will paginate)
-    query <- paste(query, "LIMIT 10000")
-
-    # Execute query
-    if (length(params) > 0) {
-      result <- dbGetQuery(conn, query, params = params)
-    } else {
-      result <- dbGetQuery(conn, query)
-    }
+    result <- dbGetQuery(conn, query, params = params)
 
     # Convert column names back to spaces for display
     colnames(result) <- gsub("_", " ", colnames(result))
@@ -985,16 +954,57 @@ server <- function(input, output, session) {
     }
   })
 
+  observeEvent(input$next_page, {
+    req(total_count())
+    max_page <- max(ceiling(total_count() / PAGE_SIZE), 1)
+    if (current_page() < max_page) {
+      current_page(current_page() + 1)
+    }
+  })
+
+  observeEvent(input$prev_page, {
+    if (current_page() > 1) {
+      current_page(current_page() - 1)
+    }
+  })
+
+  observe({
+    total <- total_count()
+    max_page <- max(ceiling(total / PAGE_SIZE), 1)
+    if (current_page() > max_page) {
+      current_page(max_page)
+    }
+  })
+
+  output$page_status <- renderText({
+    total <- total_count()
+    max_page <- max(ceiling(total / PAGE_SIZE), 1)
+    paste0("Page ", current_page(), " of ", max_page)
+  })
+
   # Statistics tab outputs
   # Dataset statistics (reactive based on filtered data)
   output$stat_total_papers <- renderText({
-    data <- filtered_data()
-    format(nrow(data), big.mark = ",")
+    total <- total_count()
+    format(total, big.mark = ",")
   })
 
   output$stat_mechanism_plot <- renderPlotly({
-    data <- filtered_data()
-    counts <- table(data$`Has Mechanism`)
+    filters <- build_filter_query()
+    query <- paste(
+      "SELECT Has_Mechanism AS label, COUNT(*) as n",
+      filters$where,
+      "GROUP BY Has_Mechanism"
+    )
+    res <- if (length(filters$params) > 0) {
+      dbGetQuery(conn, query, params = filters$params)
+    } else {
+      dbGetQuery(conn, query)
+    }
+    if (nrow(res) == 0) {
+      res <- data.frame(label = character(0), n = numeric(0))
+    }
+    counts <- setNames(res$n, ifelse(is.na(res$label) | res$label == "", "Unknown", res$label))
     plot_ly(
       labels = names(counts),
       values = as.vector(counts),
@@ -1010,8 +1020,21 @@ server <- function(input, output, session) {
   })
 
   output$stat_source_plot <- renderPlotly({
-    data <- filtered_data()
-    counts <- table(data$Source)
+    filters <- build_filter_query()
+    query <- paste(
+      "SELECT Source AS label, COUNT(*) as n",
+      filters$where,
+      "GROUP BY Source"
+    )
+    res <- if (length(filters$params) > 0) {
+      dbGetQuery(conn, query, params = filters$params)
+    } else {
+      dbGetQuery(conn, query)
+    }
+    if (nrow(res) == 0) {
+      res <- data.frame(label = character(0), n = numeric(0))
+    }
+    counts <- setNames(res$n, ifelse(is.na(res$label) | res$label == "", "Unknown", res$label))
     plot_ly(
       labels = names(counts),
       values = as.vector(counts),
@@ -1027,12 +1050,23 @@ server <- function(input, output, session) {
   })
 
   output$stat_type_plot <- renderPlotly({
-    data <- filtered_data()
-    # Filter out non-autoregulatory entries
-    data <- data %>% filter(`Autoregulatory Type` != "non-autoregulatory")
-    type_counts <- as.data.frame(table(data$`Autoregulatory Type`))
-    colnames(type_counts) <- c("Type", "Count")
-    type_counts <- type_counts[order(type_counts$Count, decreasing = TRUE), ]
+    filters <- build_filter_query()
+    query <- paste(
+      "SELECT Autoregulatory_Type AS type, COUNT(*) as n",
+      filters$where,
+      "GROUP BY Autoregulatory_Type"
+    )
+    res <- if (length(filters$params) > 0) {
+      dbGetQuery(conn, query, params = filters$params)
+    } else {
+      dbGetQuery(conn, query)
+    }
+    res <- res %>% filter(!is.na(type) & trimws(type) != "" & tolower(trimws(type)) != "non-autoregulatory")
+    if (nrow(res) == 0) {
+      res <- data.frame(type = character(0), n = numeric(0))
+    }
+    colnames(res) <- c("Type", "Count")
+    type_counts <- res[order(res$Count, decreasing = TRUE), ]
 
     plot_ly(
       data = type_counts,
@@ -1052,10 +1086,20 @@ server <- function(input, output, session) {
   })
 
   output$stat_year_plot <- renderPlotly({
-    data <- filtered_data()
-    year_counts <- as.data.frame(table(data$Year))
-    colnames(year_counts) <- c("Year", "Count")
-    year_counts <- year_counts[year_counts$Year != "Unknown", ]
+    filters <- build_filter_query()
+    query <- paste(
+      "SELECT Year AS year, COUNT(*) as n",
+      filters$where,
+      "GROUP BY Year"
+    )
+    res <- if (length(filters$params) > 0) {
+      dbGetQuery(conn, query, params = filters$params)
+    } else {
+      dbGetQuery(conn, query)
+    }
+    res <- res %>% filter(!is.na(year) & year != "Unknown")
+    colnames(res) <- c("Year", "Count")
+    year_counts <- res
 
     if (nrow(year_counts) > 0) {
       year_counts$Year <- as.numeric(as.character(year_counts$Year))
@@ -1129,68 +1173,15 @@ output$result_table <- renderDT({
     `Has Mechanism`, `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
   )
 
-  data$AC <- ifelse(!is.na(data$AC) & nchar(data$AC) > 30,
-    paste0(substr(data$AC, 1, 30),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="AC" data-text="',
-           htmltools::htmlEscape(data$AC),'">🔍</button>'),
-    data$AC
-  )
-
-  data$`Protein Name` <- ifelse(!is.na(data$`Protein Name`) & nchar(data$`Protein Name`) > 50,
-    paste0(substr(data$`Protein Name`, 1, 50),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="Protein Name" data-text="',
-           htmltools::htmlEscape(data$`Protein Name`),'">🔍</button>'),
-    data$`Protein Name`
-  )
-
-  data$`Gene Name` <- ifelse(!is.na(data$`Gene Name`) & nchar(data$`Gene Name`) > 30,
-    paste0(substr(data$`Gene Name`, 1, 30),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="Gene Name" data-text="',
-           htmltools::htmlEscape(data$`Gene Name`),'">🔍</button>'),
-    data$`Gene Name`
-  )
-
-  data$`Protein ID` <- ifelse(!is.na(data$`Protein ID`) & nchar(data$`Protein ID`) > 25,
-    paste0(substr(data$`Protein ID`, 1, 25),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="Protein ID" data-text="',
-           htmltools::htmlEscape(data$`Protein ID`),'">🔍</button>'),
-    data$`Protein ID`
-  )
-
-  data$OS <- ifelse(!is.na(data$OS) & nchar(data$OS) > 40,
-    paste0(substr(data$OS, 1, 40),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="OS" data-text="',
-           htmltools::htmlEscape(data$OS),'">🔍</button>'),
-    data$OS
-  )
-
-  data$Title <- ifelse(!is.na(data$Title) & nchar(data$Title) > 50,
-    paste0(substr(data$Title, 1, 50),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="Title" data-text="',
-           htmltools::htmlEscape(data$Title),'">🔍</button>'),
-    data$Title
-  )
-
-  data$Abstract <- ifelse(!is.na(data$Abstract) & nchar(data$Abstract) > 50,
-    paste0(substr(data$Abstract, 1, 50),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="Abstract" data-text="',
-           htmltools::htmlEscape(data$Abstract),'">🔍</button>'),
-    data$Abstract
-  )
-
-  data$Journal <- ifelse(!is.na(data$Journal) & nchar(data$Journal) > 40,
-    paste0(substr(data$Journal, 1, 40),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="Journal" data-text="',
-           htmltools::htmlEscape(data$Journal),'">🔍</button>'),
-    data$Journal
-  )
-
-  data$Authors <- ifelse(!is.na(data$Authors) & nchar(data$Authors) > 50,
-    paste0(substr(data$Authors, 1, 50),
-           '... <button class="btn btn-link btn-sm view-btn" data-field="Authors" data-text="',
-           htmltools::htmlEscape(data$Authors),'">🔍</button>'),
-    data$Authors
-  )
+  data$AC <- safe_cell(data$AC, 30, "AC")
+  data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
+  data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
+  data$`Protein ID` <- safe_cell(data$`Protein ID`, 25, "Protein ID")
+  data$OS <- safe_cell(data$OS, 40, "OS")
+  data$Title <- safe_cell(data$Title, 50, "Title")
+  data$Abstract <- safe_cell(data$Abstract, 50, "Abstract")
+  data$Journal <- safe_cell(data$Journal, 40, "Journal")
+  data$Authors <- safe_cell(data$Authors, 50, "Authors")
 
   getOntologyDetails <- function(type) {
     if (is.na(type) || type == "non-autoregulatory" || trimws(type) == "") {
@@ -1213,13 +1204,19 @@ output$result_table <- renderDT({
     )
   }
 
+  type_values <- data$`Autoregulatory Type`
+  safe_types <- vapply(type_values, function(val) {
+    if (is.na(val)) return("")
+    htmltools::htmlEscape(val)
+  }, character(1))
+
   data$`Autoregulatory Type` <- ifelse(
-    is.na(data$`Autoregulatory Type`) | data$`Autoregulatory Type` == "non-autoregulatory",
-    data$`Autoregulatory Type`,
+    is.na(type_values) | type_values == "non-autoregulatory",
+    safe_types,
     paste0(
-      data$`Autoregulatory Type`,
+      safe_types,
       ' <button class="btn btn-link btn-sm view-btn" data-field="Autoregulatory Type" data-text="',
-      htmltools::htmlEscape(vapply(data$`Autoregulatory Type`, getOntologyDetails, character(1))),
+      htmltools::htmlEscape(vapply(type_values, getOntologyDetails, character(1))),
       '"><span style="font-size:14px;">🔍</span></button>'
     )
   )
@@ -1348,8 +1345,8 @@ output$result_table <- renderDT({
   })
 
   # Cleanup: Disconnect database when app stops
-  onStop(function() {
-    dbDisconnect(conn)
+  session$onSessionEnded(function() {
+    if (dbIsValid(conn)) dbDisconnect(conn)
     cat("Database connection closed\n")
   })
 }
