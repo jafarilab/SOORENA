@@ -310,16 +310,6 @@ ui <- navbarPage(
             border-color: rgba(42, 157, 143, 0.35);
             z-index: 2;
           }
-          .stat-card--kpi {
-            border-left: 4px solid var(--stats-accent);
-            background: linear-gradient(135deg, #ffffff 0%, #f4fbf9 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 6px;
-          }
           .stat-card__header {
             display: flex;
             align-items: baseline;
@@ -337,6 +327,17 @@ ui <- navbarPage(
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.4px;
+          }
+          .stat-card__value-large {
+            display: block;
+            margin-top: 12px;
+          }
+          .stat-card__value-large #stat_total_papers {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--stats-ink);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
           }
           .stat-label {
             color: var(--stats-muted);
@@ -489,10 +490,11 @@ ui <- navbarPage(
           div(class = "stats-pill", "Live filtered view")
         ),
         div(class = "stats-grid stats-grid--top",
-          div(class = "stat-card stat-card--kpi",
-            div(class = "stat-label", "Total matching papers"),
-            div(class = "stat-value", textOutput("stat_total_papers", inline = TRUE)),
-            div(class = "stat-meta", "Updates as filters change")
+          div(class = "stat-card stat-card--chart",
+            div(class = "stat-card__header",
+              h4("Total Matching Papers", class = "stat-card__title"),
+              span(class = "stat-card__value-large", textOutput("stat_total_papers", inline = TRUE))
+            )
           ),
           div(class = "stat-card stat-card--chart",
             div(class = "stat-card__header",
