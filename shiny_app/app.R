@@ -293,10 +293,7 @@ ui <- navbarPage(
         ),
 
         # Display Table with loading spinner
-            div(style = "margin: 0 30px 20px 30px;",
-            # Info message about row counts
-            div(style = "margin-bottom: 10px; padding: 10px; background-color: #e8f4f8; border-left: 4px solid #3498db; border-radius: 4px;",
-                uiOutput("table_info_message")),
+        div(style = "margin: 0 30px 20px 30px;",
             div(style = "display: flex; gap: 10px; align-items: center; margin-bottom: 10px;",
                 selectInput("rows_per_page", "Rows per page",
                             choices = PAGE_SIZE_OPTIONS,
@@ -969,32 +966,6 @@ server <- function(input, output, session) {
     }
 
     return(result)
-  })
-
-  # Info message about loaded rows
-  output$table_info_message <- renderUI({
-    data <- filtered_data()
-    total <- as.numeric(total_count()[1])
-    loaded <- nrow(data)
-    start_row <- if (loaded > 0) ((current_page() - 1) * page_size() + 1) else 0
-    end_row <- if (loaded > 0) min(start_row + loaded - 1, total) else 0
-
-    if (loaded == 0 || is.na(total) || total <= 0) {
-      return(HTML("<b>No rows match the current filters.</b>"))
-    }
-
-    if (loaded < total) {
-      HTML(paste0(
-        "<b>Showing rows ", format(start_row, big.mark = ","), "–", format(end_row, big.mark = ","), " of ",
-        format(total, big.mark = ","), " total rows</b><br>",
-        "<small>Apply filters to narrow results and see all matching rows. ",
-        "Statistics tab shows data from all ", format(total, big.mark = ","), " rows.</small>"
-      ))
-    } else {
-      HTML(paste0(
-        "<b>Showing all ", format(loaded, big.mark = ","), " matching rows</b>"
-      ))
-    }
   })
 
   observeEvent(input$next_page, {
