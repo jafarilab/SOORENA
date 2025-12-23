@@ -179,8 +179,7 @@ SOORENA_2/
 - [deployment/README.md](deployment/README.md) — Deployment
 
 ### Data Descriptions
-- `../data/processed/README.md` — Processed data explanation
-
+- [data/processed/README.md](data/processed/README.md)  — Processed data explanation
 ---
 
 ## Technology Stack
