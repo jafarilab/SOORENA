@@ -14,7 +14,9 @@ This cascading approach improves accuracy by first filtering papers likely to ha
 ## Prerequisites
 
 ✅ Data preparation completed ([README_DATA_PREPARATION.md](README_DATA_PREPARATION.md))
+
 ✅ Files exist: `train.csv`, `val.csv`, `test.csv`, `modeling_dataset.csv`
+
 ✅ GPU recommended (but not required)
 
 ## Stage 1: Binary Classification
