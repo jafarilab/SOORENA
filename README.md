@@ -10,9 +10,8 @@
 
 <p align="center">
   <a href="#introduction">Introduction</a> •
-  <a href="#setup">Setup</a> •
-  <a href="#pipeline">Pipeline</a> •
-  <a href="#deployment">Deployment</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#data--models">Data &amp; Models</a> •
   <a href="#documentation">Documentation</a> •
   <a href="#contributing">Contributing</a> •
   <a href="#license">License</a>
@@ -77,9 +76,9 @@ The models are trained on data from UniProt and PubMed, and can predict autoregu
 
 ---
 
-## Setup
+## Quick Start
 
-### Clone Repository & Install Dependencies
+### Clone Repository
 
 Clone the repository and navigate into it:
 
@@ -88,20 +87,27 @@ git clone https://github.com/halaarar/SOORENA_2.git
 cd SOORENA_2
 ```
 
-### Download Large Files (Git LFS)
+### Data & Models
 
-This repository uses Git LFS for large datasets and model files:
+This repository uses Git LFS for large datasets. Large prediction inputs and model files are hosted externally.
 
 ```bash
 git lfs install
 git lfs pull
 ```
 
+Download required files from Google Drive and place them in:
+- `data/pred/abstracts-authors-date.tsv`
+- `models/stage1_best.pt`
+- `models/stage2_best.pt`
+
+Google Drive folder:
+https://drive.google.com/drive/folders/1cHp6lodUptxHGtIgj3Cnjd7nNBYWHItM?usp=sharing
+
 Verify files downloaded correctly:
 
 ```bash
 ls -lh data/raw
-ls -lh models
 ls -lh results
 ```
 
@@ -157,236 +163,10 @@ SOORENA_2/
 
 ---
 
-## Pipeline
-
-All commands should be run from the repository root directory.
-
-### 1. Data Preparation
-
-```bash
-python scripts/python/data_processing/prepare_data.py
-```
-
-This script:
-- Loads and merges PubMed and UniProt data
-- Cleans and normalizes text
-- Creates labeled dataset for training
-- Outputs: [data/processed/modeling_dataset.csv](data/processed/modeling_dataset.csv)
-
-### 2. Train Stage 1 (Binary Classification)
-
-```bash
-python scripts/python/training/train_stage1.py
-```
-
-Trains a binary classifier to identify papers with autoregulatory mechanisms.
-
-- Model: PubMedBERT
-- Output: [models/stage1_best.pt](models/stage1_best.pt)
-
-### 3. Train Stage 2 (Multi-class Classification)
-
-```bash
-python scripts/python/training/train_stage2.py
-```
-
-Trains a multi-class classifier to identify the specific mechanism type:
-
-- autophosphorylation
-- autoregulation
-- autocatalytic
-- autoinhibition
-- autoubiquitination
-- autolysis
-- autoinducer
-
-Output: [models/stage2_best.pt](models/stage2_best.pt)
-
-### 4. Evaluate Models
-
-```bash
-python scripts/python/training/evaluate.py
-```
-
-Generates confusion matrices and evaluation metrics.
-
-Outputs:
-- [reports/stage1_confusion_matrix.png](reports/stage1_confusion_matrix.png)
-- [reports/stage2_confusion_matrix.png](reports/stage2_confusion_matrix.png)
-
-### 5. Run Predictions
-
-**Test single paper:**
-
-```bash
-python scripts/python/prediction/predict.py
-```
-
-**Complete pipeline (create Shiny app data):**
-
-```bash
-bash scripts/shell/run_complete_pipeline.sh
-```
-
-This runs the full pipeline: extracts training samples, predicts on unused data, and merges everything.
-
-**Outputs:**
-- [data/processed/stage1_unlabeled_negatives.csv](data/processed/stage1_unlabeled_negatives.csv) - Papers used as training negatives
-- [data/processed/stage1_unlabeled_unused.csv](data/processed/stage1_unlabeled_unused.csv) - Papers NOT used in training
-- [results/unused_unlabeled_predictions.csv](results/unused_unlabeled_predictions.csv) - Model predictions on unseen papers
-- [shiny_app/data/predictions_for_app.csv](shiny_app/data/predictions_for_app.csv) - Final dataset for Shiny app
-
-### 6. Predict on New Data
-
-To run predictions on new PubMed data:
-
-```bash
-bash scripts/shell/run_new_predictions.sh
-```
-
-For detailed information, see [docs/README_PREDICTION.md](docs/README_PREDICTION.md)
-
-### 7. Protein Name Enrichment (Optional)
-
-To enrich predictions with protein names from UniProt:
-
-```bash
-bash scripts/shell/enrich_existing_data.sh
-```
-
-For detailed information, see [docs/README_ENRICHMENT.md](docs/README_ENRICHMENT.md)
-
----
-
-## Shiny App
-
-### Local Deployment
-
-To launch the interactive interface locally:
-
-```bash
-cd shiny_app
-Rscript -e "shiny::runApp('app.R')"
-```
-
-Open your browser and navigate to the displayed URL (typically `http://127.0.0.1:XXXX`)
-
-For detailed information, see [docs/README_SHINY_APP.md](docs/README_SHINY_APP.md)
-
----
-
-## Deployment
-
-The SOORENA Shiny application can be deployed to cloud platforms for public access.
-
-### DigitalOcean Deployment
-
-**Technical Advantages:**
-- Simple setup with no complex firewall configuration
-- Better performance and faster network speeds
-- Root access by default
-
-**Resource Requirements:**
-- Recommended: 4 GB RAM / 2 vCPUs
-- Minimum: 2 GB RAM / 1 vCPU
-
-**Quick Start:**
-
-1. Create a Droplet (Ubuntu 22.04/24.04 LTS)
-
-2. SSH into your droplet:
-   ```bash
-   ssh root@YOUR_DROPLET_IP
-   ```
-
-3. Copy and run setup script:
-   ```bash
-   # On your local machine
-   cd deployment
-   scp server_setup_digitalocean.sh root@YOUR_DROPLET_IP:~/
-
-   # On the droplet
-   bash server_setup_digitalocean.sh
-   ```
-
-4. Deploy the app from your local machine:
-   ```bash
-   cd deployment
-   ./deploy_to_digitalocean.sh
-   ```
-
-5. Access your app:
-   ```
-   http://YOUR_DROPLET_IP:3838/soorena/
-   ```
-
----
-
-### Oracle Cloud Deployment
-
-**Technical Advantages:**
-- Free tier with generous resource limits
-- Suitable for testing and low-traffic deployments
-
-**Technical Considerations:**
-- More complex firewall configuration required
-- Lower performance compared to DigitalOcean
-
-**Resource Requirements:**
-- Minimum: VM.Standard.E2.1.Micro (1 GB RAM)
-
-**Quick Start:**
-
-1. Create a Compute Instance (Ubuntu 22.04)
-
-2. Configure firewall (VCN Security Lists + instance firewall)
-
-3. SSH into your instance and run setup:
-   ```bash
-   bash server_setup_1GB.sh
-   ```
-
-4. Deploy using:
-   ```bash
-   cd deployment
-   ./deploy_to_oracle.sh
-   ```
-
-**Detailed Guide:** [deployment/1GB_RAM_INSTRUCTIONS.md](deployment/1GB_RAM_INSTRUCTIONS.md)
-
----
-
-### Deployment Scripts
-
-All deployment-related files are in the [deployment/](deployment/) directory:
-
-- [server_setup_digitalocean.sh](deployment/server_setup_digitalocean.sh) - DigitalOcean server configuration
-- [server_setup_1GB.sh](deployment/server_setup_1GB.sh) - Oracle Cloud setup (1GB RAM optimized)
-- [deploy_to_digitalocean.sh](deployment/deploy_to_digitalocean.sh) - Deploy app to DigitalOcean
-- [deploy_to_oracle.sh](deployment/deploy_to_oracle.sh) - Deploy app to Oracle Cloud
-- [update_app.sh](deployment/update_app.sh) - Quick app updates (no full redeployment)
-
-For step-by-step instructions, see:
-- [deployment/README.md](deployment/README.md) - Deployment overview and technical documentation
-- [deployment/USING_EXISTING_DROPLET.md](deployment/USING_EXISTING_DROPLET.md) - Reusing existing infrastructure
-
----
-
 ## Documentation
 
-Comprehensive documentation is available in the [docs/](docs/) directory:
-
-### Core Documentation
-- [README_DATA_PREPARATION.md](docs/README_DATA_PREPARATION.md) - Data preprocessing pipeline
-- [README_TRAINING.md](docs/README_TRAINING.md) - Model training (Stage 1 & 2)
-- [README_PREDICTION.md](docs/README_PREDICTION.md) - Running predictions
-- [README_PREDICTION_PIPELINE.md](docs/README_PREDICTION_PIPELINE.md) - Complete prediction workflow
-- [README_ENRICHMENT.md](docs/README_ENRICHMENT.md) - Protein name enrichment from UniProt
-- [README_SHINY_APP.md](docs/README_SHINY_APP.md) - Interactive web app usage
-
-### Additional Documentation
-- [deployment/README.md](deployment/README.md) - Deployment overview
-- [data/processed/README.md](data/processed/README.md) - Processed data explanation
+Use the docs index to navigate all guides:
+- [docs/README.md](docs/README.md)
 
 ---
 
