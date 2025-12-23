@@ -34,6 +34,12 @@ data/raw/
 !data/**
 !shiny_app/data/**
 
+# Local enrichment outputs and caches
+.cache/
+pubtator_genes*.csv
+shiny_app/data/predictions_for_app_backup.csv
+shiny_app/data/predictions_for_app_sample_10.csv
+
 # Ignore large model binaries unless needed
 models/*.pt
 data/pred/*.tsv

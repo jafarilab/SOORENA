@@ -74,7 +74,7 @@ echo This may take several hours for large datasets.
 echo Checkpoints are saved every 10,000 predictions.
 echo.
 
-python predict_new_data.py --input data\pred\abstracts-authors-date.tsv --output results\new_predictions.csv --checkpoint-interval 10000 %TEST_MODE%
+python scripts\python\prediction\predict_new_data.py --input data\pred\abstracts-authors-date.tsv --output results\new_predictions.csv --checkpoint-interval 10000 %TEST_MODE%
 
 if errorlevel 1 (
     echo ERROR: Prediction failed

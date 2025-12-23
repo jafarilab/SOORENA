@@ -7,14 +7,16 @@ Run predictions on new PubMed data using the trained SOORENA models.
 ## Quick Start
 
 ```bash
-# 1. Clone and get data files
+# 1. Clone the repo
 git clone https://github.com/HalaO/SOORENA_2.git
 cd SOORENA_2
-git lfs install
-git lfs pull
 
-# 2. Get TSV file 
-# Place at: data/pred/abstracts-authors-date.tsv
+# 2. Download required files (Google Drive)
+# https://drive.google.com/drive/folders/1cHp6lodUptxHGtIgj3Cnjd7nNBYWHItM?usp=sharing
+# Place the files here:
+# - data/pred/abstracts-authors-date.tsv
+# - models/stage1_best.pt
+# - models/stage2_best.pt
 
 # 3. Setup environment
 conda env create -f environment.yml
@@ -22,8 +24,11 @@ conda activate autoregulatory
 pip install torch --index-url https://download.pytorch.org/whl/cpu  # or GPU version
 
 # 4. Run predictions
-./run_new_predictions.sh          # macOS/Linux
-run_new_predictions.bat           # Windows
+bash scripts/shell/run_new_predictions.sh          # macOS/Linux
+scripts\shell\run_new_predictions.bat              # Windows
+
+# 5. Build SQLite database for the Shiny app
+python scripts/python/data_processing/create_sqlite_db.py
 ```
 
 ---
@@ -73,6 +78,9 @@ Raw predictions with confidence scores:
 ### `shiny_app/data/predictions_for_app.csv`
 Merged data for Shiny app (old + new predictions)
 
+### `shiny_app/data/predictions.db`
+SQLite database used by the Shiny app
+
 ---
 
 ## Platform Setup
@@ -105,13 +113,11 @@ export CUDA_VISIBLE_DEVICES=""  # Force CPU
 Or reduce `BATCH_SIZE = 8` in `config.py`
 
 ### Model Files Not Found
-Models should be included in the repo. Contact maintainer if missing.
-
-### Git LFS Error
-```bash
-git lfs install
-git lfs pull
-```
+Models and the large TSV are stored in Google Drive (not in git).
+Download them from the shared folder and place them in:
+- `models/stage1_best.pt`
+- `models/stage2_best.pt`
+- `data/pred/abstracts-authors-date.tsv`
 
 ### Resume Interrupted Job
 Automatically resumes from checkpoint. To start fresh:
@@ -125,13 +131,16 @@ rm results/new_predictions_checkpoint.csv
 
 ```bash
 # Run predictions
-python predict_new_data.py \
+python scripts/python/prediction/predict_new_data.py \
   --input data/pred/abstracts-authors-date.tsv \
   --output results/new_predictions.csv \
   --checkpoint-interval 10000
 
 # Merge with existing data
 python scripts/python/data_processing/merge_final_shiny_data.py
+
+# Build SQLite DB for the Shiny app
+python scripts/python/data_processing/create_sqlite_db.py
 
 # Launch Shiny app
 cd shiny_app && Rscript -e "shiny::runApp('app.R')"
@@ -157,10 +166,9 @@ cd shiny_app && Rscript -e "shiny::runApp('app.R')"
 
 ## Help
 
-Run in test mode first: `./run_new_predictions.sh --test`
+Run in test mode first: `bash scripts/shell/run_new_predictions.sh --test`
 
 Verify setup:
 ```bash
-python -c "from predict import MechanismPredictor; print('OK')"
+python scripts/python/prediction/predict_new_data.py --help
 ```
-

@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 # ================================================================================
 # SOORENA - New Predictions Pipeline
 # ================================================================================
@@ -46,7 +46,7 @@ echo ""
 # Step 1: Check environment
 echo -e "${BLUE}[Step 1/4] Checking environment...${NC}"
 
-if  command -v python &> /dev/null; then
+if ! command -v python &> /dev/null; then
     echo -e "${RED} Error: Python not found${NC}"
     echo "Please activate the conda environment:"
     echo "  conda activate autoregulatory"
@@ -56,7 +56,7 @@ fi
 echo -e "${GREEN} Python found: $(python --version)${NC}"
 
 # Check if input file exists
-if [  -f "data/pred/abstracts-authors-date.tsv" ]; then
+if [ ! -f "data/pred/abstracts-authors-date.tsv" ]; then
     echo -e "${RED} Error: Input file not found${NC}"
     echo "Expected: data/pred/abstracts-authors-date.tsv"
     exit 1
@@ -65,7 +65,7 @@ fi
 echo -e "${GREEN} Input file found${NC}"
 
 # Check if models exist
-if [  -f "models/stage1_best.pt" ] || [  -f "models/stage2_best.pt" ]; then
+if [ ! -f "models/stage1_best.pt" ] || [ ! -f "models/stage2_best.pt" ]; then
     echo -e "${RED} Error: Model files not found${NC}"
     echo "Expected: models/stage1_best.pt and models/stage2_best.pt"
     exit 1
