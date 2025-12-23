@@ -165,17 +165,21 @@ SOORENA_2/
 
 ## Documentation
 
-Use the docs index to navigate all guides:
-- [docs/README.md](docs/README.md)
-
-Direct links:
+### Getting Started
 - [docs/README_PREDICTION.md](docs/README_PREDICTION.md) — Run predictions on new data
 - [docs/README_PREDICTION_PIPELINE.md](docs/README_PREDICTION_PIPELINE.md) — End-to-end pipeline
-- [docs/README_TRAINING.md](docs/README_TRAINING.md) — Model training (Stage 1 & 2)
+
+### Data & Training
 - [docs/README_DATA_PREPARATION.md](docs/README_DATA_PREPARATION.md) — Data preprocessing
+- [docs/README_TRAINING.md](docs/README_TRAINING.md) — Model training (Stage 1 & 2)
 - [docs/README_ENRICHMENT.md](docs/README_ENRICHMENT.md) — Protein name enrichment
+
+### App & Deployment
 - [docs/README_SHINY_APP.md](docs/README_SHINY_APP.md) — Shiny app usage
 - [deployment/README.md](deployment/README.md) — Deployment
+
+### Data Descriptions
+- `../data/processed/README.md` — Processed data explanation
 
 ---
 
