@@ -34,6 +34,12 @@ data/raw/
 !data/**
 !shiny_app/data/**
 
+# Generated processed datasets (rebuild via prepare_data.py)
+data/processed/modeling_dataset.csv
+data/processed/train.csv
+data/processed/val.csv
+data/processed/test.csv
+
 # Local enrichment outputs and caches
 .cache/
 pubtator_genes*.csv
