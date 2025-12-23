@@ -107,9 +107,13 @@ All files saved to `data/processed/`:
 The script performs automatic validation:
 
 ✅ **No duplicate PMIDs**
+
 ✅ **No missing text fields**
+
 ✅ **Mechanism types normalized**
+
 ✅ **Split sizes correct (70/15/15)**
+
 ✅ **All papers accounted for**
 
 ## Mechanism Type Distribution
