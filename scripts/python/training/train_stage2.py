@@ -6,6 +6,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import pandas as pd
+import os
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
@@ -101,6 +102,8 @@ def main():
     print("=" * 50)
     print("STAGE 2: Multi-Class Classification Training")
     print("=" * 50)
+
+    os.makedirs(config.MODEL_DIR, exist_ok=True)
     
     # Setup device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -39,6 +39,8 @@ data/processed/modeling_dataset.csv
 data/processed/train.csv
 data/processed/val.csv
 data/processed/test.csv
+data/processed/stage1_test_eval.csv
+data/processed/stage2_test_eval.csv
 
 # Local enrichment outputs and caches
 .cache/

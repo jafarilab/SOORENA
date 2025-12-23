@@ -6,6 +6,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import pandas as pd
+import os
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, get_linear_schedule_with_warmup
@@ -141,6 +142,8 @@ def main():
     print("=" * 50)
     print("STAGE 1: Binary Classification Training")
     print("=" * 50)
+
+    os.makedirs(config.MODEL_DIR, exist_ok=True)
     
     # Setup device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
