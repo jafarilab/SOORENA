@@ -12,8 +12,8 @@ git clone https://github.com/HalaO/SOORENA_2.git
 cd SOORENA_2
 
 # 2. Download required files (Google Drive)
-# https://drive.google.com/drive/folders/1cHp6lodUptxHGtIgj3Cnjd7nNBYWHItM?usp=sharing
-# Place the files here:
+https://drive.google.com/drive/folders/1cHp6lodUptxHGtIgj3Cnjd7nNBYWHItM?usp=sharing
+Place the files here:
 # - data/pred/abstracts-authors-date.tsv
 # - models/stage1_best.pt
 # - models/stage2_best.pt
