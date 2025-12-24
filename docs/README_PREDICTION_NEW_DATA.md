@@ -91,11 +91,10 @@ app dataset (from the unused unlabeled flow).
 
 ### Recommended Command
 ```bash
-python scripts/python/data_processing/merge_enriched_predictions.py \
-  --dedupe --prefer-new
+python scripts/python/data_processing/merge_enriched_predictions.py 
 ```
 
-This removes duplicate PMIDs and keeps the newer 3M row when duplicates occur.
+
 
 ---
 
