@@ -230,11 +230,11 @@ scripts/
 ├── python/
 │   ├── data_processing/
 │   │   ├── prepare_data.py              # Main data preparation
-│   │   ├── enrich_protein_names.py      # UniProt enrichment (sequential)
-│   │   ├── enrich_protein_names_parallel.py  # UniProt enrichment (parallel)
+│   │   ├── enrich_pubtator_csv.py       # PubTator enrichment (CSV)
 │   │   ├── create_sqlite_db.py          # CSV → SQLite conversion
-│   │   ├── merge_final_shiny_data.py    # Merge all datasets
-│   │   └── rebuild_final_dataset.py     # Rebuild complete dataset
+│   │   ├── merge_final_shiny_data.py    # Merge autoregulatory datasets
+│   │   ├── merge_enriched_predictions.py # Merge enriched prediction CSVs
+│   │   └── (removed)                    # Legacy rebuild script removed
 │   │
 │   ├── training/
 │   │   ├── train_stage1.py              # Binary classification training
@@ -242,15 +242,15 @@ scripts/
 │   │   └── evaluate.py                  # Model evaluation
 │   │
 │   └── prediction/
-│       ├── predict.py                   # Single paper test
+│       ├── (removed)                    # Legacy single-paper test removed
 │       ├── predict_unused_unlabeled.py  # Predict unused training data
 │       └── predict_new_data.py          # Predict new PubMed data
 │
 └── shell/
-    ├── run_complete_pipeline.sh         # Full prediction pipeline
-    ├── run_new_predictions.sh           # New data predictions (Linux/Mac)
-    ├── run_new_predictions.bat          # New data predictions (Windows)
-    └── enrich_existing_data.sh          # Protein enrichment pipeline
+    ├── (removed)                        # Legacy pipeline scripts removed
+    ├── (removed)                        # Legacy new predictions scripts removed
+    ├── (removed)                        # Legacy Windows script removed
+    └── (removed)                        # Legacy enrichment removed
 ```
 
 ---
@@ -267,16 +267,10 @@ scripts/
 - Splits into train/test sets
 - Output: `data/processed/modeling_dataset.csv`
 
-**enrich_protein_names.py**
-- Queries UniProt API for protein names
-- Adds protein information to predictions
-- Uses caching to avoid redundant queries
-- Sequential processing (slower but stable)
-
-**enrich_protein_names_parallel.py**
-- Parallel version of enrichment
-- Uses multiprocessing for speed
-- Requires careful rate limiting
+**enrich_pubtator_csv.py**
+- Enriches prediction CSVs using PubTator + UniProt
+- Adds AC / Protein / Gene fields
+- Uses PMID → GeneID → UniProt mapping
 
 **create_sqlite_db.py**
 - Converts CSV predictions to SQLite
@@ -312,10 +306,8 @@ scripts/
 
 #### Prediction Scripts
 
-**predict.py**
-- Single paper test utility
-- Demonstrates end-to-end inference
-- Useful for debugging and demos
+**predict_new_data.py**
+- Main prediction entry point for new data
 
 **predict_unused_unlabeled.py**
 - Predicts on papers not used in training

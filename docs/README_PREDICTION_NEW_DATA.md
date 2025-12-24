@@ -111,32 +111,6 @@ python scripts/python/data_processing/create_sqlite_db.py \
 
 ---
 
-## Input
-
-`data/pred/abstracts-authors-date.tsv`
-
-Required columns:
-- `PMID`
-- `Title`
-- `Abstract`
-- `Journal` (optional but recommended)
-- `PublicationDate` (optional)
-- `Authors` (optional)
-
----
-
-## Output
-
-`results/new_predictions.csv`
-
-Key columns:
-- `PMID`
-- `has_mechanism`
-- `stage1_confidence`
-- `mechanism_type`
-- `stage2_confidence`
-
----
 
 ## Notes
 

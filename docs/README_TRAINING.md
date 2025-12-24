@@ -312,16 +312,10 @@ After training:
    ```
 
 2. **Run predictions on unseen data:**
-   ```bash
-   bash scripts/shell/run_complete_pipeline.sh
-   ```
+   See `docs/README_UNUSED_UNLABELED.md` (unused unlabeled) and
+   `docs/README_PREDICTION_NEW_DATA.md` (new 3M data).
 
-3. **Test single-paper prediction:**
-   ```bash
-   python scripts/python/prediction/predict.py
-   ```
-
-See [README_PREDICTION.md](README_PREDICTION.md) for details.
+See [README_PREDICTION.md](README_PREDICTION.md) for legacy details.
 
 ## File Locations
 

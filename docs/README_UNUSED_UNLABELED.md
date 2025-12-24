@@ -156,28 +156,19 @@ python scripts/python/data_processing/merge_final_shiny_data.py \
 After merging, enrich the final dataset with UniProt protein and gene names.
 
 ### Script
-`scripts/python/data_processing/enrich_protein_names_parallel.py`
+`scripts/python/data_processing/enrich_pubtator_csv.py`
 
 ### Input
-- `shiny_app/data/predictions_for_app.csv`
+- `results/unused_unlabeled_predictions_autoregulatory_only.csv`
 
 ### Output
-- `shiny_app/data/predictions_for_app_enriched.csv`
+- `results/unused_unlabeled_predictions_autoregulatory_only_enriched.csv`
 
-### Command (fast, parallel)
+### Command
 ```bash
-python scripts/python/data_processing/enrich_protein_names_parallel.py \
-  --input shiny_app/data/predictions_for_app.csv \
-  --output shiny_app/data/predictions_for_app_enriched.csv \
-  --cache data/protein_cache.json \
-  --workers 20
-```
-
-### Cache Note
-If you see a JSON decode error, your cache file is corrupted.
-Fix by renaming it and re-running:
-```bash
-mv data/protein_cache.json data/protein_cache.json.broken
+python scripts/python/data_processing/enrich_pubtator_csv.py \
+  --input results/unused_unlabeled_predictions_autoregulatory_only.csv \
+  --output results/unused_unlabeled_predictions_autoregulatory_only_enriched.csv
 ```
 
 ---

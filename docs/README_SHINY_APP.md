@@ -66,7 +66,7 @@ install.packages(c(
 
 If this file doesn't exist, run:
 ```bash
-bash scripts/shell/run_complete_pipeline.sh
+python scripts/python/prediction/predict_new_data.py --help
 ```
 
 ## App Features
@@ -275,7 +275,7 @@ Examples:
 ## Troubleshooting
 
 **Issue:** App won't start - "Error: file not found"
-**Solution:** Ensure `shiny_app/data/predictions_for_app.csv` exists. Run `bash scripts/shell/run_complete_pipeline.sh`
+**Solution:** Ensure `shiny_app/data/predictions_for_app.csv` exists by running the prediction workflow in `docs/README_PREDICTION_NEW_DATA.md`.
 
 **Issue:** App very slow to load
 **Solution:** Normal for large datasets (3M+ rows). Wait 2-3 minutes for initial load.
@@ -290,7 +290,7 @@ Examples:
 **Solution:** Apply at least one filter first, then export.
 
 **Issue:** Can't filter by protein name
-**Solution:** Ensure enrichment was run: `bash scripts/shell/enrich_existing_data.sh`
+**Solution:** Ensure PubTator enrichment was run on the dataset before building the DB.
 
 ## Advanced: Running on Server
 
