@@ -69,6 +69,7 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
         Mechanism_Probability REAL,
         Source TEXT,
         Autoregulatory_Type TEXT,
+        Polarity TEXT,
         Type_Confidence REAL,
         Title TEXT,
         Abstract TEXT,
@@ -89,6 +90,18 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
 
     # Step 5: Normalize columns (accept prediction-style or app-style)
     print("Step 5: Normalizing columns...")
+
+    # Polarity is derived deterministically from the mechanism type (no separate model).
+    # Use the same symbols as the Shiny app UI.
+    polarity_map = {
+        "autocatalytic": "+",
+        "autophosphorylation": "+",
+        "autoinducer": "+",
+        "autoregulation": "±",
+        "autoinhibition": "–",
+        "autoubiquitination": "–",
+        "autolysis": "–",
+    }
 
     def map_has_mechanism(val):
         if pd.isna(val):
@@ -174,6 +187,29 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
     else:
         df["Source"] = df["Source"].fillna("Non-UniProt")
 
+    # Derive Polarity if missing/empty
+    if "Polarity" not in df.columns:
+        df["Polarity"] = None
+    # Normalize legacy "-" to the en-dash symbol used in the UI.
+    if "Polarity" in df.columns:
+        df["Polarity"] = (
+            df["Polarity"]
+            .astype(object)
+            .where(~df["Polarity"].isna(), None)
+        )
+        df["Polarity"] = df["Polarity"].apply(lambda v: "–" if str(v).strip() == "-" else v)
+
+    polarity_empty = df["Polarity"].isna() | (df["Polarity"].astype(str).str.strip() == "")
+    if polarity_empty.any():
+        if "Autoregulatory Type" in df.columns:
+            src = df["Autoregulatory Type"]
+        elif "Autoregulatory_Type" in df.columns:
+            src = df["Autoregulatory_Type"]
+        else:
+            src = pd.Series([None] * len(df))
+        mech = src.fillna("").astype(str).str.strip().str.lower()
+        df.loc[polarity_empty, "Polarity"] = mech.map(polarity_map).fillna(df.loc[polarity_empty, "Polarity"])
+
     # Rename columns to match database schema (replace spaces with underscores)
     df_renamed = df.rename(columns={
         "Has Mechanism": "Has_Mechanism",
@@ -207,7 +243,7 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
     db_columns = [
         'PMID', 'AC', 'Has_Mechanism', 'Mechanism_Probability', 'Source',
         'Autoregulatory_Type', 'Type_Confidence', 'Title', 'Abstract',
-        'Journal', 'Authors', 'Year', 'Month', 'UniProtKB_accessions', 'OS',
+        'Polarity', 'Journal', 'Authors', 'Year', 'Month', 'UniProtKB_accessions', 'OS',
         'Protein_ID', 'Protein_Name', 'Gene_Name'
     ]
 
@@ -248,6 +284,7 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
         ("idx_source", "Source"),
         ("idx_has_mechanism", "Has_Mechanism"),
         ("idx_autoregulatory_type", "Autoregulatory_Type"),
+        ("idx_polarity", "Polarity"),
         ("idx_year", "Year"),
         ("idx_protein_id", "Protein_ID"),
         ("idx_uniprot_accessions", "UniProtKB_accessions"),

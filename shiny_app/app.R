@@ -106,6 +106,24 @@ ontology_key_map <- c(
   # Add more aliases here if your data contains other variants
 )
 
+# Polarity is derived deterministically from mechanism class (no separate model).
+# Symbols: "+" positive/self-amplifying, "–" negative/self-limiting, "±" context-dependent.
+polarity_symbol_map <- c(
+  Autocatalysis = "+",
+  Autophosphorylation = "+",
+  Autoubiquitination = "–",
+  Autoregulation = "±",
+  Autoinhibition = "–",
+  Autolysis = "–",
+  Autoinduction = "+"
+)
+
+get_polarity_symbol <- function(key) {
+  sym <- polarity_symbol_map[[key]]
+  if (is.null(sym) || is.na(sym) || sym == "") return("Unknown")
+  sym
+}
+
 # Ontology path helper for display
 get_ontology_path <- function(key) {
   enzymatic <- c("Autokinase","Autophosphorylation","Autoubiquitination","Autolysis","Autocatalysis")
@@ -771,6 +789,13 @@ ui <- navbarPage(
           p(style = "font-size: 16px; color: #555; margin-top: 20px;",
             "A structured classification of self-directed biochemical processes identified and categorized by the SOORENA pipeline."),
 
+          div(style = "margin: 14px 0 22px 0; padding: 12px 14px; background: #f5f1e8; border: 1px solid #e8dcc8; border-radius: 10px;",
+            tags$span(style = "font-weight: 700; color: #1a2332; margin-right: 8px;", "Polarity legend:"),
+            tags$span(style = "display: inline-block; margin-right: 10px;", tags$b("+"), " positive / self-amplifying"),
+            tags$span(style = "display: inline-block; margin-right: 10px;", tags$b("–"), " negative / self-limiting"),
+            tags$span(style = "display: inline-block;", tags$b("±"), " context-dependent")
+          ),
+
           # Ontology Tree
           h3("Hierarchical Structure", style = "color: #1a2332; margin-top: 40px; font-weight: 600;"),
 
@@ -805,7 +830,7 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-catalytic chemistry"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    tags$a(href = '#autocatalytic', class = 'tree-link', style = "font-size: 14px;", "→ Autocatalytic Reaction")
+                    tags$a(href = '#autocatalytic', class = 'tree-link', style = "font-size: 14px;", "→ Autocatalytic Reaction (+)")
                   )
                 )
               ),
@@ -816,8 +841,8 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Protein self-modification (post-translational)"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    div(tags$a(href = '#autophosphorylation', class = 'tree-link', style = "font-size: 14px;", "→ Autophosphorylation")),
-                    div(tags$a(href = '#autoubiquitination', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoubiquitination"))
+                    div(tags$a(href = '#autophosphorylation', class = 'tree-link', style = "font-size: 14px;", "→ Autophosphorylation (+)")),
+                    div(tags$a(href = '#autoubiquitination', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoubiquitination (–)"))
                   )
                 )
               ),
@@ -828,8 +853,8 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Intrinsic regulatory control"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    div(tags$a(href = '#autoregulation', class = 'tree-link', style = "font-size: 14px;", "→ Autoregulation of Gene Expression")),
-                    div(tags$a(href = '#autoinhibition', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoinhibition within Proteins"))
+                    div(tags$a(href = '#autoregulation', class = 'tree-link', style = "font-size: 14px;", "→ Autoregulation of Gene Expression (±)")),
+                    div(tags$a(href = '#autoinhibition', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoinhibition within Proteins (–)"))
                   )
                 )
               ),
@@ -840,7 +865,7 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-degradation and lysis"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    tags$a(href = '#autolysis', class = 'tree-link', style = "font-size: 14px;", "→ Autolysis")
+                    tags$a(href = '#autolysis', class = 'tree-link', style = "font-size: 14px;", "→ Autolysis (–)")
                   )
                 )
               ),
@@ -851,7 +876,7 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Population-level self-signaling"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    tags$a(href = '#autoinducer', class = 'tree-link', style = "font-size: 14px;", "→ Autoinducer Molecules in Quorum Sensing")
+                    tags$a(href = '#autoinducer', class = 'tree-link', style = "font-size: 14px;", "→ Autoinducer Molecules in Quorum Sensing (+)")
                   )
                 )
               )
@@ -866,7 +891,7 @@ ui <- navbarPage(
           # 1. Autocatalytic Reaction
           div(id = "autocatalytic", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("1. Autocatalytic Reaction", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("1. Autocatalytic Reaction (+)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A chemical reaction in which its product or intermediate accelerates the same reaction. Supports nonlinear self-reinforcement and chemical self-organization."),
 
@@ -891,7 +916,7 @@ ui <- navbarPage(
           # 2. Autophosphorylation
           div(id = "autophosphorylation", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("2. Autophosphorylation", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
+              h4("2. Autophosphorylation (+)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A protein kinase phosphorylates its own amino acid residues (cis or trans), tuning its conformation, catalytic activity, localization, and signaling dynamics."),
 
@@ -917,7 +942,7 @@ ui <- navbarPage(
           # 3. Autoubiquitination
           div(id = "autoubiquitination", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("3. Autoubiquitination", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("3. Autoubiquitination (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "An E3 ubiquitin ligase attaches ubiquitin to itself, altering its stability, proteasomal targeting, and signaling functions depending on chain type and site."),
 
@@ -943,7 +968,7 @@ ui <- navbarPage(
           # 4. Autoregulation
           div(id = "autoregulation", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("4. Autoregulation of Gene Expression", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
+              h4("4. Autoregulation of Gene Expression (±)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A gene product regulates transcription of the same gene through positive or negative feedback, tuning gene expression dynamics, noise, and homeostasis."),
 
@@ -969,7 +994,7 @@ ui <- navbarPage(
           # 5. Autoinducer
           div(id = "autoinducer", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("5. Autoinducer Molecules in Quorum Sensing", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("5. Autoinducer Molecules in Quorum Sensing (+)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Small diffusible molecules synthesized and detected by bacteria. Their accumulation with increasing cell density triggers coordinated community-wide transcriptional changes."),
 
@@ -995,7 +1020,7 @@ ui <- navbarPage(
           # 6. Autoinhibition
           div(id = "autoinhibition", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("6. Autoinhibition within Proteins", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
+              h4("6. Autoinhibition within Proteins (–)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Intrinsic structural interactions prevent inappropriate activation of a protein, maintaining it in an inactive state until relieved by ligand binding, structural rearrangement, or post-translational modification."),
 
@@ -1021,7 +1046,7 @@ ui <- navbarPage(
           # 7. Autolysis
           div(id = "autolysis", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("7. Autolysis", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("7. Autolysis (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Self-degradation mediated by endogenous lytic enzymes, occurring during programmed cell death, post-mortem breakdown, or engineered microbial lysis systems."),
 
@@ -1457,6 +1482,7 @@ server <- function(input, output, session) {
         "PMID",
         "UniProt AC",
         "Autoregulatory Type",
+        "Polarity",
         "Mechanism Probability",
         "Type Confidence",
         "Title",
@@ -1553,6 +1579,38 @@ server <- function(input, output, session) {
         "non-autoregulatory",
         result$`Autoregulatory Type`
       )
+    }
+
+    # Ensure Polarity exists (some older DB builds may not have the column).
+    if (!("Polarity" %in% colnames(result))) {
+      result$Polarity <- NA_character_
+    }
+
+    # If Polarity is missing/blank, derive it deterministically from Autoregulatory Type.
+    pol_empty <- is.na(result$Polarity) | trimws(as.character(result$Polarity)) == ""
+    if (any(pol_empty) && ("Autoregulatory Type" %in% colnames(result))) {
+      types <- result$`Autoregulatory Type`
+
+      to_key <- function(type) {
+        if (is.na(type) || trimws(type) == "" || tolower(trimws(type)) == "non-autoregulatory") return(NA_character_)
+        raw  <- trimws(type)
+        norm <- gsub("[^A-Za-z]", "", raw)
+        norm <- paste0(toupper(substr(norm, 1, 1)), tolower(substr(norm, 2, nchar(norm))))
+        mapped <- if (norm %in% names(ontology_key_map)) ontology_key_map[[norm]] else NA_character_
+        if (!is.na(mapped)) return(mapped)
+        norm
+      }
+
+      keys <- vapply(types, to_key, character(1))
+      symbols <- vapply(keys, function(k) {
+        if (is.na(k) || k == "") return(NA_character_)
+        sym <- get_polarity_symbol(k)
+        if (is.na(sym) || sym == "" || sym == "Unknown") return(NA_character_)
+        if (sym == "-") return("–")
+        sym
+      }, character(1))
+
+      result$Polarity[pol_empty] <- symbols[pol_empty]
     }
 
     return(result)
@@ -1941,6 +1999,7 @@ server <- function(input, output, session) {
 	    PMID,
 	    `UniProt AC`,
 	    `Autoregulatory Type`,
+	    Polarity,
 	    `Mechanism Probability`,
 	    `Type Confidence`,
 	    Title,
@@ -2005,17 +2064,19 @@ server <- function(input, output, session) {
     norm <- paste0(toupper(substr(norm,1,1)), tolower(substr(norm,2,nchar(norm))))
     mapped <- if (norm %in% names(ontology_key_map)) ontology_key_map[[norm]] else NA_character_
     key    <- if (!is.na(mapped)) mapped else norm
-    info <- ontology_info[[key]]
-    if (is.null(info)) return(paste0("Ontology information not found for: ", htmltools::htmlEscape(raw)))
-    path <- get_ontology_path(key)
-    paste0(
-      "<b>Ontology Path</b><br>", htmltools::htmlEscape(path), "<br><br>",
-      "<b>Definition</b><br>", htmltools::htmlEscape(info$Definition), "<br><br>",
-      "<b>Synonym:</b> ", htmltools::htmlEscape(info$Synonym), "<br><br>",
-      "<b>Antonym:</b> ", htmltools::htmlEscape(info$Antonym), "<br><br>",
-      "<b>Related:</b> ", htmltools::htmlEscape(info$Related)
-    )
-  }
+	    info <- ontology_info[[key]]
+	    if (is.null(info)) return(paste0("Ontology information not found for: ", htmltools::htmlEscape(raw)))
+	    path <- get_ontology_path(key)
+	    pol <- get_polarity_symbol(key)
+	    paste0(
+	      "<b>Ontology Path</b><br>", htmltools::htmlEscape(path), "<br><br>",
+	      "<b>Polarity</b><br>", htmltools::htmlEscape(pol), "<br><br>",
+	      "<b>Definition</b><br>", htmltools::htmlEscape(info$Definition), "<br><br>",
+	      "<b>Synonym:</b> ", htmltools::htmlEscape(info$Synonym), "<br><br>",
+	      "<b>Antonym:</b> ", htmltools::htmlEscape(info$Antonym), "<br><br>",
+	      "<b>Related:</b> ", htmltools::htmlEscape(info$Related)
+	    )
+	  }
 
   type_values <- data$`Autoregulatory Type`
   safe_types <- vapply(type_values, function(val) {
@@ -2037,7 +2098,7 @@ server <- function(input, output, session) {
   datatable(
     data,
     escape = FALSE,
-    rownames = FALSE,  # Disable built-in row numbers (we have our own # column)
+    rownames = FALSE,
 	    options = list(
 	      pageLength = page_size(),  # Show all loaded rows for current page size
 	      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
@@ -2046,7 +2107,7 @@ server <- function(input, output, session) {
 	      order = list(),
 	      columnDefs = list(
 	        list(
-	          targets = 6,  # PMID column (rendered as HTML link)
+	          targets = 1,  # PMID column (rendered as HTML link)
 	          render = JS(
 	            "function(data, type, row, meta) {",
 	            "  if (type === 'sort' || type === 'type') {",
@@ -2057,7 +2118,7 @@ server <- function(input, output, session) {
 	            "}"
 	          )
 	        ),
-	        list(targets = c(11, 12, 13, 14, 15, 16), className = "dt-center"),  # Year, Month, Source, Mechanism Probability, Autoregulatory Type, Type Confidence - centered
+	        list(targets = c(3, 4, 5, 6, 11, 12, 13), className = "dt-center"),  # Type, Polarity, probabilities, date, source
 	        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
 	      ),
 	      # Server-side processing: only load current page, not all rows
