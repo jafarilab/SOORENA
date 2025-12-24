@@ -576,12 +576,9 @@ ui <- navbarPage(
         width = 8,
         fluidRow(
           column(3, textInput("protein_id", "Protein ID", placeholder = "Search protein ID...")),
-          column(3, textInput("ac", "AC", placeholder = "Search AC...")),
-          column(3, selectInput("has_mechanism", "Has Mechanism", choices = c("All", "Yes", "No"))),
-          column(3, selectizeInput("os", "OS",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select OS...')))
+          column(3, textInput("protein_name", "Protein Name", placeholder = "Search protein name...")),
+          column(3, textInput("gene_name", "Gene Name", placeholder = "Search gene name...")),
+          column(3, textInput("ac", "AC", placeholder = "Search AC..."))
         ),
         fluidRow(
           column(3, textInput("pmid", "PMID", placeholder = "Search PMID...")),
@@ -590,7 +587,10 @@ ui <- navbarPage(
                                 choices = NULL,
                                 multiple = TRUE,
                                 options = list(placeholder = 'Select journal...'))),
-          column(3, selectInput("source", "Data Source", choices = c("All", "UniProt", "Non-UniProt")))
+          column(3, selectizeInput("os", "OS",
+                                choices = NULL,
+                                multiple = TRUE,
+                                options = list(placeholder = 'Select OS...')))
         ),
         fluidRow(
           column(3, selectizeInput("type", "Autoregulatory Type",
@@ -601,6 +601,11 @@ ui <- navbarPage(
                                 choices = NULL,
                                 multiple = TRUE,
                                 options = list(placeholder = 'Select year...'))),
+          column(3, selectizeInput("source", "Data Source",
+                                choices = c("UniProt", "Non-UniProt"),
+                                selected = c("UniProt", "Non-UniProt"),
+                                multiple = TRUE,
+                                options = list(placeholder = 'Select source...'))),
           column(3, selectInput("month", "Publication Month",
                                 choices = c("All", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
@@ -1224,21 +1229,21 @@ server <- function(input, output, session) {
     params <- list()
 
     # Journal filter
-    if (!is.null(input$journal) && !"All" %in% input$journal && length(input$journal) > 0) {
+    if (!is.null(input$journal) && length(input$journal) > 0) {
       placeholders <- paste(rep("?", length(input$journal)), collapse = ",")
       query <- paste(query, "AND Journal IN (", placeholders, ")")
       params <- c(params, as.list(input$journal))
     }
 
     # Type filter
-    if (!is.null(input$type) && !"All" %in% input$type && length(input$type) > 0) {
+    if (!is.null(input$type) && length(input$type) > 0) {
       placeholders <- paste(rep("?", length(input$type)), collapse = ",")
       query <- paste(query, "AND Autoregulatory_Type IN (", placeholders, ")")
       params <- c(params, as.list(input$type))
     }
 
     # OS filter
-    if (!is.null(input$os) && !"All" %in% input$os && length(input$os) > 0) {
+    if (!is.null(input$os) && length(input$os) > 0) {
       placeholders <- paste(rep("?", length(input$os)), collapse = ",")
       query <- paste(query, "AND OS IN (", placeholders, ")")
       params <- c(params, as.list(input$os))
@@ -1256,6 +1261,18 @@ server <- function(input, output, session) {
       params <- c(params, paste0("%", input$protein_id, "%"))
     }
 
+    # Protein Name search
+    if (!is.null(input$protein_name) && nzchar(input$protein_name)) {
+      query <- paste(query, "AND Protein_Name LIKE ?")
+      params <- c(params, paste0("%", input$protein_name, "%"))
+    }
+
+    # Gene Name search
+    if (!is.null(input$gene_name) && nzchar(input$gene_name)) {
+      query <- paste(query, "AND Gene_Name LIKE ?")
+      params <- c(params, paste0("%", input$gene_name, "%"))
+    }
+
     # PMID search
     if (!is.null(input$pmid) && nzchar(input$pmid)) {
       query <- paste(query, "AND PMID LIKE ?")
@@ -1268,20 +1285,15 @@ server <- function(input, output, session) {
       params <- c(params, paste0("%", input$author, "%"))
     }
 
-    # Has Mechanism filter
-    if (!is.null(input$has_mechanism) && input$has_mechanism != "All") {
-      query <- paste(query, "AND Has_Mechanism = ?")
-      params <- c(params, input$has_mechanism)
-    }
-
     # Source filter
-    if (!is.null(input$source) && input$source != "All") {
-      query <- paste(query, "AND Source = ?")
-      params <- c(params, input$source)
+    if (!is.null(input$source) && length(input$source) > 0) {
+      placeholders <- paste(rep("?", length(input$source)), collapse = ",")
+      query <- paste(query, "AND Source IN (", placeholders, ")")
+      params <- c(params, as.list(input$source))
     }
 
     # Year filter
-    if (!is.null(input$year) && !"All" %in% input$year && length(input$year) > 0) {
+    if (!is.null(input$year) && length(input$year) > 0) {
       placeholders <- paste(rep("?", length(input$year)), collapse = ",")
       query <- paste(query, "AND Year IN (", placeholders, ")")
       params <- c(params, as.list(input$year))
@@ -1336,7 +1348,7 @@ server <- function(input, output, session) {
        LIMIT 100")$Journal
 
     updateSelectizeInput(session, "journal",
-      choices = c("All" = "All", top_journals),
+      choices = top_journals,
       server = FALSE)
 
     # Load top 100 most common organisms (OS has 9000+ unique values!)
@@ -1348,7 +1360,7 @@ server <- function(input, output, session) {
        LIMIT 100")$OS
 
     updateSelectizeInput(session, "os",
-      choices = c("All" = "All", top_os),
+      choices = top_os,
       server = FALSE)
 
     # Load all autoregulatory types (only ~10 values)
@@ -1358,7 +1370,7 @@ server <- function(input, output, session) {
        ORDER BY Autoregulatory_Type")$Autoregulatory_Type
 
     updateSelectizeInput(session, "type",
-      choices = c("All" = "All", all_types),
+      choices = all_types,
       server = FALSE)
 
     # Load all years (only ~50 values)
@@ -1368,14 +1380,14 @@ server <- function(input, output, session) {
        ORDER BY Year DESC")$Year
 
     updateSelectizeInput(session, "year",
-      choices = c("All" = "All", all_years),
+      choices = all_years,
       server = FALSE)
   })
 
   # Reset pagination whenever filters change
   observeEvent(list(input$journal, input$type, input$os, input$ac, input$protein_id,
-                    input$pmid, input$author, input$has_mechanism, input$source,
-                    input$year, input$month, input$search, input$rows_per_page), {
+                    input$protein_name, input$gene_name, input$pmid, input$author,
+                    input$source, input$year, input$month, input$search, input$rows_per_page), {
     current_page(1)
   })
 
@@ -1408,15 +1420,16 @@ server <- function(input, output, session) {
   # Reset all filters to default state
   observeEvent(input$reset_filters, {
     updateTextInput(session, "protein_id", value = "")
+    updateTextInput(session, "protein_name", value = "")
+    updateTextInput(session, "gene_name", value = "")
     updateTextInput(session, "ac", value = "")
     updateTextInput(session, "pmid", value = "")
     updateTextInput(session, "author", value = "")
-    updateSelectInput(session, "journal", selected = "All")
-    updateSelectInput(session, "os", selected = "All")
-    updateSelectInput(session, "type", selected = "All")
-    updateSelectInput(session, "has_mechanism", selected = "All")
-    updateSelectInput(session, "source", selected = "All")
-    updateSelectInput(session, "year", selected = "All")
+    updateSelectizeInput(session, "journal", selected = character(0))
+    updateSelectizeInput(session, "os", selected = character(0))
+    updateSelectizeInput(session, "type", selected = character(0))
+    updateSelectizeInput(session, "source", selected = c("UniProt", "Non-UniProt"))
+    updateSelectizeInput(session, "year", selected = character(0))
     updateSelectInput(session, "month", selected = "All")
     updateTextAreaInput(session, "search", value = "")
   })
