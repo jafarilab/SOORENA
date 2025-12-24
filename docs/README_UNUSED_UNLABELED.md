@@ -139,9 +139,9 @@ Used to add:
 - `Abstract`
 
 ### Output
-`shiny_app/data/predictions_for_app.csv`
+`results/unused_predictions_autoregulatory_only_metadata.csv`
 
-This is the final dataset used by the Shiny app (before SQLite conversion).
+This is the merged dataset with metadata (AC/OS/Title/Abstract) before enrichment and SQLite conversion.
 
 ### Command
 ```bash
@@ -159,16 +159,16 @@ After merging, enrich the final dataset with UniProt protein and gene names.
 `scripts/python/data_processing/enrich_pubtator_csv.py`
 
 ### Input
-- `results/unused_unlabeled_predictions_autoregulatory_only.csv`
+- `results/unused_predictions_autoregulatory_only_metadata.csv`
 
 ### Output
-- `results/unused_unlabeled_predictions_autoregulatory_only_enriched.csv`
+- `results/unused_predictions_autoregulatory_only_metadata_enriched.csv`
 
 ### Command
 ```bash
 python scripts/python/data_processing/enrich_pubtator_csv.py \
-  --input results/unused_unlabeled_predictions_autoregulatory_only.csv \
-  --output results/unused_unlabeled_predictions_autoregulatory_only_enriched.csv
+  --input results/unused_predictions_autoregulatory_only_metadata.csv \
+  --output results/unused_predictions_autoregulatory_only_metadata_enriched.csv
 ```
 
 ---
@@ -184,8 +184,8 @@ Raw model predictions for the unused pool (includes both autoregulatory and nonâ
 **unused_unlabeled_predictions_autoregulatory_only.csv**  
 Filtered predictions (autoregulatory only).
 
-**predictions_for_app.csv**  
-Final merged dataset used by the Shiny app.
+**unused_predictions_autoregulatory_only_metadata.csv**  
+Merged dataset with metadata (AC/OS/Title/Abstract) before enrichment.
 
 ---
 

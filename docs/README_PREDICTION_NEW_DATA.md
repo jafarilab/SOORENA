@@ -73,25 +73,29 @@ python scripts/python/data_processing/enrich_pubtator_csv.py \
 
 ## 6) Merge with Existing Enriched Dataset
 
-Once the 3M predictions are enriched, merge them with the existing enriched
-app dataset (from the unused unlabeled flow).
+Once the 3M predictions are enriched, merge them with the enriched metadata
+dataset from the unused unlabeled flow.
 
 ### Script
 `scripts/python/data_processing/merge_enriched_predictions.py`
 
 ### Inputs
-**Base (existing app data):**
-- `shiny_app/data/predictions_for_app_enriched.csv`
+**Base (unused unlabeled metadata, enriched):**
+- `results/unused_predictions_autoregulatory_only_metadata_enriched.csv`
 
 **New (3M predictions enriched):**
 - `results/new_predictions_autoregulatory_only_enriched.csv`
 
 ### Output
-- `shiny_app/data/predictions_for_app_enriched_merged.csv`
+- `results/predictions_autoregulatory_only_enriched_merged.csv`
 
 ### Recommended Command
 ```bash
-python scripts/python/data_processing/merge_enriched_predictions.py 
+python scripts/python/data_processing/merge_enriched_predictions.py \
+  --base results/unused_predictions_autoregulatory_only_metadata_enriched.csv \
+  --new results/new_predictions_autoregulatory_only_enriched.csv \
+  --output results/predictions_autoregulatory_only_enriched_merged.csv
+
 ```
 
 
@@ -104,7 +108,7 @@ Create the Shiny app database directly from the merged enriched CSV:
 
 ```bash
 python scripts/python/data_processing/create_sqlite_db.py \
-  --input shiny_app/data/predictions_for_app_enriched_merged.csv \
+  --input shiny_app/data/predictions.csv \
   --output shiny_app/data/predictions.db
 ```
 

@@ -196,8 +196,8 @@ def main():
             combined_df[col] = None
 
     # Save final dataset
-    output_file = 'shiny_app/data/predictions_for_app.csv'
-    os.makedirs('shiny_app/data', exist_ok=True)
+    output_file = 'results/unused_predictions_autoregulatory_only_metadata.csv'
+    os.makedirs('results', exist_ok=True)
 
     print("Step 7: Saving final dataset...")
     combined_df.to_csv(output_file, index=False)
