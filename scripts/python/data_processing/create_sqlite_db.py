@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Create SQLite database from predictions_for_app.csv
+Create SQLite database from a CSV dataset.
 
 This script:
-1. Loads the final CSV file
+1. Loads the CSV file
 2. Creates a SQLite database with optimized schema
 3. Creates indexes for fast filtering
 4. Validates the database
 
-Output: shiny_app/data/predictions.db
+Default output: shiny_app/data/predictions.db
 """
 import sys
+import argparse
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -203,17 +204,27 @@ def create_database(csv_file, db_file):
 
 def main():
     """Main execution."""
-    csv_file = 'shiny_app/data/predictions_for_app.csv'
-    db_file = 'shiny_app/data/predictions.db'
+    parser = argparse.ArgumentParser(description="Create SQLite DB from CSV.")
+    parser.add_argument(
+        "--input",
+        default="shiny_app/data/predictions_for_app.csv",
+        help="Input CSV path",
+    )
+    parser.add_argument(
+        "--output",
+        default="shiny_app/data/predictions.db",
+        help="Output SQLite DB path",
+    )
+    args = parser.parse_args()
 
     # Check CSV exists
-    if not os.path.exists(csv_file):
-        print(f"ERROR: CSV file not found: {csv_file}")
-        print("Please run rebuild_final_dataset.py first")
+    if not os.path.exists(args.input):
+        print(f"ERROR: CSV file not found: {args.input}")
+        print("Please provide --input or build the CSV first.")
         sys.exit(1)
 
     # Create database
-    create_database(csv_file, db_file)
+    create_database(args.input, args.output)
 
 
 if __name__ == "__main__":

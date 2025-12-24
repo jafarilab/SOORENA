@@ -47,6 +47,7 @@ data/processed/stage2_test_eval.csv
 pubtator_genes*.csv
 shiny_app/data/predictions_for_app_backup.csv
 shiny_app/data/predictions_for_app_sample_10.csv
+data/protein_cache.json
 
 # Ignore large model binaries unless needed
 models/*.pt
@@ -59,3 +60,15 @@ shiny_app/data/predictions_for_app.csv
 shiny_app/data/predictions_for_app_enriched.csv
 results/*_checkpoint.csv
 shiny_app/data/predictions.db
+
+# Generated predictions and merges
+results/*.csv
+**/*_enriched*.csv
+**/*_merged*.csv
+
+# App data (generated)
+shiny_app/data/*.csv
+shiny_app/data/*.db
+
+# Local notebooks
+N.ipynb
