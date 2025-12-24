@@ -3,7 +3,7 @@
 Enrich a CSV with protein/gene info using PubTator + UniProt.
 
 This script uses PMIDs to fetch gene IDs/names from PubTator, maps GeneID -> UniProt,
-and writes AC / Protein_ID / Protein_Name / Gene_Name columns into a new CSV.
+and writes UniProtKB_accessions / Protein_ID / Protein_Name / Gene_Name columns into a new CSV.
 """
 import argparse
 import sys
@@ -148,7 +148,7 @@ def main():
             gene_name_value = " | ".join(sorted(gene_names_final)) if gene_names_final else ""
 
             results[pmid_doc] = {
-                "AC": ac_value,
+                "UniProtKB_accessions": ac_value,
                 "Protein_ID": protein_id_value,
                 "Protein_Name": protein_name_value,
                 "Gene_Name": gene_name_value,
@@ -167,12 +167,15 @@ def main():
         time.sleep(args.sleep)
 
     print()
-    for col in ["AC", "Protein_ID", "Protein_Name", "Gene_Name"]:
+    for col in ["UniProtKB_accessions", "Protein_ID", "Protein_Name", "Gene_Name"]:
         if col not in df.columns:
             df[col] = ""
-        df[col] = df[args.pmid_col].astype(str).map(
+        mapped = df[args.pmid_col].astype(str).map(
             lambda p: results.get(str(p), {}).get(col, "")
-        )
+        ).fillna("")
+        existing = df[col].fillna("").astype(str)
+        # Only overwrite when we have a non-empty enrichment value.
+        df[col] = existing.where(mapped == "", mapped)
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

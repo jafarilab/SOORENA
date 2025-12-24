@@ -124,6 +124,7 @@ header_ui <- div(
   div(class = "header-logos",
       img(src = "logoHelsinki.png"),
       img(src = "logoUBC.png"),
+      img(src = "Tampere.png", alt = "Tampere University"),
       img(src = "logoJafariLab.png")
   )
 )
@@ -570,15 +571,15 @@ ui <- navbarPage(
 
       # Search and Filter Controls
   # Search and Filter Controls
-  div(class = "filter-panel",
-    fluidRow(
-      column(
-        width = 8,
+	  div(class = "filter-panel",
+	    fluidRow(
+	      column(
+	        width = 8,
         fluidRow(
           column(3, textInput("protein_id", "Protein ID", placeholder = "Search protein ID...")),
           column(3, textInput("protein_name", "Protein Name", placeholder = "Search protein name...")),
           column(3, textInput("gene_name", "Gene Name", placeholder = "Search gene name...")),
-          column(3, textInput("ac", "AC", placeholder = "Search AC..."))
+          column(3, textInput("ac", "UniProt AC", placeholder = "Search UniProt accession..."))
         ),
         fluidRow(
           column(3, textInput("pmid", "PMID", placeholder = "Search PMID...")),
@@ -611,14 +612,20 @@ ui <- navbarPage(
                                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                 multiple = TRUE))
         )
-      ),
-      column(
-        width = 4,
-        textAreaInput("search", "Search Title / Abstract", placeholder = "Type or paste any text...", height = "120px"),
-        actionButton("reset_filters", "Reset Filters", class = "btn-warning")
-      )
-    )
-  ),
+	      ),
+	      column(
+	        width = 4,
+	        selectInput(
+	          "match_mode",
+	          "Search match",
+	          choices = c("Contains" = "contains", "Exact" = "exact"),
+	          selected = "contains"
+	        ),
+	        textAreaInput("search", "Search Title / Abstract", placeholder = "Type or paste any text...", height = "120px"),
+	        actionButton("reset_filters", "Reset Filters", class = "btn-warning")
+	      )
+	    )
+	  ),
 
         # Display Table with loading spinner
         div(class = "table-toolbar-wrap", style = "margin: 0 30px 20px 30px;",
@@ -1082,14 +1089,23 @@ ui <- navbarPage(
       ),
 
       # Project Description
-      div(class = "about-description",
-        style = "max-width: 900px; margin: 0 auto 60px auto; padding: 0 20px;",
-        p("SOORENA is a comprehensive database for exploring autoregulatory mechanisms in proteins.
-          Our machine learning-powered platform analyzes millions of scientific publications to identify
-          and classify autoregulatory protein mechanisms, providing researchers with unprecedented access
-          to this critical biological information.",
-          style = "font-size: 1.1em; line-height: 1.8; color: #34495e; text-align: center;")
-      ),
+	      div(class = "about-description",
+	        style = "max-width: 900px; margin: 0 auto 60px auto; padding: 0 20px;",
+	        p("SOORENA is a comprehensive database for exploring autoregulatory mechanisms in proteins.
+	          Our machine learning-powered platform analyzes millions of scientific publications to identify
+	          and classify autoregulatory protein mechanisms, providing researchers with unprecedented access
+	          to this critical biological information.",
+	          style = "font-size: 1.1em; line-height: 1.8; color: #34495e; text-align: center;")
+	        ,
+	        p(
+	          tags$a(
+	            href = "https://www.biorxiv.org/content/10.1101/2025.11.03.685842v1",
+	            target = "_blank",
+	            "Read the BioRxiv manuscript"
+	          ),
+	          style = "font-size: 1.05em; line-height: 1.6; color: #34495e; text-align: center;"
+	        )
+	      ),
 
       # Team Section Header
       div(class = "about-team-header",
@@ -1224,9 +1240,10 @@ server <- function(input, output, session) {
   }
 
   # Build WHERE clause and parameter list based on current filters
-  build_filter_query <- function() {
-    query <- "FROM predictions WHERE 1=1"
-    params <- list()
+	  build_filter_query <- function() {
+	    query <- "FROM predictions WHERE 1=1"
+	    params <- list()
+	    match_mode <- if (!is.null(input$match_mode) && input$match_mode == "exact") "exact" else "contains"
 
     # Journal filter
     if (!is.null(input$journal) && length(input$journal) > 0) {
@@ -1249,41 +1266,77 @@ server <- function(input, output, session) {
       params <- c(params, as.list(input$os))
     }
 
-    # AC search
-    if (!is.null(input$ac) && nzchar(input$ac)) {
-      query <- paste(query, "AND AC LIKE ?")
-      params <- c(params, paste0("%", input$ac, "%"))
-    }
+	    # UniProtKB accessions search
+	    if (!is.null(input$ac) && nzchar(input$ac)) {
+	      value <- trimws(input$ac)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND (',' || REPLACE(UPPER(UniProtKB_accessions), ' ', '') || ',') LIKE ?")
+	        params <- c(params, paste0("%,", toupper(gsub(" ", "", value)), ",%"))
+	      } else {
+	        query <- paste(query, "AND UPPER(UniProtKB_accessions) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Protein ID search
-    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
-      query <- paste(query, "AND Protein_ID LIKE ?")
-      params <- c(params, paste0("%", input$protein_id, "%"))
-    }
+	    # Protein ID search
+	    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
+	      value <- trimws(input$protein_id)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Protein_ID = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Protein_ID) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Protein Name search
-    if (!is.null(input$protein_name) && nzchar(input$protein_name)) {
-      query <- paste(query, "AND Protein_Name LIKE ?")
-      params <- c(params, paste0("%", input$protein_name, "%"))
-    }
+	    # Protein Name search
+	    if (!is.null(input$protein_name) && nzchar(input$protein_name)) {
+	      value <- trimws(input$protein_name)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Protein_Name = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Protein_Name) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Gene Name search
-    if (!is.null(input$gene_name) && nzchar(input$gene_name)) {
-      query <- paste(query, "AND Gene_Name LIKE ?")
-      params <- c(params, paste0("%", input$gene_name, "%"))
-    }
+	    # Gene Name search
+	    if (!is.null(input$gene_name) && nzchar(input$gene_name)) {
+	      value <- trimws(input$gene_name)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Gene_Name = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Gene_Name) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # PMID search
-    if (!is.null(input$pmid) && nzchar(input$pmid)) {
-      query <- paste(query, "AND PMID LIKE ?")
-      params <- c(params, paste0("%", input$pmid, "%"))
-    }
+	    # PMID search
+	    if (!is.null(input$pmid) && nzchar(input$pmid)) {
+	      value <- trimws(input$pmid)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND PMID = ?")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND PMID LIKE ?")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Author search
-    if (!is.null(input$author) && nzchar(input$author)) {
-      query <- paste(query, "AND Authors LIKE ?")
-      params <- c(params, paste0("%", input$author, "%"))
-    }
+	    # Author search
+	    if (!is.null(input$author) && nzchar(input$author)) {
+	      value <- trimws(input$author)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Authors = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Authors) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
     # Source filter
     if (!is.null(input$source) && length(input$source) > 0) {
@@ -1306,12 +1359,18 @@ server <- function(input, output, session) {
       params <- c(params, as.list(input$month))
     }
 
-    # Title / Abstract search
-    if (!is.null(input$search) && nzchar(input$search)) {
-      query <- paste(query, "AND (Title LIKE ? OR Abstract LIKE ?)")
-      search_pattern <- paste0("%", input$search, "%")
-      params <- c(params, search_pattern, search_pattern)
-    }
+	    # Title / Abstract search
+	    if (!is.null(input$search) && nzchar(input$search)) {
+	      value <- trimws(input$search)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND (Title = ? COLLATE NOCASE OR Abstract = ? COLLATE NOCASE)")
+	        params <- c(params, value, value)
+	      } else {
+	        query <- paste(query, "AND (UPPER(Title) LIKE UPPER(?) OR UPPER(Abstract) LIKE UPPER(?))")
+	        search_pattern <- paste0("%", value, "%")
+	        params <- c(params, search_pattern, search_pattern)
+	      }
+	    }
 
     list(where = query, params = params)
   }
@@ -1384,12 +1443,12 @@ server <- function(input, output, session) {
       server = FALSE)
   })
 
-  # Reset pagination whenever filters change
-  observeEvent(list(input$journal, input$type, input$os, input$ac, input$protein_id,
-                    input$protein_name, input$gene_name, input$pmid, input$author,
-                    input$source, input$year, input$month, input$search, input$rows_per_page), {
-    current_page(1)
-  })
+	  # Reset pagination whenever filters change
+	  observeEvent(list(input$journal, input$type, input$os, input$ac, input$protein_id,
+	                    input$protein_name, input$gene_name, input$pmid, input$author,
+	                    input$source, input$year, input$month, input$search, input$match_mode, input$rows_per_page), {
+	    current_page(1)
+	  })
 
   # Download csv button
   output$download_csv <- downloadHandler(
@@ -1418,21 +1477,22 @@ server <- function(input, output, session) {
     })
 
   # Reset all filters to default state
-  observeEvent(input$reset_filters, {
-    updateTextInput(session, "protein_id", value = "")
-    updateTextInput(session, "protein_name", value = "")
-    updateTextInput(session, "gene_name", value = "")
-    updateTextInput(session, "ac", value = "")
-    updateTextInput(session, "pmid", value = "")
-    updateTextInput(session, "author", value = "")
-    updateSelectizeInput(session, "journal", selected = character(0))
-    updateSelectizeInput(session, "os", selected = character(0))
-    updateSelectizeInput(session, "type", selected = character(0))
-    updateSelectizeInput(session, "source", selected = c("UniProt", "Non-UniProt"))
-    updateSelectizeInput(session, "year", selected = character(0))
-    updateSelectInput(session, "month", selected = "All")
-    updateTextAreaInput(session, "search", value = "")
-  })
+	  observeEvent(input$reset_filters, {
+	    updateTextInput(session, "protein_id", value = "")
+	    updateTextInput(session, "protein_name", value = "")
+	    updateTextInput(session, "gene_name", value = "")
+	    updateTextInput(session, "ac", value = "")
+	    updateTextInput(session, "pmid", value = "")
+	    updateTextInput(session, "author", value = "")
+	    updateSelectizeInput(session, "journal", selected = character(0))
+	    updateSelectizeInput(session, "os", selected = character(0))
+	    updateSelectizeInput(session, "type", selected = character(0))
+	    updateSelectizeInput(session, "source", selected = c("UniProt", "Non-UniProt"))
+	    updateSelectizeInput(session, "year", selected = character(0))
+	    updateSelectInput(session, "month", selected = "All")
+	    updateSelectInput(session, "match_mode", selected = "contains")
+	    updateTextAreaInput(session, "search", value = "")
+	  })
 
   # Get total count of matching rows (for "Showing X of Y" display)
   total_count <- reactive({
@@ -1449,26 +1509,29 @@ server <- function(input, output, session) {
   })
 
   # Filtering Logic - Build SQL query dynamically with LIMIT
-  filtered_data <- reactive({
-    filters <- build_filter_query()
-    offset <- (current_page() - 1) * page_size()
-    query <- paste(
-      "SELECT *",
-      filters$where,
-      "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, PMID",
-      "LIMIT ? OFFSET ?"
-    )
-    params <- c(filters$params, page_size(), offset)
+	  filtered_data <- reactive({
+	    filters <- build_filter_query()
+	    offset <- (current_page() - 1) * page_size()
+	    query <- paste(
+	      "SELECT *",
+	      filters$where,
+	      "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, CAST(PMID AS INTEGER)",
+	      "LIMIT ? OFFSET ?"
+	    )
+	    params <- c(filters$params, page_size(), offset)
 
-    result <- dbGetQuery(conn, query, params = params)
+	    result <- dbGetQuery(conn, query, params = params)
 
-    # Convert column names back to spaces for display
-    colnames(result) <- gsub("_", " ", colnames(result))
+	    # Convert column names back to spaces for display
+	    colnames(result) <- gsub("_", " ", colnames(result))
+	    if ("UniProtKB accessions" %in% colnames(result)) {
+	      colnames(result)[colnames(result) == "UniProtKB accessions"] <- "UniProt AC"
+	    }
 
-    # Replace Autoregulatory Type 'NA' and 'none' values with 'non-autoregulatory'
-    if ("Autoregulatory Type" %in% colnames(result)) {
-      result$`Autoregulatory Type` <- ifelse(
-        is.na(result$`Autoregulatory Type`) |
+	    # Replace Autoregulatory Type 'NA' and 'none' values with 'non-autoregulatory'
+	    if ("Autoregulatory Type" %in% colnames(result)) {
+	      result$`Autoregulatory Type` <- ifelse(
+	        is.na(result$`Autoregulatory Type`) |
           trimws(result$`Autoregulatory Type`) == "" |
           tolower(trimws(result$`Autoregulatory Type`)) == "none",
         "non-autoregulatory",
@@ -1820,54 +1883,53 @@ server <- function(input, output, session) {
   }, striped = TRUE, hover = TRUE, bordered = TRUE, width = "100%", align = 'lcccc')
 
 
-output$result_table <- renderDT({
-  data <- filtered_data()
+	output$result_table <- renderDT({
+	  data <- filtered_data()
 
-  data <- data %>% select(
-    AC, `Protein Name`, `Gene Name`, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Year, Month, Source,
-    `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
-  )
+	  data <- data %>% select(
+	    AC, `UniProt AC`, `Protein Name`, `Gene Name`, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Year, Month, Source,
+	    `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
+	  )
 
-  # Add row numbers as first column
-  data <- data %>% mutate(`#` = row_number(), .before = 1)
-
-  # Make PMID a clickable link to PubMed
-  data$PMID <- ifelse(
-    !is.na(data$PMID) & data$PMID != "",
+	  # Make PMID a clickable link to PubMed
+	  data$PMID <- ifelse(
+	    !is.na(data$PMID) & data$PMID != "",
     paste0('<a href="https://pubmed.ncbi.nlm.nih.gov/', data$PMID,
            '" target="_blank" style="color: #0366d6; text-decoration: none;">',
            data$PMID, '</a>'),
     data$PMID
-  )
+	  )
 
-  # Make AC a clickable link to UniProt (first AC if multiple)
-  data$AC <- ifelse(
-    !is.na(data$AC) & data$AC != "",
-    sapply(data$AC, function(ac) {
-      first_ac <- trimws(strsplit(ac, ",")[[1]][1])
-      full_ac <- safe_cell(ac, 30, "AC")
+	  # Make UniProtKB accessions clickable to UniProt (first accession if multiple)
+	  uniprot_col <- "UniProt AC"
+	  data[[uniprot_col]] <- ifelse(
+	    !is.na(data[[uniprot_col]]) & data[[uniprot_col]] != "",
+	    sapply(data[[uniprot_col]], function(ac) {
+	      first_ac <- trimws(strsplit(ac, ",")[[1]][1])
+      full_ac <- safe_cell(ac, 30, uniprot_col)
       paste0('<a href="https://www.uniprot.org/uniprotkb/', first_ac,
              '" target="_blank" style="color: #0366d6; text-decoration: none;">',
              full_ac, '</a>')
     }),
-    safe_cell(data$AC, 30, "AC")
-  )
+    safe_cell(data[[uniprot_col]], 30, uniprot_col)
+	  )
 
-  data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
-  data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
+	  data$AC <- safe_cell(data$AC, 25, "AC")
+	  data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
+	  data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
 
   # Clean up Protein ID: hide "NA_####" entries (show blank instead)
   data$`Protein ID` <- ifelse(
     grepl("^NA_", data$`Protein ID`),
     "",  # Show blank for NA_#### entries
     safe_cell(data$`Protein ID`, 25, "Protein ID")
-  )
+	  )
 
-  data$OS <- safe_cell(data$OS, 40, "OS")
-  data$Title <- safe_cell(data$Title, 50, "Title")
-  data$Abstract <- safe_cell(data$Abstract, 50, "Abstract")
-  data$Journal <- safe_cell(data$Journal, 40, "Journal")
-  data$Authors <- safe_cell(data$Authors, 50, "Authors")
+	  data$OS <- safe_cell(data$OS, 40, "OS")
+	  data$Title <- safe_cell(data$Title, 50, "Title")
+	  data$Abstract <- safe_cell(data$Abstract, 50, "Abstract")
+	  data$Journal <- safe_cell(data$Journal, 40, "Journal")
+	  data$Authors <- safe_cell(data$Authors, 50, "Authors")
 
   getOntologyDetails <- function(type) {
     if (is.na(type) || type == "non-autoregulatory" || trimws(type) == "") {
@@ -1911,19 +1973,30 @@ output$result_table <- renderDT({
     data,
     escape = FALSE,
     rownames = FALSE,  # Disable built-in row numbers (we have our own # column)
-    options = list(
-      pageLength = page_size(),  # Show all loaded rows for current page size
-      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
-      scrollX = TRUE,
-      dom = 't',  # Only show table (no info text at bottom)
-      order = list(),
-      columnDefs = list(
-        list(targets = 0, orderable = FALSE, width = "40px", className = "dt-center"),  # Row number column - centered
-        list(targets = c(11, 12, 13, 14, 15, 16), className = "dt-center"),  # Year, Month, Source, Mechanism Probability, Autoregulatory Type, Type Confidence - centered
-        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
-      ),
-      # Server-side processing: only load current page, not all rows
-      serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
+	    options = list(
+	      pageLength = page_size(),  # Show all loaded rows for current page size
+	      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
+	      scrollX = TRUE,
+	      dom = 't',  # Only show table (no info text at bottom)
+	      order = list(),
+	      columnDefs = list(
+	        list(
+	          targets = 6,  # PMID column (rendered as HTML link)
+	          render = JS(
+	            "function(data, type, row, meta) {",
+	            "  if (type === 'sort' || type === 'type') {",
+	            "    var m = String(data).match(/\\d+/);",
+	            "    return m ? parseInt(m[0], 10) : 0;",
+	            "  }",
+	            "  return data;",
+	            "}"
+	          )
+	        ),
+	        list(targets = c(11, 12, 13, 14, 15, 16), className = "dt-center"),  # Year, Month, Source, Mechanism Probability, Autoregulatory Type, Type Confidence - centered
+	        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
+	      ),
+	      # Server-side processing: only load current page, not all rows
+	      serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
       deferRender = TRUE,
       scroller = FALSE,
       # Center column headers

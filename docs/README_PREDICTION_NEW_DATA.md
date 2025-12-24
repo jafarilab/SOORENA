@@ -64,7 +64,7 @@ python scripts/python/data_processing/enrich_pubtator_csv.py \
 ```
 
 **Output columns added:**
-- `AC`
+- `UniProtKB_accessions` (comma-separated UniProtKB accession numbers, if found)
 - `Protein_ID`
 - `Protein_Name`
 - `Gene_Name`
@@ -97,6 +97,9 @@ python scripts/python/data_processing/merge_enriched_predictions.py \
   --output shiny_app/data/predictions.csv
 
 ```
+
+This merge step also generates a **database-specific unique row identifier**:
+- `AC` = `SOORENA_<PMID>_<n>` (keeps duplicate PMIDs as separate rows)
 
 
 

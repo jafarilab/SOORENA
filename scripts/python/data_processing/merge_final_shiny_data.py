@@ -84,10 +84,14 @@ def merge_with_metadata(df, autoreg_df):
     )
 
     # Aggregate by PMID
-    autoreg_agg = autoreg_df.groupby('PMID', as_index=False).agg({
-        'AC': lambda x: ', '.join(x.dropna().astype(str).unique()),
-        'OS': 'first'
-    })
+    autoreg_agg = (
+        autoreg_df.groupby('PMID', as_index=False)
+        .agg({
+            'AC': lambda x: ', '.join(x.dropna().astype(str).unique()),
+            'OS': 'first'
+        })
+        .rename(columns={"AC": "UniProtKB_accessions"})
+    )
     # FIX: Convert float PMID to Int64 first (removes .0), then to string
     autoreg_agg['PMID'] = autoreg_agg['PMID'].astype('Int64').astype(str)
 
@@ -96,7 +100,8 @@ def merge_with_metadata(df, autoreg_df):
 
     # Create Protein ID
     df['Protein ID'] = df.apply(
-        lambda row: f"{row['AC'].split(', ')[0]}_{row['PMID']}" if pd.notna(row['AC']) else f"NA_{row['PMID']}",
+        lambda row: f"{row['UniProtKB_accessions'].split(', ')[0]}_{row['PMID']}"
+        if pd.notna(row['UniProtKB_accessions']) else f"NA_{row['PMID']}",
         axis=1
     )
 
@@ -104,15 +109,15 @@ def merge_with_metadata(df, autoreg_df):
 
 
 def merge_with_pubmed(df, pubmed_df):
-    """Add Title and Abstract columns from raw PubMed data."""
+    """Add Title/Abstract/Journal/Authors columns from raw PubMed data."""
     df['PMID'] = df['PMID'].astype(str)
     pubmed_df['PMID'] = pubmed_df['PMID'].astype(str)
 
-    cols = ['PMID', 'Title', 'Abstract']
+    cols = ['PMID', 'Title', 'Abstract', 'Journal', 'Authors']
     pubmed_trim = pubmed_df[cols].copy()
 
     merged = df.merge(pubmed_trim, on='PMID', how='left', suffixes=('', '_pubmed'))
-    for col in ['Title', 'Abstract']:
+    for col in ['Title', 'Abstract', 'Journal', 'Authors']:
         pubmed_col = f"{col}_pubmed"
         if col in merged.columns and pubmed_col in merged.columns:
             merged[col] = merged[col].fillna(merged[pubmed_col])
@@ -186,7 +191,7 @@ def main():
     print()
 
     # Ensure all required columns exist
-    required_cols = ['Protein ID', 'AC', 'OS', 'PMID',
+    required_cols = ['Protein ID', 'UniProtKB_accessions', 'OS', 'PMID',
                      'Has Mechanism', 'Mechanism Probability', 'Source',
                      'Autoregulatory Type', 'Type Confidence',
                      'Title', 'Abstract']

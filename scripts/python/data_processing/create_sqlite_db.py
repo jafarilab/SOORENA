@@ -64,6 +64,7 @@ def create_database(csv_file, db_file):
     create_table_sql = """
     CREATE TABLE predictions (
         PMID TEXT,
+        AC TEXT,
         Has_Mechanism TEXT,
         Mechanism_Probability REAL,
         Source TEXT,
@@ -75,7 +76,7 @@ def create_database(csv_file, db_file):
         Authors TEXT,
         Year INTEGER,
         Month TEXT,
-        AC TEXT,
+        UniProtKB_accessions TEXT,
         OS TEXT,
         Protein_ID TEXT,
         Protein_Name TEXT,
@@ -111,6 +112,35 @@ def create_database(csv_file, db_file):
     if "Gene Name" in df.columns and "Gene_Name" in df.columns:
         df["Gene Name"] = df["Gene Name"].combine_first(df["Gene_Name"])
         df.drop(columns=["Gene_Name"], inplace=True)
+
+    # Normalize UniProtKB accessions column (legacy AC previously meant UniProt accessions)
+    if "UniProtKB accession numbers" in df.columns and "UniProtKB_accessions" not in df.columns:
+        df.rename(columns={"UniProtKB accession numbers": "UniProtKB_accessions"}, inplace=True)
+
+    def looks_like_uniprot_accessions(series: pd.Series) -> bool:
+        s = series.dropna().astype(str).str.strip()
+        s = s[s != ""]
+        if s.empty:
+            return False
+        sample = s.head(500)
+        if (sample.str.startswith("SOORENA_").mean() > 0.5) or (sample.str.contains("_").mean() > 0.5):
+            return False
+        # Basic "comma-separated accessions" shape check.
+        pattern = r"^[A-Za-z0-9]+(?:,\\s*[A-Za-z0-9]+)*$"
+        return sample.str.match(pattern).mean() > 0.8
+
+    if "UniProtKB_accessions" not in df.columns and "AC" in df.columns and looks_like_uniprot_accessions(df["AC"]):
+        df["UniProtKB_accessions"] = df["AC"].fillna("")
+        df.drop(columns=["AC"], inplace=True)
+
+    # Ensure a unique per-row AC exists; if missing (or duplicated), generate deterministically from PMID.
+    if "AC" not in df.columns or df["AC"].isna().all() or df["AC"].duplicated().any():
+        pmid = df["PMID"].astype(str).fillna("")
+        df["_orig_order"] = range(len(df))
+        df = df.sort_values(["PMID", "_orig_order"], kind="mergesort")
+        df["_pmid_rank"] = df.groupby("PMID").cumcount() + 1
+        df["AC"] = "SOORENA_" + pmid + "_" + df["_pmid_rank"].astype(str)
+        df.drop(columns=["_orig_order", "_pmid_rank"], inplace=True)
 
     # Map prediction-style columns to app-style if needed
     if "has_mechanism" in df.columns:
@@ -163,9 +193,9 @@ def create_database(csv_file, db_file):
 
     # Define column order
     db_columns = [
-        'PMID', 'Has_Mechanism', 'Mechanism_Probability', 'Source',
+        'PMID', 'AC', 'Has_Mechanism', 'Mechanism_Probability', 'Source',
         'Autoregulatory_Type', 'Type_Confidence', 'Title', 'Abstract',
-        'Journal', 'Authors', 'Year', 'Month', 'AC', 'OS',
+        'Journal', 'Authors', 'Year', 'Month', 'UniProtKB_accessions', 'OS',
         'Protein_ID', 'Protein_Name', 'Gene_Name'
     ]
 
@@ -202,12 +232,13 @@ def create_database(csv_file, db_file):
 
     indexes = [
         ("idx_pmid", "PMID"),
+        ("idx_ac", "AC"),
         ("idx_source", "Source"),
         ("idx_has_mechanism", "Has_Mechanism"),
         ("idx_autoregulatory_type", "Autoregulatory_Type"),
         ("idx_year", "Year"),
         ("idx_protein_id", "Protein_ID"),
-        ("idx_ac", "AC")
+        ("idx_uniprot_accessions", "UniProtKB_accessions"),
     ]
 
     for idx_name, column in indexes:

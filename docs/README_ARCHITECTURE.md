@@ -269,7 +269,7 @@ scripts/
 
 **enrich_pubtator_csv.py**
 - Enriches prediction CSVs using PubTator + UniProt
-- Adds AC / Protein / Gene fields
+- Adds UniProtKB_accessions / Protein / Gene fields
 - Uses PMID → GeneID → UniProt mapping
 
 **create_sqlite_db.py**

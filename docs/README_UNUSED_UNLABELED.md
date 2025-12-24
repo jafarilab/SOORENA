@@ -127,7 +127,7 @@ These are model predictions on unseen papers, filtered to autoregulatory only.
 - `data/raw/autoregulatoryDB.rds`
 
 Used to add:
-- `AC` (UniProt accession)
+- `UniProtKB_accessions` (comma-separated UniProtKB accession numbers)
 - `OS` (organism)
 - `Protein ID`
 
@@ -137,11 +137,15 @@ Used to add:
 Used to add:
 - `Title`
 - `Abstract`
+- `Journal`
+- `Authors`
 
 ### Output
 `results/unused_predictions_autoregulatory_only_metadata.csv`
 
-This is the merged dataset with metadata (AC/OS/Title/Abstract) before enrichment and SQLite conversion.
+This is the merged dataset with metadata (UniProtKB_accessions/OS/Title/Abstract/Journal/Authors) before enrichment and SQLite conversion.
+
+Note: The SQLite database later includes a separate `AC` column as a **unique per-row record ID** (not the UniProt accessions).
 
 ### Command
 ```bash
@@ -188,7 +192,7 @@ Raw model predictions for the unused pool (includes both autoregulatory and nonâ
 Filtered predictions (autoregulatory only).
 
 **unused_predictions_autoregulatory_only_metadata.csv**  
-Merged dataset with metadata (AC/OS/Title/Abstract) before enrichment.
+Merged dataset with metadata (UniProtKB_accessions/OS/Title/Abstract/Journal/Authors) before enrichment.
 
 ---
 
