@@ -45,6 +45,7 @@ def load_labeled_papers():
     labeled_df['Type Confidence'] = 1.0  # Ground truth = 100% confidence
 
     labeled_df = labeled_df[labeled_df['Has Mechanism'] == 'Yes']
+    labeled_df = labeled_df[labeled_df['Autoregulatory Type'].fillna("").astype(str).str.strip() != "non-autoregulatory"]
 
     return labeled_df[['PMID', 'Has Mechanism', 'Mechanism Probability',
                        'Source', 'Autoregulatory Type', 'Type Confidence']]

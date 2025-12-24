@@ -23,7 +23,7 @@ import os
 from tqdm import tqdm
 
 
-def create_database(csv_file, db_file):
+def create_database(csv_file, db_file, keep_non_autoregulatory=False):
     """Create SQLite database from CSV file."""
 
     print("="*80)
@@ -188,6 +188,18 @@ def create_database(csv_file, db_file):
     print("  ✓ Columns normalized")
     print()
 
+    if not keep_non_autoregulatory:
+        # Enforce autoregulatory-only invariant for the Shiny app.
+        before = len(df_renamed)
+        has_yes = df_renamed["Has_Mechanism"].astype(str).str.strip().str.lower() == "yes"
+        autoreg = df_renamed["Autoregulatory_Type"].fillna("").astype(str).str.strip().str.lower()
+        is_autoreg = (autoreg != "") & (autoreg != "none") & (autoreg != "non-autoregulatory")
+        df_renamed = df_renamed[has_yes & is_autoreg].copy()
+        removed = before - len(df_renamed)
+        if removed:
+            print(f"Step 5b: Filtered out {removed:,} non-autoregulatory / no-mechanism rows")
+            print()
+
     # Step 6: Insert data in batches
     print("Step 6: Inserting data...")
 
@@ -307,6 +319,11 @@ def main():
         default="shiny_app/data/predictions.db",
         help="Output SQLite DB path",
     )
+    parser.add_argument(
+        "--keep-non-autoregulatory",
+        action="store_true",
+        help="Do not filter out rows with no mechanism / non-autoregulatory type",
+    )
     args = parser.parse_args()
 
     # Check CSV exists
@@ -316,7 +333,7 @@ def main():
         sys.exit(1)
 
     # Create database
-    create_database(args.input, args.output)
+    create_database(args.input, args.output, keep_non_autoregulatory=args.keep_non_autoregulatory)
 
 
 if __name__ == "__main__":

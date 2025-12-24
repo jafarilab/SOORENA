@@ -38,6 +38,21 @@ def http_get_json(url, retries=3, sleep=1.0):
         try:
             with urllib.request.urlopen(url, timeout=30) as resp:
                 return json.load(resp)
+        except urllib.error.HTTPError as exc:
+            # Handle rate limiting / transient errors with backoff.
+            if exc.code in (429, 500, 502, 503, 504):
+                retry_after = exc.headers.get("Retry-After")
+                if retry_after:
+                    try:
+                        time.sleep(float(retry_after))
+                    except Exception:
+                        time.sleep(sleep * (2 ** attempt))
+                else:
+                    time.sleep(sleep * (2 ** attempt))
+                continue
+            if attempt == retries - 1:
+                raise
+            time.sleep(sleep * (2 ** attempt))
         except Exception:
             if attempt == retries - 1:
                 raise
@@ -52,6 +67,20 @@ def http_post_json(url, data_dict, retries=3, sleep=1.0):
             req = urllib.request.Request(url, data=data, method="POST")
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.load(resp)
+        except urllib.error.HTTPError as exc:
+            if exc.code in (429, 500, 502, 503, 504):
+                retry_after = exc.headers.get("Retry-After")
+                if retry_after:
+                    try:
+                        time.sleep(float(retry_after))
+                    except Exception:
+                        time.sleep(sleep * (2 ** attempt))
+                else:
+                    time.sleep(sleep * (2 ** attempt))
+                continue
+            if attempt == retries - 1:
+                raise
+            time.sleep(sleep * (2 ** attempt))
         except Exception:
             if attempt == retries - 1:
                 raise

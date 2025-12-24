@@ -73,6 +73,7 @@ def main():
     pmids = [p for p in pmids if p]
     if args.limit:
         pmids = pmids[: args.limit]
+    pmid_set = set(pmids)
 
     if not pmids:
         raise SystemExit("ERROR: No PMIDs found in input.")
@@ -197,10 +198,11 @@ def main():
         def _is_missing(x):
             if x is None:
                 return True
-            if isinstance(x, float) and pd.isna(x):
+            # Handles NaN, pd.NA, NaT, etc.
+            if pd.isna(x):
                 return True
             s = str(x).strip()
-            return s == "" or s.lower() == "nan"
+            return s == "" or s.lower() == "nan" or s.lower() == "<na>"
 
         missing_mask = df.apply(
             lambda r: _is_missing(r.get("Year")) or _is_missing(r.get("Month")) or _is_missing(r.get("PublicationDate")),
@@ -214,19 +216,31 @@ def main():
         )
         pmids_need = [p for p in pmids_need.tolist() if p]
         pmids_need = list(dict.fromkeys(pmids_need))  # preserve order, unique
+        # Respect --limit for testing (only fill the subset we are processing).
+        pmids_need = [p for p in pmids_need if p in pmid_set]
 
         if pmids_need:
             print(f"Filling PubMed metadata for {len(pmids_need):,} PMIDs (cached)...")
             filled = 0
             start_meta = time.monotonic()
+
             for i in range(0, len(pmids_need), args.pubmed_batch):
                 batch = pmids_need[i:i + args.pubmed_batch]
                 cached = get_cached_pubmed_metadata(cache_conn, batch)
                 missing = [p for p in batch if p not in cached]
+
                 fetched = {}
                 if missing:
-                    fetched = fetch_pubmed_metadata(missing, retries=args.pubmed_retries, sleep=args.pubmed_sleep)
-                    store_pubmed_metadata(cache_conn, fetched)
+                    try:
+                        fetched = fetch_pubmed_metadata(
+                            missing, retries=args.pubmed_retries, sleep=args.pubmed_sleep
+                        )
+                        store_pubmed_metadata(cache_conn, fetched)
+                    except Exception as exc:
+                        # Don't fail the entire run on transient PubMed errors.
+                        print(f"\nWARNING: PubMed fetch failed for batch starting at {i}: {exc}\n")
+                        fetched = {}
+
                 meta = {}
                 meta.update(cached)
                 meta.update(fetched)

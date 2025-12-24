@@ -674,13 +674,6 @@ ui <- navbarPage(
           ),
           div(class = "stat-card stat-card--chart",
             div(class = "stat-card__header",
-              h4("Has Mechanism", class = "stat-card__title"),
-              span(class = "stat-card__meta", "Yes vs No")
-            ),
-            withSpinner(plotlyOutput("stat_mechanism_plot", height = "230px"), type = 6, color = "#2c3e50")
-          ),
-          div(class = "stat-card stat-card--chart",
-            div(class = "stat-card__header",
               h4("Source Mix", class = "stat-card__title"),
               span(class = "stat-card__meta", "UniProt vs Non-UniProt")
             ),
@@ -1457,6 +1450,28 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       data <- filtered_data()
+      # Keep the download consistent with the visible table (no Has Mechanism column).
+      keep <- c(
+        "AC",
+        "PMID",
+        "UniProt AC",
+        "Autoregulatory Type",
+        "Mechanism Probability",
+        "Type Confidence",
+        "Title",
+        "Abstract",
+        "Journal",
+        "Authors",
+        "Year",
+        "Month",
+        "Source",
+        "Protein Name",
+        "Gene Name",
+        "Protein ID",
+        "OS"
+      )
+      keep <- keep[keep %in% colnames(data)]
+      data <- data[, keep, drop = FALSE]
       # Convert underscores back to spaces for column names
       colnames(data) <- gsub("_", " ", colnames(data))
       write.csv(data, file, row.names = FALSE)
@@ -1582,49 +1597,6 @@ server <- function(input, output, session) {
     total <- as.numeric(total_count()[1])
     if (is.na(total)) total <- 0
     format(total, big.mark = ",")
-  })
-
-  output$stat_mechanism_plot <- renderPlotly({
-    is_mobile <- is_mobile_output("stat_mechanism_plot")
-    filters <- build_filter_query()
-    query <- paste(
-      "SELECT Has_Mechanism AS label, COUNT(*) as n",
-      filters$where,
-      "GROUP BY Has_Mechanism"
-    )
-    res <- if (length(filters$params) > 0) {
-      dbGetQuery(conn, query, params = filters$params)
-    } else {
-      dbGetQuery(conn, query)
-    }
-    if (nrow(res) == 0) {
-      res <- data.frame(label = character(0), n = numeric(0))
-    }
-    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
-    res$label <- factor(res$label, levels = c("Yes", "No", "Unknown"))
-    res <- res[order(res$label), ]
-    color_map <- c("Yes" = "#d97742", "No" = "#1a2332", "Unknown" = "#94a3b8")
-    text_info <- if (is_mobile) "percent" else "label+percent"
-    text_size <- if (is_mobile) 10 else 12
-
-    p <- plot_ly(
-      labels = res$label,
-      values = res$n,
-      text = format(res$n, big.mark = ","),
-      type = 'pie',
-      hole = 0.55,
-      sort = FALSE,
-      marker = list(colors = unname(color_map[as.character(res$label)])),
-      textinfo = text_info,
-      textposition = 'inside',
-      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
-      textfont = list(size = text_size)
-    ) %>%
-      layout(
-        showlegend = FALSE,
-        margin = list(l = 10, r = 10, t = 10, b = 10)
-      )
-    apply_plotly_config(p, is_mobile)
   })
 
   output$stat_source_plot <- renderPlotly({
@@ -1883,13 +1855,28 @@ server <- function(input, output, session) {
   }, striped = TRUE, hover = TRUE, bordered = TRUE, width = "100%", align = 'lcccc')
 
 
-	output$result_table <- renderDT({
-	  data <- filtered_data()
-
-	  data <- data %>% select(
-	    AC, `UniProt AC`, `Protein Name`, `Gene Name`, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Year, Month, Source,
-	    `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
-	  )
+ 	output$result_table <- renderDT({
+ 	  data <- filtered_data()
+ 
+ 	  data <- data %>% select(
+	    AC,
+	    PMID,
+	    `UniProt AC`,
+	    `Autoregulatory Type`,
+	    `Mechanism Probability`,
+	    `Type Confidence`,
+	    Title,
+	    Abstract,
+	    Journal,
+	    Authors,
+	    Year,
+	    Month,
+	    Source,
+	    `Protein Name`,
+	    `Gene Name`,
+	    `Protein ID`,
+	    OS
+ 	  )
 
 	  # Make PMID a clickable link to PubMed
 	  data$PMID <- ifelse(
