@@ -1677,53 +1677,48 @@ server <- function(input, output, session) {
 	    paste(parts, collapse = " • ")
 	  })
 
-	  output$stat_source_plot <- renderPlotly({
-	    is_mobile <- is_mobile_output("stat_source_plot")
-	    filters <- build_filter_query()
-	    query <- paste(
-      "SELECT Source AS label, COUNT(*) as n",
-      filters$where,
-      "GROUP BY Source"
-    )
-    res <- if (length(filters$params) > 0) {
-      dbGetQuery(conn, query, params = filters$params)
-    } else {
-      dbGetQuery(conn, query)
-    }
-    if (nrow(res) == 0) {
-      res <- data.frame(label = character(0), n = numeric(0))
-    }
-	    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
-	    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
-	    res <- res[order(res$n, decreasing = TRUE), ]
-	    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
-	    total_n <- sum(res$n, na.rm = TRUE)
-	    pct <- if (total_n > 0) (res$n / total_n) * 100 else 0
-	    label_text <- paste0(format(res$n, big.mark = ","), " (", sprintf("%.1f%%", pct), ")")
-	    text_pos <- if (is_mobile) "inside" else "outside"
-	    text_size <- if (is_mobile) 10 else 12
-	    left_margin <- if (is_mobile) 70 else 90
+		  output$stat_source_plot <- renderPlotly({
+		    is_mobile <- is_mobile_output("stat_source_plot")
+		    filters <- build_filter_query()
+		    query <- paste(
+	      "SELECT Source AS label, COUNT(*) as n",
+	      filters$where,
+	      "GROUP BY Source"
+	    )
+	    res <- if (length(filters$params) > 0) {
+	      dbGetQuery(conn, query, params = filters$params)
+	    } else {
+	      dbGetQuery(conn, query)
+	    }
+	    if (nrow(res) == 0) {
+	      res <- data.frame(label = character(0), n = numeric(0))
+	    }
+		    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
+		    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
+		    res <- res[order(res$label), ]
+		    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
+		    text_size <- if (is_mobile) 10 else 12
+		    text_info <- if (is_mobile) "percent" else "label+percent"
 
-	    p <- plot_ly(
-	      data = res,
-	      x = ~n,
-	      y = ~label,
-	      type = "bar",
-	      orientation = "h",
-	      marker = list(colors = unname(color_map[as.character(res$label)])),
-	      text = label_text,
-	      textposition = text_pos,
-	      hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>",
-	      textfont = list(size = text_size)
-	    ) %>%
-	      layout(
-	        showlegend = FALSE,
-	        xaxis = list(title = "", tickfont = list(size = text_size)),
-	        yaxis = list(title = "", tickfont = list(size = text_size)),
-	        margin = list(l = left_margin, r = 10, t = 10, b = 10)
-	      )
-	    apply_plotly_config(p, is_mobile)
-	  })
+		    p <- plot_ly(
+		      labels = res$label,
+		      values = res$n,
+		      text = format(res$n, big.mark = ","),
+		      type = 'pie',
+		      hole = 0.55,
+		      sort = FALSE,
+		      marker = list(colors = unname(color_map[as.character(res$label)])),
+		      textinfo = text_info,
+		      textposition = 'inside',
+		      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
+		      textfont = list(size = text_size)
+		    ) %>%
+		      layout(
+		        showlegend = FALSE,
+		        margin = list(l = 10, r = 10, t = 10, b = 10)
+		      )
+		    apply_plotly_config(p, is_mobile)
+		  })
 
   output$stat_type_plot <- renderPlotly({
     is_mobile <- is_mobile_output("stat_type_plot")
