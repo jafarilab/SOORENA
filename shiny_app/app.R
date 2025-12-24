@@ -659,14 +659,15 @@ ui <- navbarPage(
       header_ui,
 
       # Dataset Statistics Section
-      div(class = "stats-panel",
-        div(class = "stats-header",
-          div(
-            h2("Dataset Statistics", class = "stats-title"),
-            p("Based on current filters", class = "stats-subtitle")
-          ),
-          div(class = "stats-pill", "Live filtered view")
-        ),
+	      div(class = "stats-panel",
+	        div(class = "stats-header",
+	          div(
+	            h2("Dataset Statistics", class = "stats-title"),
+	            p("Based on current filters", class = "stats-subtitle"),
+	            div(class = "stats-subtitle", textOutput("stat_filters_summary"))
+	          ),
+	          div(class = "stats-pill", "Live filtered view")
+	        ),
         div(class = "stats-grid stats-grid--top",
           div(class = "stat-card stat-card--chart",
             h4("Total Matching Papers", class = "stat-card__title"),
@@ -1591,18 +1592,95 @@ server <- function(input, output, session) {
     paste0("Page ", page, " of ", max_page)
   })
 
-  # Statistics tab outputs
-  # Dataset statistics (reactive based on filtered data)
-  output$stat_total_papers <- renderText({
-    total <- as.numeric(total_count()[1])
-    if (is.na(total)) total <- 0
-    format(total, big.mark = ",")
-  })
+	  # Statistics tab outputs
+	  # Dataset statistics (reactive based on filtered data)
+	  output$stat_total_papers <- renderText({
+	    total <- as.numeric(total_count()[1])
+	    if (is.na(total)) total <- 0
+	    format(total, big.mark = ",")
+	  })
 
-  output$stat_source_plot <- renderPlotly({
-    is_mobile <- is_mobile_output("stat_source_plot")
-    filters <- build_filter_query()
-    query <- paste(
+	  output$stat_filters_summary <- renderText({
+	    summarize_values <- function(label, values, max_items = 3) {
+	      if (is.null(values) || length(values) == 0) return(NULL)
+	      values <- as.character(values)
+	      values <- values[!is.na(values) & trimws(values) != ""]
+	      if (length(values) == 0) return(NULL)
+	      if (length(values) > max_items) {
+	        shown <- paste(values[seq_len(max_items)], collapse = ", ")
+	        return(paste0(label, ": ", shown, " +", length(values) - max_items))
+	      }
+	      paste0(label, ": ", paste(values, collapse = ", "))
+	    }
+
+	    parts <- c()
+
+	    # Only show non-default / user-provided filters (keeps it screenshot-friendly).
+	    if (!is.null(input$type) && length(input$type) > 0) {
+	      parts <- c(parts, summarize_values("Type", input$type, max_items = 2))
+	    }
+
+	    if (!is.null(input$year) && length(input$year) > 0) {
+	      yrs <- suppressWarnings(as.integer(input$year))
+	      yrs <- yrs[!is.na(yrs)]
+	      if (length(yrs) > 0) {
+	        if (length(yrs) > 4) {
+	          parts <- c(parts, paste0("Year: ", min(yrs), "–", max(yrs)))
+	        } else {
+	          parts <- c(parts, paste0("Year: ", paste(sort(unique(yrs)), collapse = ", ")))
+	        }
+	      }
+	    }
+
+	    if (!is.null(input$month) && length(input$month) > 0 && !"All" %in% input$month) {
+	      parts <- c(parts, summarize_values("Month", input$month, max_items = 4))
+	    }
+
+	    if (!is.null(input$source) && length(input$source) > 0 && length(input$source) < 2) {
+	      parts <- c(parts, summarize_values("Source", input$source, max_items = 2))
+	    }
+
+	    if (!is.null(input$journal) && length(input$journal) > 0) {
+	      parts <- c(parts, summarize_values("Journal", input$journal, max_items = 2))
+	    }
+
+	    if (!is.null(input$os) && length(input$os) > 0) {
+	      parts <- c(parts, summarize_values("OS", input$os, max_items = 1))
+	    }
+
+	    if (!is.null(input$pmid) && nzchar(input$pmid)) {
+	      parts <- c(parts, paste0("PMID: ", trimws(input$pmid)))
+	    }
+	    if (!is.null(input$ac) && nzchar(input$ac)) {
+	      parts <- c(parts, paste0("UniProt AC: ", trimws(input$ac)))
+	    }
+	    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
+	      parts <- c(parts, paste0("Protein ID: ", trimws(input$protein_id)))
+	    }
+	    if (!is.null(input$protein_name) && nzchar(input$protein_name)) {
+	      parts <- c(parts, paste0("Protein: ", trimws(input$protein_name)))
+	    }
+	    if (!is.null(input$gene_name) && nzchar(input$gene_name)) {
+	      parts <- c(parts, paste0("Gene: ", trimws(input$gene_name)))
+	    }
+	    if (!is.null(input$author) && nzchar(input$author)) {
+	      parts <- c(parts, paste0("Author: ", trimws(input$author)))
+	    }
+	    if (!is.null(input$search) && nzchar(input$search)) {
+	      q <- trimws(input$search)
+	      if (nchar(q) > 70) q <- paste0(substr(q, 1, 67), "...")
+	      parts <- c(parts, paste0("Text: “", q, "”"))
+	    }
+
+	    parts <- parts[!is.na(parts) & parts != ""]
+	    if (length(parts) == 0) return("No filters applied")
+	    paste(parts, collapse = " • ")
+	  })
+
+	  output$stat_source_plot <- renderPlotly({
+	    is_mobile <- is_mobile_output("stat_source_plot")
+	    filters <- build_filter_query()
+	    query <- paste(
       "SELECT Source AS label, COUNT(*) as n",
       filters$where,
       "GROUP BY Source"
@@ -1615,32 +1693,37 @@ server <- function(input, output, session) {
     if (nrow(res) == 0) {
       res <- data.frame(label = character(0), n = numeric(0))
     }
-    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
-    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
-    res <- res[order(res$label), ]
-    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
-    text_info <- if (is_mobile) "percent" else "label+percent"
-    text_size <- if (is_mobile) 10 else 12
+	    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
+	    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
+	    res <- res[order(res$n, decreasing = TRUE), ]
+	    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
+	    total_n <- sum(res$n, na.rm = TRUE)
+	    pct <- if (total_n > 0) (res$n / total_n) * 100 else 0
+	    label_text <- paste0(format(res$n, big.mark = ","), " (", sprintf("%.1f%%", pct), ")")
+	    text_pos <- if (is_mobile) "inside" else "outside"
+	    text_size <- if (is_mobile) 10 else 12
+	    left_margin <- if (is_mobile) 70 else 90
 
-    p <- plot_ly(
-      labels = res$label,
-      values = res$n,
-      text = format(res$n, big.mark = ","),
-      type = 'pie',
-      hole = 0.55,
-      sort = FALSE,
-      marker = list(colors = unname(color_map[as.character(res$label)])),
-      textinfo = text_info,
-      textposition = 'inside',
-      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
-      textfont = list(size = text_size)
-    ) %>%
-      layout(
-        showlegend = FALSE,
-        margin = list(l = 10, r = 10, t = 10, b = 10)
-      )
-    apply_plotly_config(p, is_mobile)
-  })
+	    p <- plot_ly(
+	      data = res,
+	      x = ~n,
+	      y = ~label,
+	      type = "bar",
+	      orientation = "h",
+	      marker = list(colors = unname(color_map[as.character(res$label)])),
+	      text = label_text,
+	      textposition = text_pos,
+	      hovertemplate = "<b>%{y}</b><br>Papers: %{text}<extra></extra>",
+	      textfont = list(size = text_size)
+	    ) %>%
+	      layout(
+	        showlegend = FALSE,
+	        xaxis = list(title = "", tickfont = list(size = text_size)),
+	        yaxis = list(title = "", tickfont = list(size = text_size)),
+	        margin = list(l = left_margin, r = 10, t = 10, b = 10)
+	      )
+	    apply_plotly_config(p, is_mobile)
+	  })
 
   output$stat_type_plot <- renderPlotly({
     is_mobile <- is_mobile_output("stat_type_plot")
