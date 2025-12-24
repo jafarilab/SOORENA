@@ -69,6 +69,16 @@ python scripts/python/data_processing/enrich_pubtator_csv.py \
 - `Protein_Name`
 - `Gene_Name`
 
+Optional: if any PubMed fields are missing (e.g., Year/Month/PublicationDate), add `--fill-pubmed`
+to fetch them from PubMed (cached):
+
+```bash
+python scripts/python/data_processing/enrich_pubtator_csv.py \
+  --input results/new_predictions_autoregulatory_only.csv \
+  --output results/new_predictions_autoregulatory_only_enriched.csv \
+  --fill-pubmed
+```
+
 ---
 
 ## 6) Merge with Existing Enriched Dataset

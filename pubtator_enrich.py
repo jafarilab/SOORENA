@@ -26,6 +26,7 @@ UNIPROT_RUN_URL = "https://rest.uniprot.org/idmapping/run"
 UNIPROT_STATUS_URL = "https://rest.uniprot.org/idmapping/status/"
 UNIPROT_RESULTS_URL = "https://rest.uniprot.org/idmapping/results/"
 UNIPROT_SEARCH_URL = "https://rest.uniprot.org/uniprotkb/search"
+PUBMED_ESUMMARY_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 
 
 # ----------------------------
@@ -255,6 +256,19 @@ def ensure_cache_db(cache_conn):
         )
         """
     )
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS pubmed_metadata (
+            pmid TEXT PRIMARY KEY,
+            publication_date TEXT,
+            year INTEGER,
+            month TEXT,
+            journal TEXT,
+            authors TEXT,
+            fetched_at TEXT
+        )
+        """
+    )
     cache_conn.commit()
 
 
@@ -323,6 +337,141 @@ def store_uniprot_details(cache_conn, details):
     )
     cache_conn.commit()
 
+
+# ----------------------------
+# PubMed metadata (E-utilities)
+# ----------------------------
+
+_MONTH_MAP = {
+    "jan": "Jan",
+    "feb": "Feb",
+    "mar": "Mar",
+    "apr": "Apr",
+    "may": "May",
+    "jun": "Jun",
+    "jul": "Jul",
+    "aug": "Aug",
+    "sep": "Sep",
+    "sept": "Sep",
+    "oct": "Oct",
+    "nov": "Nov",
+    "dec": "Dec",
+}
+
+
+def _parse_year_month(pubdate: str):
+    if not pubdate:
+        return None, ""
+    s = str(pubdate).strip()
+    year = None
+    for token in s.replace("/", " ").replace("-", " ").split():
+        if len(token) == 4 and token.isdigit():
+            year = int(token)
+            break
+    month = ""
+    lower = s.lower()
+    for key, val in _MONTH_MAP.items():
+        if f" {key} " in f" {lower} ":
+            month = val
+            break
+    return year, month
+
+
+def get_cached_pubmed_metadata(cache_conn, pmids):
+    pmids = [str(p).strip() for p in (pmids or []) if str(p).strip()]
+    if not pmids:
+        return {}
+    cur = cache_conn.cursor()
+    placeholders = ",".join(["?"] * len(pmids))
+    cur.execute(
+        f"""
+        SELECT pmid, publication_date, year, month, journal, authors
+        FROM pubmed_metadata
+        WHERE pmid IN ({placeholders})
+        """,
+        pmids,
+    )
+    out = {}
+    for pmid, publication_date, year, month, journal, authors in cur.fetchall():
+        out[str(pmid)] = {
+            "PublicationDate": publication_date or "",
+            "Year": int(year) if year is not None else None,
+            "Month": month or "",
+            "Journal": journal or "",
+            "Authors": authors or "",
+        }
+    return out
+
+
+def store_pubmed_metadata(cache_conn, meta):
+    if not meta:
+        return
+    cur = cache_conn.cursor()
+    fetched_at = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    rows = []
+    for pmid, info in meta.items():
+        pmid = str(pmid).strip()
+        if not pmid:
+            continue
+        publication_date = (info.get("PublicationDate") or "").strip()
+        year = info.get("Year")
+        month = (info.get("Month") or "").strip()
+        journal = (info.get("Journal") or "").strip()
+        authors = (info.get("Authors") or "").strip()
+        rows.append((pmid, publication_date, year, month, journal, authors, fetched_at))
+    if not rows:
+        return
+    cur.executemany(
+        """
+        INSERT OR REPLACE INTO pubmed_metadata
+          (pmid, publication_date, year, month, journal, authors, fetched_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        rows,
+    )
+    cache_conn.commit()
+
+
+def fetch_pubmed_metadata(pmids, retries=3, sleep=0.34):
+    """Fetch publication metadata for PMIDs via NCBI ESummary.
+
+    Returns dict keyed by PMID with keys: PublicationDate, Year, Month, Journal, Authors.
+    """
+    pmids = [str(p).strip() for p in (pmids or []) if str(p).strip()]
+    if not pmids:
+        return {}
+
+    params = {
+        "db": "pubmed",
+        "id": ",".join(pmids),
+        "retmode": "json",
+    }
+    url = PUBMED_ESUMMARY_URL + "?" + urllib.parse.urlencode(params)
+    data = http_get_json(url, retries=retries, sleep=sleep)
+    result = data.get("result", {})
+    out = {}
+    for pmid in pmids:
+        item = result.get(str(pmid), {}) if isinstance(result, dict) else {}
+        pubdate = (item.get("pubdate") or "").strip()
+        journal = (item.get("fulljournalname") or item.get("source") or "").strip()
+        authors_list = item.get("authors") or []
+        names = []
+        for a in authors_list:
+            name = (a.get("name") if isinstance(a, dict) else "") or ""
+            name = name.strip()
+            if name:
+                names.append(name)
+        authors = "; ".join(names)
+        year, month = _parse_year_month(pubdate)
+        out[str(pmid)] = {
+            "PublicationDate": pubdate,
+            "Year": year,
+            "Month": month,
+            "Journal": journal,
+            "Authors": authors,
+        }
+    time.sleep(sleep)
+    return out
 
 # ----------------------------
 # SQLite helpers

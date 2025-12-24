@@ -178,6 +178,16 @@ python scripts/python/data_processing/enrich_pubtator_csv.py \
   --output results/unused_predictions_autoregulatory_only_metadata_enriched.csv
 ```
 
+If Year/Month/PublicationDate are missing (common for the UniProt/labeled portion), add `--fill-pubmed`
+to pull publication metadata from PubMed (cached for reproducibility):
+
+```bash
+python scripts/python/data_processing/enrich_pubtator_csv.py \
+  --input results/unused_predictions_autoregulatory_only_metadata.csv \
+  --output results/unused_predictions_autoregulatory_only_metadata_enriched.csv \
+  --fill-pubmed
+```
+
 ---
 
 ## Dataset Glossary

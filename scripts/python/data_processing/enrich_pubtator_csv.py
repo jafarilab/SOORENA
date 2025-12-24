@@ -27,6 +27,9 @@ from pubtator_enrich import (  # noqa: E402
     store_gene_map,
     get_cached_uniprot_details,
     store_uniprot_details,
+    fetch_pubmed_metadata,
+    get_cached_pubmed_metadata,
+    store_pubmed_metadata,
 )
 
 
@@ -51,6 +54,14 @@ def main():
     parser.add_argument("--limit", type=int, default=0, help="Limit number of PMIDs (for testing)")
     parser.add_argument("--uniprot-batch", type=int, default=200, help="Gene IDs per UniProt request")
     parser.add_argument("--uniprot-sleep", type=float, default=0.4, help="Seconds between UniProt requests")
+    parser.add_argument(
+        "--fill-pubmed",
+        action="store_true",
+        help="Fill missing PublicationDate/Year/Month/Journal/Authors via PubMed E-utilities (cached)",
+    )
+    parser.add_argument("--pubmed-batch", type=int, default=200, help="PMIDs per PubMed request")
+    parser.add_argument("--pubmed-sleep", type=float, default=0.34, help="Seconds between PubMed requests")
+    parser.add_argument("--pubmed-retries", type=int, default=3, help="Retries for PubMed requests")
     parser.add_argument("--cache-db", default=".cache/uniprot_cache.sqlite", help="Cache DB for UniProt mapping")
     args = parser.parse_args()
 
@@ -176,6 +187,86 @@ def main():
         existing = df[col].fillna("").astype(str)
         # Only overwrite when we have a non-empty enrichment value.
         df[col] = existing.where(mapped == "", mapped)
+
+    if args.fill_pubmed:
+        # Ensure columns exist
+        for col in ["PublicationDate", "Year", "Month", "Journal", "Authors"]:
+            if col not in df.columns:
+                df[col] = pd.NA
+
+        def _is_missing(x):
+            if x is None:
+                return True
+            if isinstance(x, float) and pd.isna(x):
+                return True
+            s = str(x).strip()
+            return s == "" or s.lower() == "nan"
+
+        missing_mask = df.apply(
+            lambda r: _is_missing(r.get("Year")) or _is_missing(r.get("Month")) or _is_missing(r.get("PublicationDate")),
+            axis=1,
+        )
+        pmids_need = (
+            df.loc[missing_mask, args.pmid_col]
+            .dropna()
+            .astype(str)
+            .str.strip()
+        )
+        pmids_need = [p for p in pmids_need.tolist() if p]
+        pmids_need = list(dict.fromkeys(pmids_need))  # preserve order, unique
+
+        if pmids_need:
+            print(f"Filling PubMed metadata for {len(pmids_need):,} PMIDs (cached)...")
+            filled = 0
+            start_meta = time.monotonic()
+            for i in range(0, len(pmids_need), args.pubmed_batch):
+                batch = pmids_need[i:i + args.pubmed_batch]
+                cached = get_cached_pubmed_metadata(cache_conn, batch)
+                missing = [p for p in batch if p not in cached]
+                fetched = {}
+                if missing:
+                    fetched = fetch_pubmed_metadata(missing, retries=args.pubmed_retries, sleep=args.pubmed_sleep)
+                    store_pubmed_metadata(cache_conn, fetched)
+                meta = {}
+                meta.update(cached)
+                meta.update(fetched)
+
+                # Apply fills only where missing
+                for pmid, info in meta.items():
+                    idx = df[args.pmid_col].astype(str) == str(pmid)
+                    if not idx.any():
+                        continue
+                    if "PublicationDate" in df.columns:
+                        df.loc[idx, "PublicationDate"] = df.loc[idx, "PublicationDate"].apply(
+                            lambda v: info.get("PublicationDate") if _is_missing(v) and info.get("PublicationDate") else v
+                        )
+                    if "Year" in df.columns:
+                        df.loc[idx, "Year"] = df.loc[idx, "Year"].apply(
+                            lambda v: info.get("Year") if _is_missing(v) and info.get("Year") is not None else v
+                        )
+                    if "Month" in df.columns:
+                        df.loc[idx, "Month"] = df.loc[idx, "Month"].apply(
+                            lambda v: info.get("Month") if _is_missing(v) and info.get("Month") else v
+                        )
+                    if "Journal" in df.columns:
+                        df.loc[idx, "Journal"] = df.loc[idx, "Journal"].apply(
+                            lambda v: info.get("Journal") if _is_missing(v) and info.get("Journal") else v
+                        )
+                    if "Authors" in df.columns:
+                        df.loc[idx, "Authors"] = df.loc[idx, "Authors"].apply(
+                            lambda v: info.get("Authors") if _is_missing(v) and info.get("Authors") else v
+                        )
+
+                filled += len(batch)
+                elapsed = time.monotonic() - start_meta
+                rate = filled / elapsed if elapsed > 0 else 0.0
+                eta = ((len(pmids_need) - filled) / rate) if rate > 0 else 0
+                msg = (
+                    f"PubMed {filled}/{len(pmids_need)} | Rate {rate:,.1f} pmid/s | "
+                    f"Elapsed {format_duration(elapsed)} | ETA {format_duration(eta)}"
+                )
+                print("\r" + msg.ljust(120), end="", flush=True)
+            print()
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
