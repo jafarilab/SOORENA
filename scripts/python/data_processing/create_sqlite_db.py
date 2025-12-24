@@ -86,19 +86,80 @@ def create_database(csv_file, db_file):
     print("  ✓ Table schema created")
     print()
 
-    # Step 5: Insert data in batches
-    print("Step 5: Inserting data...")
+    # Step 5: Normalize columns (accept prediction-style or app-style)
+    print("Step 5: Normalizing columns...")
+
+    def map_has_mechanism(val):
+        if pd.isna(val):
+            return pd.NA
+        if isinstance(val, bool):
+            return "Yes" if val else "No"
+        s = str(val).strip().lower()
+        if s in {"true", "yes", "1", "y", "t"}:
+            return "Yes"
+        if s in {"false", "no", "0", "n", "f"}:
+            return "No"
+        return pd.NA
+
+    # Coalesce duplicate naming variants before rename
+    if "Protein ID" in df.columns and "Protein_ID" in df.columns:
+        df["Protein ID"] = df["Protein ID"].combine_first(df["Protein_ID"])
+        df.drop(columns=["Protein_ID"], inplace=True)
+    if "Protein Name" in df.columns and "Protein_Name" in df.columns:
+        df["Protein Name"] = df["Protein Name"].combine_first(df["Protein_Name"])
+        df.drop(columns=["Protein_Name"], inplace=True)
+    if "Gene Name" in df.columns and "Gene_Name" in df.columns:
+        df["Gene Name"] = df["Gene Name"].combine_first(df["Gene_Name"])
+        df.drop(columns=["Gene_Name"], inplace=True)
+
+    # Map prediction-style columns to app-style if needed
+    if "has_mechanism" in df.columns:
+        mapped = df["has_mechanism"].apply(map_has_mechanism)
+        if "Has Mechanism" in df.columns:
+            df["Has Mechanism"] = df["Has Mechanism"].combine_first(mapped)
+        else:
+            df["Has Mechanism"] = mapped
+
+    if "stage1_confidence" in df.columns:
+        if "Mechanism Probability" in df.columns:
+            df["Mechanism Probability"] = df["Mechanism Probability"].combine_first(df["stage1_confidence"])
+        else:
+            df["Mechanism Probability"] = df["stage1_confidence"]
+
+    if "mechanism_type" in df.columns:
+        mech = df["mechanism_type"].replace("none", "non-autoregulatory")
+        if "Autoregulatory Type" in df.columns:
+            df["Autoregulatory Type"] = df["Autoregulatory Type"].combine_first(mech)
+        else:
+            df["Autoregulatory Type"] = mech
+
+    if "stage2_confidence" in df.columns:
+        if "Type Confidence" in df.columns:
+            df["Type Confidence"] = df["Type Confidence"].combine_first(df["stage2_confidence"])
+        else:
+            df["Type Confidence"] = df["stage2_confidence"]
+
+    if "Source" not in df.columns:
+        df["Source"] = "Non-UniProt"
+    else:
+        df["Source"] = df["Source"].fillna("Non-UniProt")
 
     # Rename columns to match database schema (replace spaces with underscores)
     df_renamed = df.rename(columns={
-        'Has Mechanism': 'Has_Mechanism',
-        'Mechanism Probability': 'Mechanism_Probability',
-        'Autoregulatory Type': 'Autoregulatory_Type',
-        'Type Confidence': 'Type_Confidence',
-        'Protein ID': 'Protein_ID',
-        'Protein Name': 'Protein_Name',
-        'Gene Name': 'Gene_Name'
+        "Has Mechanism": "Has_Mechanism",
+        "Mechanism Probability": "Mechanism_Probability",
+        "Autoregulatory Type": "Autoregulatory_Type",
+        "Type Confidence": "Type_Confidence",
+        "Protein ID": "Protein_ID",
+        "Protein Name": "Protein_Name",
+        "Gene Name": "Gene_Name"
     })
+
+    print("  ✓ Columns normalized")
+    print()
+
+    # Step 6: Insert data in batches
+    print("Step 6: Inserting data...")
 
     # Define column order
     db_columns = [
@@ -136,8 +197,8 @@ def create_database(csv_file, db_file):
     print("  ✓ Data inserted")
     print()
 
-    # Step 6: Create indexes
-    print("Step 6: Creating indexes for fast queries...")
+    # Step 7: Create indexes
+    print("Step 7: Creating indexes for fast queries...")
 
     indexes = [
         ("idx_pmid", "PMID"),
@@ -155,14 +216,14 @@ def create_database(csv_file, db_file):
 
     print()
 
-    # Step 7: Commit and validate
-    print("Step 7: Committing changes...")
+    # Step 8: Commit and validate
+    print("Step 8: Committing changes...")
     conn.commit()
     print("  ✓ Changes committed")
     print()
 
-    # Step 8: Validate
-    print("Step 8: Validating database...")
+    # Step 9: Validate
+    print("Step 9: Validating database...")
 
     # Count rows
     cursor.execute("SELECT COUNT(*) FROM predictions")

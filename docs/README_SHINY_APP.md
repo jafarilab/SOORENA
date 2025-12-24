@@ -62,11 +62,11 @@ install.packages(c(
 
 ### Data File
 
-**Required:** `shiny_app/data/predictions_for_app.csv`
+**Required:** `shiny_app/data/predictions.db`
 
-If this file doesn't exist, run:
+If this file doesn't exist, build it from the latest dataset:
 ```bash
-python scripts/python/prediction/predict_new_data.py --help
+python scripts/python/data_processing/create_sqlite_db.py --help
 ```
 
 ## App Features
@@ -85,7 +85,7 @@ python scripts/python/prediction/predict_new_data.py --help
 - Has Mechanism (Yes/No)
 - Mechanism Probability
 - Autoregulatory Type
-- Source (Ground Truth / Training Negatives / Model Predictions)
+- Source (UniProt / Non-UniProt)
 - Year
 - Journal
 
@@ -95,7 +95,6 @@ python scripts/python/prediction/predict_new_data.py --help
 
 **Mechanism Status:**
 - ☑️ With mechanism
-- ☑️ Without mechanism
 
 **Autoregulatory Type:**
 - All types
@@ -275,7 +274,7 @@ Examples:
 ## Troubleshooting
 
 **Issue:** App won't start - "Error: file not found"
-**Solution:** Ensure `shiny_app/data/predictions_for_app.csv` exists by running the prediction workflow in `docs/README_PREDICTION_NEW_DATA.md`.
+**Solution:** Ensure `shiny_app/data/predictions.db` exists by running the prediction workflow in `docs/README_PREDICTION_NEW_DATA.md`.
 
 **Issue:** App very slow to load
 **Solution:** Normal for large datasets (3M+ rows). Wait 2-3 minutes for initial load.
@@ -373,8 +372,8 @@ Edit the `DT::renderDataTable()` section to show/hide columns.
 shiny_app/
 ├── app.R                    # Main application file
 ├── data/
-│   ├── predictions_for_app.csv          # Main dataset (3.25M rows)
-│   └── predictions_for_app_enriched.csv # With protein names (optional)
+│   ├── predictions.csv                  # Main dataset (CSV)
+│   └── predictions.db                   # SQLite DB used by the app
 └── www/                     # Static assets (logos, CSS)
 ```
 

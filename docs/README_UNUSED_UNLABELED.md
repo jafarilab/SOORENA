@@ -164,6 +164,9 @@ After merging, enrich the final dataset with UniProt protein and gene names.
 ### Output
 - `results/unused_predictions_autoregulatory_only_metadata_enriched.csv`
 
+This enriched metadata file should be used as the **base** when merging with
+new 3M predictions so Title/Abstract/Journal/Authors are preserved.
+
 ### Command
 ```bash
 python scripts/python/data_processing/enrich_pubtator_csv.py \

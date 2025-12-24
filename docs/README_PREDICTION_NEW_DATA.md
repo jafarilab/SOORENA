@@ -87,14 +87,14 @@ dataset from the unused unlabeled flow.
 - `results/new_predictions_autoregulatory_only_enriched.csv`
 
 ### Output
-- `results/predictions_autoregulatory_only_enriched_merged.csv`
+- `shiny_app/data/predictions.csv`
 
 ### Recommended Command
 ```bash
 python scripts/python/data_processing/merge_enriched_predictions.py \
   --base results/unused_predictions_autoregulatory_only_metadata_enriched.csv \
   --new results/new_predictions_autoregulatory_only_enriched.csv \
-  --output results/predictions_autoregulatory_only_enriched_merged.csv
+  --output shiny_app/data/predictions.csv
 
 ```
 

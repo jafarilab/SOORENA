@@ -119,13 +119,13 @@ Optimizer: AdamW
 3. **Filter positives** - Keep papers predicted to have mechanisms
 4. **Run Stage 2** - Multi-class classification on positives
 5. **Merge results** - Combine predictions with metadata
-6. **Enrich (optional)** - Add protein names from UniProt
+6. **Enrich (optional)** - Add protein and gene names (PubTator + UniProt)
 7. **Create database** - Convert to SQLite for Shiny app
 
 **Output:**
 - `results/new_predictions.csv` - 3.6M+ predictions
 - `shiny_app/data/predictions.db` - SQLite database
-- `shiny_app/data/predictions_for_app.csv` - CSV version
+- `shiny_app/data/predictions.csv` - CSV version
 
 ---
 
