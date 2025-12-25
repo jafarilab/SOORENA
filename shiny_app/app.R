@@ -230,11 +230,25 @@ ui <- navbarPage(
 	            flex: 1 1 520px;
 	          }
 	          .filter-top-search {
-	            flex: 1 1 340px;
+	            flex: 1 1 520px;
+	            max-width: 720px;
 	            min-width: 280px;
 	          }
-	          .filter-top-match {
-	            flex: 0 0 auto;
+	          .filter-top-search .shiny-input-container {
+	            width: 100%;
+	          }
+	          .filter-top-search .form-group {
+	            margin-bottom: 0;
+	          }
+	          .search-label-row {
+	            display: flex;
+	            align-items: center;
+	            justify-content: space-between;
+	            gap: 12px;
+	            margin-bottom: 6px;
+	          }
+	          .filter-top-row .search-label-row .control-label {
+	            margin: 0;
 	          }
 	          .filter-top-right {
 	            display: flex;
@@ -262,50 +276,56 @@ ui <- navbarPage(
             font-size: 14px;
             white-space: nowrap;
           }
-          .match-toggle .shiny-options-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-          }
-          .match-toggle label.radio-inline {
-            position: relative;
-            margin: 0;
-            padding: 8px 12px;
-            border-radius: 999px;
-            border: 1px solid #d1d5db;
-            background: #ffffff;
-            font-weight: 700;
-            color: #1a2332;
-            cursor: pointer;
-            user-select: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
-            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-          }
-          .match-toggle label.radio-inline input[type=radio] {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-          }
-          .match-toggle label.radio-inline:has(input:checked) {
-            background: rgba(217, 119, 66, 0.14);
-            border-color: rgba(217, 119, 66, 0.75);
-            box-shadow: 0 4px 12px rgba(217, 119, 66, 0.12);
-          }
+	          .match-exact-toggle .form-group {
+	            margin: 0;
+	          }
+	          .match-exact-toggle .control-label {
+	            display: none;
+	          }
+	          .match-exact-toggle .checkbox {
+	            margin: 0;
+	          }
+	          .match-exact-toggle .checkbox label {
+	            position: relative;
+	            margin: 0;
+	            padding: 8px 12px;
+	            border-radius: 999px;
+	            border: 1px solid #d1d5db;
+	            background: #ffffff;
+	            font-weight: 700;
+	            color: #1a2332;
+	            cursor: pointer;
+	            user-select: none;
+	            display: inline-flex;
+	            align-items: center;
+	            justify-content: center;
+	            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+	            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+	          }
+	          .match-exact-toggle .checkbox input[type=checkbox] {
+	            position: absolute;
+	            opacity: 0;
+	            width: 0;
+	            height: 0;
+	          }
+	          .match-exact-toggle .checkbox label:has(input:checked) {
+	            background: rgba(217, 119, 66, 0.14);
+	            border-color: rgba(217, 119, 66, 0.75);
+	            box-shadow: 0 4px 12px rgba(217, 119, 66, 0.12);
+	          }
           .btn-clear {
             background: #ffffff !important;
             border: 1px solid rgba(217, 119, 66, 0.7) !important;
             color: #d97742 !important;
             font-weight: 700;
           }
-          .btn-clear:hover {
-            background: rgba(217, 119, 66, 0.08) !important;
-            border-color: rgba(217, 119, 66, 0.95) !important;
-          }
+	          .btn-clear:hover {
+	            background: rgba(217, 119, 66, 0.08) !important;
+	            border-color: rgba(217, 119, 66, 0.95) !important;
+	          }
+	          .help-icon {
+	            text-decoration: none !important;
+	          }
           details.more-filters {
             margin-top: 14px;
             border: 1px solid #f0e6d6;
@@ -814,21 +834,15 @@ ui <- navbarPage(
 				        class = "filter-top-left",
 				        div(
 				          class = "filter-top-search",
-				          textInput(
-				            "search",
-				            "Title/Abstract search",
-				            placeholder = "Search title or abstract..."
-				          )
-				        ),
-				        div(
-				          class = "filter-top-match match-toggle",
-				          radioButtons(
-				            "match_mode",
-				            "Match",
-				            choices = c("Contains" = "contains", "Exact" = "exact"),
-				            selected = "contains",
-				            inline = TRUE
-				          )
+				          div(
+				            class = "search-label-row",
+				            tags$label("Title/Abstract search", `for` = "search", class = "control-label"),
+				            div(
+				              class = "match-exact-toggle",
+				              checkboxInput("match_exact", label = "Exact match", value = FALSE)
+				            )
+				          ),
+				          textInput("search", NULL, placeholder = "Search title or abstract...")
 				        )
 				      ),
 				      div(
@@ -846,20 +860,21 @@ ui <- navbarPage(
 			                            options = list(placeholder = "Select type..."))),
 			      column(3,
 			             div(class = "polarity-toggle",
-			                 checkboxGroupInput(
-			                   "polarity",
-			                   tags$span(
-			                     "Polarity",
-		                     tags$span(
-		                       class = "help-icon",
-		                       title = "+ positive/self-amplifying • – negative/self-limiting • ± context-dependent",
-			                       "i"
+				                 checkboxGroupInput(
+				                   "polarity",
+				                   tags$span(
+				                     "Polarity",
+			                     actionLink(
+			                       "polarity_help",
+			                       label = "i",
+			                       class = "help-icon",
+			                       title = "Click for polarity definitions"
 			                     )
-			                   ),
-			                   choices = c("+", "–", "±"),
-			                   selected = c("+", "–", "±"),
-			                   inline = TRUE
-			                 ))),
+				                   ),
+				                   choices = c("+", "–", "±"),
+				                   selected = c("+", "–", "±"),
+				                   inline = TRUE
+				                 ))),
 			      column(3,
 			             div(class = "year-range-group",
 			                 tags$label("Year range"),
@@ -1541,10 +1556,10 @@ server <- function(input, output, session) {
   }
 
   # Build WHERE clause and parameter list based on current filters
-	  build_filter_query <- function() {
-	    query <- "FROM predictions WHERE 1=1"
-	    params <- list()
-	    match_mode <- if (!is.null(input$match_mode) && input$match_mode == "exact") "exact" else "contains"
+		  build_filter_query <- function() {
+		    query <- "FROM predictions WHERE 1=1"
+		    params <- list()
+		    match_mode <- if (isTRUE(input$match_exact)) "exact" else "contains"
 
     # Journal filter
     if (!is.null(input$journal) && length(input$journal) > 0) {
@@ -1815,11 +1830,11 @@ server <- function(input, output, session) {
 	  })
 
 		  # Reset pagination whenever filters change
-		  observeEvent(list(input$journal, input$type, input$polarity, input$os, input$ac, input$record_ac, input$protein_id,
-		                    input$protein_name, input$gene_name, input$pmid, input$author,
-		                    input$source_mode, input$year_from, input$year_to, input$month, input$search, input$match_mode, input$rows_per_page), {
-		    current_page(1)
-		  })
+			  observeEvent(list(input$journal, input$type, input$polarity, input$os, input$ac, input$record_ac, input$protein_id,
+			                    input$protein_name, input$gene_name, input$pmid, input$author,
+			                    input$source_mode, input$year_from, input$year_to, input$month, input$search, input$match_exact, input$rows_per_page), {
+			    current_page(1)
+			  })
 
   # Download csv button
   output$download_csv <- downloadHandler(
@@ -1887,7 +1902,7 @@ server <- function(input, output, session) {
 			    updateSelectizeInput(session, "year_from", selected = "")
 			    updateSelectizeInput(session, "year_to", selected = "")
 			    updateSelectizeInput(session, "month", selected = character(0))
-			    updateRadioButtons(session, "match_mode", selected = "contains")
+			    updateCheckboxInput(session, "match_exact", value = FALSE)
 			    updateTextInput(session, "search", value = "")
 			  })
 
@@ -1897,6 +1912,26 @@ server <- function(input, output, session) {
 	      updateCheckboxGroupInput(session, "polarity", selected = c("+", "–", "±"))
 	    }
 	  }, ignoreInit = TRUE)
+
+	  observeEvent(input$polarity_help, {
+	    showModal(modalDialog(
+	      title = "Polarity",
+	      div(
+	        p("Polarity is derived from the inferred autoregulatory mechanism:"),
+	        tags$ul(
+	          tags$li(tags$b("+"), " positive / self-amplifying (e.g., autocatalysis, autophosphorylation, autoinduction)"),
+	          tags$li(tags$b("–"), " negative / self-limiting (e.g., autoinhibition, autoubiquitination, autolysis)"),
+	          tags$li(tags$b("±"), " context-dependent (e.g., autoregulation)")
+	        ),
+	        p(style = "margin-top: 10px;",
+	          "Tip: If you want to see everything, leave all three selected (default)."
+	        )
+	      ),
+	      easyClose = TRUE,
+	      footer = modalButton("Close"),
+	      size = "m"
+	    ))
+	  })
 
 	  # Get total count of matching rows (for "Showing X of Y" display)
 	  total_count <- reactive({
