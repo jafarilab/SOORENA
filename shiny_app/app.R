@@ -207,12 +207,228 @@ ui <- navbarPage(
           .header-logos img {
             height: 120px;
           }
-          .filter-panel {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+	          .filter-panel {
+	            background-color: #ffffff;
+	            padding: 20px;
+	            border-radius: 8px;
+	            margin: 20px 30px;
+	            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+	          }
+	          .filter-top-row {
+	            display: flex;
+	            align-items: flex-end;
+	            justify-content: flex-start;
+	            gap: 12px 16px;
+	            flex-wrap: wrap;
+	          }
+	          .filter-top-left {
+	            display: flex;
+	            align-items: flex-end;
+	            justify-content: flex-start;
+	            gap: 12px 16px;
+	            flex-wrap: wrap;
+	            flex: 1 1 520px;
+	          }
+	          .filter-top-search {
+	            flex: 1 1 340px;
+	            min-width: 280px;
+	          }
+	          .filter-top-match {
+	            flex: 0 0 auto;
+	          }
+	          .filter-top-right {
+	            display: flex;
+	            align-items: flex-end;
+	            justify-content: flex-start;
+	            gap: 12px;
+	            flex-wrap: wrap;
+	            margin-left: auto;
+	          }
+	          .filter-top-row .form-group {
+	            margin-bottom: 0;
+	          }
+	          .filter-top-row .control-label {
+	            margin-bottom: 6px;
+	            font-weight: 600;
+	          }
+          .match-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(217, 119, 66, 0.12);
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+          }
+          .match-toggle .shiny-options-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          }
+          .match-toggle label.radio-inline {
+            position: relative;
+            margin: 0;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            font-weight: 700;
+            color: #1a2332;
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+          }
+          .match-toggle label.radio-inline input[type=radio] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+          }
+          .match-toggle label.radio-inline:has(input:checked) {
+            background: rgba(217, 119, 66, 0.14);
+            border-color: rgba(217, 119, 66, 0.75);
+            box-shadow: 0 4px 12px rgba(217, 119, 66, 0.12);
+          }
+          .btn-clear {
+            background: #ffffff !important;
+            border: 1px solid rgba(217, 119, 66, 0.7) !important;
+            color: #d97742 !important;
+            font-weight: 700;
+          }
+          .btn-clear:hover {
+            background: rgba(217, 119, 66, 0.08) !important;
+            border-color: rgba(217, 119, 66, 0.95) !important;
+          }
+          details.more-filters {
+            margin-top: 14px;
+            border: 1px solid #f0e6d6;
+            border-radius: 10px;
+            background: #fbf7f0;
+            padding: 10px 12px;
+          }
+          details.more-filters summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: #1a2332;
+            list-style: none;
+            outline: none;
+          }
+          details.more-filters summary::-webkit-details-marker {
+            display: none;
+          }
+          details.more-filters summary:after {
+            content: \"▾\";
+            float: right;
+            color: #d97742;
+            font-weight: 700;
+          }
+          details.more-filters[open] summary:after {
+            content: \"▴\";
+          }
+          .filter-card {
+            margin-top: 12px;
+            background: #ffffff;
+            border: 1px solid #f0e6d6;
+            border-radius: 10px;
+            padding: 14px;
+          }
+          .filter-card h4 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #1a2332;
+            font-weight: 700;
+          }
+          .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            margin-left: 6px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: #64748b;
+            font-size: 12px;
+            cursor: help;
+          }
+          .polarity-toggle .shiny-options-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          }
+          .polarity-toggle label.checkbox-inline {
+            position: relative;
+            margin: 0;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            font-weight: 800;
+            color: #1a2332;
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 46px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+          }
+          .polarity-toggle label.checkbox-inline input[type=checkbox] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"+\"]) {
+            border-color: rgba(34, 197, 94, 0.35);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"–\"]) {
+            border-color: rgba(239, 68, 68, 0.35);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"±\"]) {
+            border-color: rgba(99, 102, 241, 0.35);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"+\"]:checked) {
+            background: rgba(34, 197, 94, 0.14);
+            border-color: rgba(34, 197, 94, 0.7);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.18);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"–\"]:checked) {
+            background: rgba(239, 68, 68, 0.14);
+            border-color: rgba(239, 68, 68, 0.7);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.14);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"±\"]:checked) {
+            background: rgba(99, 102, 241, 0.14);
+            border-color: rgba(99, 102, 241, 0.7);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.14);
+          }
+          .year-range-group > label {
+            font-weight: 600;
+            margin-bottom: 6px;
+          }
+          .year-range-inputs {
+            display: flex;
+            gap: 10px;
+          }
+          .year-range-inputs .form-group {
+            margin-bottom: 0;
+            flex: 1;
+          }
+          .year-range-inputs .selectize-input {
+            border-radius: 6px;
+          }
+          .source-select .form-group {
+            margin-bottom: 0;
           }
           .btn-warning {
             margin-top: 10px;
@@ -413,7 +629,7 @@ ui <- navbarPage(
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
           }
-          @media (max-width: 768px) {
+	          @media (max-width: 768px) {
             .header-section {
               flex-direction: column;
               align-items: center;
@@ -438,15 +654,18 @@ ui <- navbarPage(
             .header-logos img {
               height: 56px;
             }
-            .filter-panel {
-              margin: 12px;
-              padding: 16px;
-            }
-            .table-toolbar {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 12px;
-            }
+		            .filter-panel {
+		              margin: 12px;
+		              padding: 16px;
+		            }
+		            .filter-top-right {
+		              margin-left: 0;
+		            }
+		            .table-toolbar {
+		              flex-direction: column;
+		              align-items: flex-start;
+		              gap: 12px;
+		            }
             .table-toolbar__left {
               flex-wrap: wrap;
             }
@@ -587,63 +806,124 @@ ui <- navbarPage(
       # Header section
       header_ui,
 
-      # Search and Filter Controls
-  # Search and Filter Controls
-	  div(class = "filter-panel",
-	    fluidRow(
-	      column(
-	        width = 8,
-        fluidRow(
-          column(3, textInput("protein_id", "Protein ID", placeholder = "Search protein ID...")),
-          column(3, textInput("protein_name", "Protein Name", placeholder = "Search protein name...")),
-          column(3, textInput("gene_name", "Gene Name", placeholder = "Search gene name...")),
-          column(3, textInput("ac", "UniProt AC", placeholder = "Search UniProt accession..."))
-        ),
-        fluidRow(
-          column(3, textInput("pmid", "PMID", placeholder = "Search PMID...")),
-          column(3, textInput("author", "Author", placeholder = "Search author...")),
-          column(3, selectizeInput("journal", "Journal",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select journal...'))),
-          column(3, selectizeInput("os", "OS",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select OS...')))
-        ),
-        fluidRow(
-          column(3, selectizeInput("type", "Autoregulatory Type",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select type...'))),
-          column(3, selectizeInput("year", "Publication Year",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select year...'))),
-          column(3, selectizeInput("source", "Data Source",
-                                choices = c("UniProt", "Non-UniProt"),
-                                selected = c("UniProt", "Non-UniProt"),
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select source...'))),
-          column(3, selectInput("month", "Publication Month",
-                                choices = c("All", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
-                                multiple = TRUE))
-        )
-	      ),
-	      column(
-	        width = 4,
-	        selectInput(
-	          "match_mode",
-	          "Search match",
-	          choices = c("Contains" = "contains", "Exact" = "exact"),
-	          selected = "contains"
-	        ),
-	        textAreaInput("search", "Search Title / Abstract", placeholder = "Type or paste any text...", height = "120px"),
-	        actionButton("reset_filters", "Reset Filters", class = "btn-warning")
-	      )
-	    )
-	  ),
+	      # Search and Filter Controls
+				  div(class = "filter-panel",
+				    div(
+				      class = "filter-top-row",
+				      div(
+				        class = "filter-top-left",
+				        div(
+				          class = "filter-top-search",
+				          textInput(
+				            "search",
+				            "Title/Abstract search",
+				            placeholder = "Search title or abstract..."
+				          )
+				        ),
+				        div(
+				          class = "filter-top-match match-toggle",
+				          radioButtons(
+				            "match_mode",
+				            "Match",
+				            choices = c("Contains" = "contains", "Exact" = "exact"),
+				            selected = "contains",
+				            inline = TRUE
+				          )
+				        )
+				      ),
+				      div(
+				        class = "filter-top-right",
+				        div(class = "match-pill", textOutput("match_count_badge", inline = TRUE)),
+				        actionButton("reset_filters", "Clear all", class = "btn-clear")
+				      )
+				    ),
+				    tags$hr(style = "margin: 14px 0; border-top: 1px solid #eee;"),
+				    fluidRow(
+				      column(4,
+				             selectizeInput("type", "Autoregulatory Type",
+			                            choices = NULL,
+			                            multiple = TRUE,
+			                            options = list(placeholder = "Select type..."))),
+			      column(3,
+			             div(class = "polarity-toggle",
+			                 checkboxGroupInput(
+			                   "polarity",
+			                   tags$span(
+			                     "Polarity",
+		                     tags$span(
+		                       class = "help-icon",
+		                       title = "+ positive/self-amplifying • – negative/self-limiting • ± context-dependent",
+			                       "i"
+			                     )
+			                   ),
+			                   choices = c("+", "–", "±"),
+			                   selected = c("+", "–", "±"),
+			                   inline = TRUE
+			                 ))),
+			      column(3,
+			             div(class = "year-range-group",
+			                 tags$label("Year range"),
+			                 div(class = "year-range-inputs",
+			                     selectizeInput("year_from", NULL,
+		                                    choices = c(""),
+		                                    selected = "",
+		                                    multiple = FALSE,
+		                                    options = list(placeholder = "From...")),
+		                     selectizeInput("year_to", NULL,
+		                                    choices = c(""),
+		                                    selected = "",
+			                                    multiple = FALSE,
+			                                    options = list(placeholder = "To..."))
+			                 ))),
+			      column(2,
+			             div(class = "source-select",
+			                 selectInput(
+			                   "source_mode",
+			                   "Data Source",
+			                   choices = c("All" = "all", "UniProt" = "UniProt", "Non-UniProt" = "Non-UniProt"),
+			                   selected = "all"
+			                 )))
+			    ),
+		    tags$details(
+		      class = "more-filters",
+		      tags$summary(textOutput("more_filters_title", container = span)),
+		      div(class = "filter-card",
+		        h4("Publication & Metadata"),
+		        fluidRow(
+		          column(3,
+		                 selectizeInput("journal", "Journal",
+		                                choices = NULL,
+		                                multiple = TRUE,
+		                                options = list(placeholder = "Select journal..."))),
+		          column(3,
+		                 selectizeInput("os", "OS",
+		                                choices = NULL,
+		                                multiple = TRUE,
+		                                options = list(placeholder = "Select OS..."))),
+		          column(3, textInput("author", "Author", placeholder = "Search author...")),
+		          column(3,
+		                 selectizeInput("month", "Publication Month",
+		                                choices = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		                                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+		                                multiple = TRUE,
+		                                options = list(placeholder = "Select month..."))),
+		        )
+		      ),
+		      div(class = "filter-card",
+		        h4("Proteins & IDs"),
+		        fluidRow(
+		          column(4, textInput("protein_name", "Protein Name", placeholder = "Search protein name...")),
+		          column(4, textInput("gene_name", "Gene Name", placeholder = "Search gene name...")),
+		          column(4, textInput("protein_id", "Protein ID", placeholder = "Search protein ID..."))
+		        ),
+		        fluidRow(
+		          column(4, textInput("pmid", "PMID", placeholder = "Search PMID...")),
+		          column(4, textInput("ac", "UniProt AC", placeholder = "Search UniProt accession...")),
+		          column(4, textInput("record_ac", "AC (Record ID)", placeholder = "Search record AC..."))
+		        )
+		      )
+		    )
+		  ),
 
         # Display Table with loading spinner
         div(class = "table-toolbar-wrap", style = "margin: 0 30px 20px 30px;",
@@ -1233,6 +1513,8 @@ server <- function(input, output, session) {
 
   # Open a per-session database connection
   conn <- dbConnect(RSQLite::SQLite(), DB_PATH)
+  db_columns <- dbGetQuery(conn, "PRAGMA table_info(predictions)")$name
+  db_has_polarity <- "Polarity" %in% db_columns
 
   # Track current page for server-side pagination
   current_page <- reactiveVal(1)
@@ -1278,6 +1560,40 @@ server <- function(input, output, session) {
       params <- c(params, as.list(input$type))
     }
 
+    # Polarity filter (optional).
+    # When all polarity options are selected, treat it as "no filter" for clarity/performance.
+    if (!is.null(input$polarity) && length(input$polarity) > 0) {
+      selected <- as.character(input$polarity)
+      selected <- selected[!is.na(selected) & trimws(selected) != ""]
+
+      # Normalize "-" to the en-dash used in the UI.
+      selected[selected == "-"] <- "–"
+
+      all_polarities <- c("+", "–", "±")
+      if (length(selected) > 0 && !setequal(selected, all_polarities)) {
+        if (db_has_polarity) {
+          placeholders <- paste(rep("?", length(selected)), collapse = ",")
+          query <- paste(query, "AND Polarity IN (", placeholders, ")")
+          params <- c(params, as.list(selected))
+        } else {
+          # Backwards-compatible fallback for older DBs without a Polarity column.
+          pol_conditions <- c()
+          if ("+" %in% selected) {
+            pol_conditions <- c(pol_conditions, "lower(Autoregulatory_Type) IN ('autocatalytic','autophosphorylation','autoinducer')")
+          }
+          if ("–" %in% selected) {
+            pol_conditions <- c(pol_conditions, "lower(Autoregulatory_Type) IN ('autoinhibition','autoubiquitination','autolysis')")
+          }
+          if ("±" %in% selected) {
+            pol_conditions <- c(pol_conditions, "lower(Autoregulatory_Type) IN ('autoregulation')")
+          }
+          if (length(pol_conditions) > 0) {
+            query <- paste(query, "AND (", paste(pol_conditions, collapse = " OR "), ")")
+          }
+        }
+      }
+    }
+
     # OS filter
     if (!is.null(input$os) && length(input$os) > 0) {
       placeholders <- paste(rep("?", length(input$os)), collapse = ",")
@@ -1293,6 +1609,18 @@ server <- function(input, output, session) {
 	        params <- c(params, paste0("%,", toupper(gsub(" ", "", value)), ",%"))
 	      } else {
 	        query <- paste(query, "AND UPPER(UniProtKB_accessions) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
+
+	    # Record AC (unique per-row ID) search
+	    if (!is.null(input$record_ac) && nzchar(input$record_ac)) {
+	      value <- trimws(input$record_ac)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND AC = ?")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(AC) LIKE UPPER(?)")
 	        params <- c(params, paste0("%", value, "%"))
 	      }
 	    }
@@ -1357,22 +1685,37 @@ server <- function(input, output, session) {
 	      }
 	    }
 
-    # Source filter
-    if (!is.null(input$source) && length(input$source) > 0) {
-      placeholders <- paste(rep("?", length(input$source)), collapse = ",")
-      query <- paste(query, "AND Source IN (", placeholders, ")")
-      params <- c(params, as.list(input$source))
-    }
+    # Source filter (segmented control)
+	    if (!is.null(input$source_mode) && nzchar(input$source_mode) && input$source_mode != "all") {
+	      query <- paste(query, "AND Source = ?")
+	      params <- c(params, input$source_mode)
+	    }
 
-    # Year filter
-    if (!is.null(input$year) && length(input$year) > 0) {
-      placeholders <- paste(rep("?", length(input$year)), collapse = ",")
-      query <- paste(query, "AND Year IN (", placeholders, ")")
-      params <- c(params, as.list(input$year))
+    # Year range filter (optional)
+    year_from <- NA_integer_
+    year_to <- NA_integer_
+    if (!is.null(input$year_from) && nzchar(input$year_from)) {
+      year_from <- suppressWarnings(as.integer(trimws(input$year_from)))
     }
+    if (!is.null(input$year_to) && nzchar(input$year_to)) {
+      year_to <- suppressWarnings(as.integer(trimws(input$year_to)))
+    }
+    if (!is.na(year_from) && !is.na(year_to) && year_from > year_to) {
+      tmp <- year_from
+      year_from <- year_to
+      year_to <- tmp
+    }
+	    if (!is.na(year_from)) {
+	      query <- paste(query, "AND CAST(Year AS INTEGER) >= ?")
+	      params <- c(params, year_from)
+	    }
+	    if (!is.na(year_to)) {
+	      query <- paste(query, "AND CAST(Year AS INTEGER) <= ?")
+	      params <- c(params, year_to)
+	    }
 
     # Month filter
-    if (!is.null(input$month) && !"All" %in% input$month && length(input$month) > 0) {
+    if (!is.null(input$month) && length(input$month) > 0) {
       placeholders <- paste(rep("?", length(input$month)), collapse = ",")
       query <- paste(query, "AND Month IN (", placeholders, ")")
       params <- c(params, as.list(input$month))
@@ -1451,23 +1794,32 @@ server <- function(input, output, session) {
       choices = all_types,
       server = FALSE)
 
-    # Load all years (only ~50 values)
-    all_years <- dbGetQuery(conn,
-      "SELECT DISTINCT Year FROM predictions
-       WHERE Year IS NOT NULL
-       ORDER BY Year DESC")$Year
+		    # Load all years (only ~50 values)
+		    all_years <- dbGetQuery(conn,
+		      "SELECT DISTINCT Year FROM predictions
+		       WHERE Year IS NOT NULL
+		       ORDER BY Year DESC")$Year
 
-    updateSelectizeInput(session, "year",
-      choices = all_years,
-      server = FALSE)
-  })
-
-	  # Reset pagination whenever filters change
-	  observeEvent(list(input$journal, input$type, input$os, input$ac, input$protein_id,
-	                    input$protein_name, input$gene_name, input$pmid, input$author,
-	                    input$source, input$year, input$month, input$search, input$match_mode, input$rows_per_page), {
-	    current_page(1)
+		    year_nums <- suppressWarnings(as.integer(as.character(all_years)))
+			    year_nums <- year_nums[!is.na(year_nums) & year_nums >= 1800 & year_nums <= (as.integer(format(Sys.Date(), "%Y")) + 1)]
+		    year_nums <- sort(unique(year_nums), decreasing = TRUE)
+		    year_choices <- c("", as.character(year_nums))
+		    updateSelectizeInput(session, "year_from",
+		      choices = year_choices,
+		      selected = "",
+		      server = FALSE)
+	    updateSelectizeInput(session, "year_to",
+	      choices = year_choices,
+	      selected = "",
+	      server = FALSE)
 	  })
+
+		  # Reset pagination whenever filters change
+		  observeEvent(list(input$journal, input$type, input$polarity, input$os, input$ac, input$record_ac, input$protein_id,
+		                    input$protein_name, input$gene_name, input$pmid, input$author,
+		                    input$source_mode, input$year_from, input$year_to, input$month, input$search, input$match_mode, input$rows_per_page), {
+		    current_page(1)
+		  })
 
   # Download csv button
   output$download_csv <- downloadHandler(
@@ -1518,28 +1870,38 @@ server <- function(input, output, session) {
       ))
     })
 
-  # Reset all filters to default state
-	  observeEvent(input$reset_filters, {
-	    updateTextInput(session, "protein_id", value = "")
-	    updateTextInput(session, "protein_name", value = "")
-	    updateTextInput(session, "gene_name", value = "")
-	    updateTextInput(session, "ac", value = "")
-	    updateTextInput(session, "pmid", value = "")
-	    updateTextInput(session, "author", value = "")
-	    updateSelectizeInput(session, "journal", selected = character(0))
-	    updateSelectizeInput(session, "os", selected = character(0))
-	    updateSelectizeInput(session, "type", selected = character(0))
-	    updateSelectizeInput(session, "source", selected = c("UniProt", "Non-UniProt"))
-	    updateSelectizeInput(session, "year", selected = character(0))
-	    updateSelectInput(session, "month", selected = "All")
-	    updateSelectInput(session, "match_mode", selected = "contains")
-	    updateTextAreaInput(session, "search", value = "")
-	  })
+		  # Reset all filters to default state
+			  observeEvent(input$reset_filters, {
+			    updateTextInput(session, "protein_id", value = "")
+			    updateTextInput(session, "protein_name", value = "")
+			    updateTextInput(session, "gene_name", value = "")
+			    updateTextInput(session, "ac", value = "")
+			    updateTextInput(session, "record_ac", value = "")
+			    updateTextInput(session, "pmid", value = "")
+			    updateTextInput(session, "author", value = "")
+			    updateSelectizeInput(session, "journal", selected = character(0))
+			    updateSelectizeInput(session, "os", selected = character(0))
+			    updateSelectizeInput(session, "type", selected = character(0))
+			    updateCheckboxGroupInput(session, "polarity", selected = c("+", "–", "±"))
+			    updateSelectInput(session, "source_mode", selected = "all")
+			    updateSelectizeInput(session, "year_from", selected = "")
+			    updateSelectizeInput(session, "year_to", selected = "")
+			    updateSelectizeInput(session, "month", selected = character(0))
+			    updateRadioButtons(session, "match_mode", selected = "contains")
+			    updateTextInput(session, "search", value = "")
+			  })
 
-  # Get total count of matching rows (for "Showing X of Y" display)
-  total_count <- reactive({
-    filters <- build_filter_query()
-    query <- paste("SELECT COUNT(*) as count", filters$where)
+	  observeEvent(input$polarity, {
+	    selected <- input$polarity
+	    if (is.null(selected) || length(selected) == 0) {
+	      updateCheckboxGroupInput(session, "polarity", selected = c("+", "–", "±"))
+	    }
+	  }, ignoreInit = TRUE)
+
+	  # Get total count of matching rows (for "Showing X of Y" display)
+	  total_count <- reactive({
+	    filters <- build_filter_query()
+	    query <- paste("SELECT COUNT(*) as count", filters$where)
 
     if (length(filters$params) > 0) {
       count_result <- dbGetQuery(conn, query, params = filters$params)
@@ -1548,6 +1910,34 @@ server <- function(input, output, session) {
     }
 
     return(count_result$count)
+  })
+
+  output$match_count_badge <- renderText({
+    total <- as.numeric(total_count()[1])
+    if (is.na(total)) total <- 0
+    paste0(format(total, big.mark = ","), " matches")
+  })
+
+  output$more_filters_title <- renderText({
+    active <- 0
+
+    if (!is.null(input$journal) && length(input$journal) > 0) active <- active + 1
+    if (!is.null(input$os) && length(input$os) > 0) active <- active + 1
+    if (!is.null(input$month) && length(input$month) > 0) active <- active + 1
+
+    if (!is.null(input$author) && nzchar(trimws(input$author))) active <- active + 1
+    if (!is.null(input$protein_name) && nzchar(trimws(input$protein_name))) active <- active + 1
+    if (!is.null(input$gene_name) && nzchar(trimws(input$gene_name))) active <- active + 1
+    if (!is.null(input$protein_id) && nzchar(trimws(input$protein_id))) active <- active + 1
+    if (!is.null(input$pmid) && nzchar(trimws(input$pmid))) active <- active + 1
+    if (!is.null(input$ac) && nzchar(trimws(input$ac))) active <- active + 1
+    if (!is.null(input$record_ac) && nzchar(trimws(input$record_ac))) active <- active + 1
+
+    if (active > 0) {
+      paste0("More filters (", active, ")")
+    } else {
+      "More filters"
+    }
   })
 
   # Filtering Logic - Build SQL query dynamically with LIMIT
@@ -1678,24 +2068,36 @@ server <- function(input, output, session) {
 	      parts <- c(parts, summarize_values("Type", input$type, max_items = 2))
 	    }
 
-	    if (!is.null(input$year) && length(input$year) > 0) {
-	      yrs <- suppressWarnings(as.integer(input$year))
-	      yrs <- yrs[!is.na(yrs)]
-	      if (length(yrs) > 0) {
-	        if (length(yrs) > 4) {
-	          parts <- c(parts, paste0("Year: ", min(yrs), "–", max(yrs)))
-	        } else {
-	          parts <- c(parts, paste0("Year: ", paste(sort(unique(yrs)), collapse = ", ")))
-	        }
+		    if (!is.null(input$polarity) && length(input$polarity) > 0) {
+		      selected <- as.character(input$polarity)
+		      selected <- selected[!is.na(selected) & trimws(selected) != ""]
+		      selected[selected == "-"] <- "–"
+		      if (length(selected) > 0 && !setequal(selected, c("+", "–", "±"))) {
+		        parts <- c(parts, summarize_values("Polarity", selected, max_items = 3))
+		      }
+		    }
+
+	    from <- suppressWarnings(as.integer(trimws(as.character(input$year_from))))
+	    to <- suppressWarnings(as.integer(trimws(as.character(input$year_to))))
+	    if (!is.na(from) && !is.na(to)) {
+	      if (from > to) {
+	        tmp <- from
+	        from <- to
+	        to <- tmp
 	      }
+	      parts <- c(parts, paste0("Year: ", from, "–", to))
+	    } else if (!is.na(from)) {
+	      parts <- c(parts, paste0("Year: ≥", from))
+	    } else if (!is.na(to)) {
+	      parts <- c(parts, paste0("Year: ≤", to))
 	    }
 
-	    if (!is.null(input$month) && length(input$month) > 0 && !"All" %in% input$month) {
+	    if (!is.null(input$month) && length(input$month) > 0) {
 	      parts <- c(parts, summarize_values("Month", input$month, max_items = 4))
 	    }
 
-	    if (!is.null(input$source) && length(input$source) > 0 && length(input$source) < 2) {
-	      parts <- c(parts, summarize_values("Source", input$source, max_items = 2))
+	    if (!is.null(input$source_mode) && nzchar(input$source_mode) && input$source_mode != "all") {
+	      parts <- c(parts, paste0("Source: ", input$source_mode))
 	    }
 
 	    if (!is.null(input$journal) && length(input$journal) > 0) {
@@ -1711,6 +2113,9 @@ server <- function(input, output, session) {
 	    }
 	    if (!is.null(input$ac) && nzchar(input$ac)) {
 	      parts <- c(parts, paste0("UniProt AC: ", trimws(input$ac)))
+	    }
+	    if (!is.null(input$record_ac) && nzchar(input$record_ac)) {
+	      parts <- c(parts, paste0("AC: ", trimws(input$record_ac)))
 	    }
 	    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
 	      parts <- c(parts, paste0("Protein ID: ", trimws(input$protein_id)))
