@@ -2679,12 +2679,21 @@ server <- function(input, output, session) {
         "}"
       )
 	    ),
-	    callback = JS("
-	      // Prevent DataTables from sorting client-side; handle server-side instead
-	      table.off('click', 'th');
-	      $(table.table().header()).on('click', 'th', function(e) {
-	        var colIdx = table.column(this).index();
-	        if (colIdx === null || colIdx === undefined) return;
+		    callback = JS("
+		      // Prevent DataTables from sorting client-side (it only has the current page);
+		      // we handle sorting server-side via SQL + Shiny re-render.
+		      var header = $(table.table().header());
+
+		      // Remove DataTables' built-in header sort handler (namespaced 'DT')
+		      header.off('click.DT');
+		      header.find('th').off('click.DT');
+
+		      // Remove our handler if this table was re-rendered
+		      header.off('click.resultTableSort');
+
+		      header.on('click.resultTableSort', 'th', function(e) {
+		        var colIdx = table.column(this).index();
+		        if (colIdx === null || colIdx === undefined) return;
 
 	        // Get current order state for this column
 	        var currentOrder = table.order();
@@ -2701,27 +2710,28 @@ server <- function(input, output, session) {
 	          nextDir = '';
 	        }
 
-	        // Send to Shiny for server-side processing
-	        if (nextDir === '') {
-	          Shiny.setInputValue('result_table_order', [], {priority: 'event'});
-	        } else {
-	          Shiny.setInputValue('result_table_order', [[colIdx, nextDir]], {priority: 'event'});
-	        }
+		        // Send to Shiny for server-side processing
+		        if (nextDir === '') {
+		          Shiny.setInputValue('result_table_order', [], {priority: 'event'});
+		        } else {
+		          Shiny.setInputValue('result_table_order', [[colIdx, nextDir]], {priority: 'event'});
+		        }
 
-	        // Prevent event bubbling
-	        e.stopImmediatePropagation();
-	        return false;
-	      });
+		        // Prevent event bubbling
+		        e.preventDefault();
+		        e.stopImmediatePropagation();
+		        return false;
+		      });
 
-	      table.off('click', '.view-btn');
-	      table.on('click', '.view-btn', function() {
-	        var text = $(this).data('text');
-	        var field = $(this).data('field');
-	        Shiny.setInputValue('show_full_text', { field: field, text: text }, {priority: 'event'});
-	      });
-	    ")
-	  )
-	})
+		      table.off('click.resultTableView', '.view-btn');
+		      table.on('click.resultTableView', '.view-btn', function() {
+		        var text = $(this).data('text');
+		        var field = $(this).data('field');
+		        Shiny.setInputValue('show_full_text', { field: field, text: text }, {priority: 'event'});
+		      });
+		    ")
+		  )
+		})
 
 
 
