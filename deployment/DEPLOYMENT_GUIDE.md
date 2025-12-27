@@ -226,7 +226,6 @@ sudo apt update && sudo apt upgrade -y
 ## Additional Resources
 
 - [USING_EXISTING_DROPLET.md](USING_EXISTING_DROPLET.md) - Using existing infrastructure
-- [1GB_RAM_INSTRUCTIONS.md](1GB_RAM_INSTRUCTIONS.md) - Low-resource deployment
 - [README.md](README.md) - Deployment scripts overview
 
 ---

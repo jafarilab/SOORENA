@@ -1,123 +1,137 @@
-# SOORENA Deployment Files
+# SOORENA Deployment Guide (DigitalOcean)
 
-This directory contains deployment scripts and documentation for the SOORENA Shiny application.
-
-## Recommended: CI/CD (GitHub Actions)
-
-If you are using the GitHub Actions workflow in `.github/workflows/deploy.yml`, a merge to `main` will:
-- Sync `shiny_app/app.R`
-- Sync `shiny_app/www/`
-- Restart Shiny Server on the droplet
-
-Important:
-- The workflow **does not upload** `shiny_app/data/predictions.db`.
-- You must upload the database separately (e.g., `rsync`/`scp`) to `/srv/shiny-server/soorena/data/predictions.db`.
-
-## Hosting Options
-
-### Option 1: Oracle Cloud
-- **Resource Requirements**: 1 GB RAM minimum
-- **Setup Complexity**: More complex (firewall rules, iptables)
-- **Performance**: Lower performance, suitable for testing
-- See: [1GB_RAM_INSTRUCTIONS.md](1GB_RAM_INSTRUCTIONS.md)
-
-### Option 2: DigitalOcean
-- **Resource Requirements**: 2-4 GB RAM recommended
-- **Setup Complexity**: Simple and straightforward
-- **Performance**: Better performance for production use
-- Technical documentation available
+This directory contains deployment scripts and documentation for the SOORENA Shiny application on DigitalOcean.
 
 ---
 
-## Files
+## Recommended: CI/CD (GitHub Actions)
+
+The GitHub Actions workflow in `.github/workflows/deploy.yml` automatically deploys when you merge to `main`:
+- Syncs `shiny_app/app.R`
+- Syncs `shiny_app/www/`
+- Restarts Shiny Server on the droplet
+
+**Important:** The workflow **does not upload** `shiny_app/data/predictions.db`. You must upload the database separately.
+
+### Required GitHub Secrets
+
+Before the workflow can run, you need to configure these secrets in your GitHub repository:
+
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Secrets and variables** → **Actions**
+3. Click **New repository secret** and add each of these:
+
+| Secret Name | Description | Example Value |
+|------------|-------------|---------------|
+| `DO_SSH_KEY` | Your private SSH key for the DigitalOcean droplet | Contents of your `~/.ssh/id_rsa` or downloaded key file |
+| `DO_HOST` | Public IP address of your DigitalOcean droplet | `164.90.xxx.xxx` |
+| `DO_USER` | SSH username (usually `root` for DigitalOcean) | `root` |
+
+**How to get your SSH private key:**
+```bash
+cat ~/.ssh/id_rsa
+# Copy the entire output including -----BEGIN and -----END lines
+```
+
+---
+
+## Files in This Directory
 
 ### Documentation
-- **`README.md`** - This file
-- **`1GB_RAM_INSTRUCTIONS.md`** - Oracle Cloud setup guide (1GB RAM instance)
-- **`DEPLOYMENT_GUIDE.md`** - DigitalOcean setup guide
+- **`README.md`** - This file (DigitalOcean deployment guide)
+- **`DEPLOYMENT_GUIDE.md`** - Detailed DigitalOcean setup instructions
 - **`USING_EXISTING_DROPLET.md`** - Deploy to an existing server/droplet
 
-### Oracle Cloud Scripts
-- **`server_setup_1GB.sh`** - Oracle Cloud server configuration
-- **`deploy_to_oracle.sh`** - Oracle Cloud deployment
-
-### Digital Ocean Scripts
-- **`server_setup_digitalocean.sh`** - Digital Ocean server configuration
-- **`deploy_to_digitalocean.sh`** - Digital Ocean deployment
-
-### Shared Scripts
+### Scripts
+- **`server_setup_digitalocean.sh`** - Server configuration script
+- **`deploy_to_digitalocean.sh`** - Manual deployment script
 - **`update_app.sh`** - Quick update for app.R changes only
+
+---
 
 ## Deployment Instructions
 
-### Initial Setup
+### Option 1: Automated CI/CD (Recommended)
 
-1. **Configure server** (SSH into Oracle Cloud VM):
+1. **Set up GitHub Secrets** (see table above)
+2. **Merge to main branch:**
    ```bash
-   bash server_setup_1GB.sh
+   git checkout main
+   git merge CLEAN-REPO
+   git push origin main
+   ```
+3. **Upload database manually:**
+   ```bash
+   rsync -avz shiny_app/data/predictions.db root@<DO_HOST>:/srv/shiny-server/soorena/data/
+   ssh root@<DO_HOST> "chown -R shiny:shiny /srv/shiny-server/soorena && systemctl restart shiny-server"
    ```
 
-2. **Deploy application** (run locally):
+### Option 2: Manual Deployment
+
+1. **Configure server** (SSH into DigitalOcean droplet):
    ```bash
-   ./deploy_to_oracle.sh
+   ssh root@YOUR_DROPLET_IP
+   # Copy the contents of server_setup_digitalocean.sh and run it
+   bash server_setup_digitalocean.sh
    ```
 
-### Updates
+2. **Deploy application** (run from your local machine):
+   ```bash
+   cd deployment
+   ./deploy_to_digitalocean.sh
+   ```
 
-For app.R changes only:
-```bash
-./update_app.sh
-```
+---
 
 ## Scripts Usage
 
-### server_setup_digitalocean.sh / server_setup_1GB.sh
-**Purpose**: Install R, Shiny Server, and all dependencies on a fresh Ubuntu server
+### server_setup_digitalocean.sh
+**Purpose:** Install R, Shiny Server, and all dependencies on a fresh Ubuntu server
 
-**Run on**: The server (via SSH)
+**Run on:** The DigitalOcean droplet (via SSH)
 
-**Usage**:
+**Usage:**
 ```bash
-# SSH into your server first
-ssh root@YOUR_PUBLIC_IP
+# SSH into your droplet first
+ssh root@YOUR_DROPLET_IP
 
 # Then run the setup script
 bash server_setup_digitalocean.sh
 ```
 
-**What it does**:
+**What it does:**
 - Updates Ubuntu
 - Installs R and system dependencies
 - Installs Shiny Server
 - Installs required R packages (shiny, DT, plotly, etc.)
-- Configures firewall
-- Creates app directory
+- Configures firewall (ports 22, 80, 443, 3838)
+- Creates app directory at `/srv/shiny-server/soorena/`
 
-**Run once**: You only need to run this once when setting up a new server.
+**Run once:** You only need to run this once when setting up a new droplet.
 
 ---
 
-### deploy_to_oracle.sh
-**Purpose**: Deploy your complete SOORENA app to the server
+### deploy_to_digitalocean.sh
+**Purpose:** Deploy your complete SOORENA app to the server
 
-**Run on**: Your local machine (Mac)
+**Run on:** Your local machine
 
-**Usage**:
+**Usage:**
 ```bash
-cd /Users/halao/Desktop/SOORENA_2/deployment
-./deploy_to_oracle.sh
+cd deployment
+./deploy_to_digitalocean.sh
 ```
 
-**What it does**:
+**What it does:**
 - Tests SSH connection
 - Creates app directory structure
 - Uploads app.R
-- Uploads database (6.1 GB) - **takes 5-15 minutes**
-- Uploads images and assets
+- Uploads database (244 MB) - **takes a few minutes**
+- Uploads www/ assets
 - Sets correct permissions
 - Restarts Shiny Server
 
-**When to use**:
+**When to use:**
 - First deployment
 - Major updates that include database changes
 - When you've updated images or other assets
@@ -125,97 +139,86 @@ cd /Users/halao/Desktop/SOORENA_2/deployment
 ---
 
 ### update_app.sh
-**Purpose**: Quick update when you've only changed app.R
+**Purpose:** Quick update when you've only changed app.R
 
-**Run on**: Your local machine (Mac)
+**Run on:** Your local machine
 
-**Usage**:
+**Usage:**
 ```bash
-cd /Users/halao/Desktop/SOORENA_2/deployment
+cd deployment
 ./update_app.sh
 ```
 
-**What it does**:
+**What it does:**
 - Uploads only app.R (fast!)
 - Restarts Shiny Server
 
-**When to use**:
+**When to use:**
 - You fixed a UI bug
 - You updated colors or styling
 - You changed filters or query logic
 - Any change to app.R only (no database/images)
 
-**Advantage**: Takes seconds instead of 15+ minutes!
+**Advantage:** Takes seconds instead of minutes!
 
 ---
 
 ## Resource Requirements
 
-Oracle Cloud Always Free tier specifications:
+**Recommended DigitalOcean Droplet:**
+- **Size:** Basic or General Purpose
+- **RAM:** 2-4 GB (minimum 2 GB for smooth operation)
+- **Storage:** 50-80 GB SSD
+- **OS:** Ubuntu 22.04 LTS
+- **Cost:** ~$12-24/month
 
-- **Compute**: 2 OCPUs, 12 GB RAM (Ampere A1 Flex)
-- **Storage**: ~56 GB (OS + database + app)
-- **Bandwidth**: Minimal (research database, not high traffic)
+The database is 244 MB and the Shiny app requires ~1-2 GB RAM for comfortable operation with concurrent users.
 
 ---
 
 ## Typical Workflow
 
 ### Initial Deployment
-1. Create Oracle Cloud account
-2. Create VM instance
-3. SSH into VM: `ssh -i ~/Downloads/ssh-key-*.key ubuntu@IP`
-4. Run: `bash server_setup.sh` (on server)
+1. Create DigitalOcean droplet (Ubuntu 22.04, 2+ GB RAM)
+2. Add your SSH key during droplet creation
+3. SSH into droplet: `ssh root@DROPLET_IP`
+4. Run: `bash server_setup_digitalocean.sh` (on server)
 5. Exit SSH
-6. Run: `./deploy_to_oracle.sh` (on local machine)
-7. Access: `http://YOUR_IP:3838/soorena/`
+6. Run: `./deploy_to_digitalocean.sh` (on local machine)
+7. Access: `http://DROPLET_IP:3838/soorena/`
 
 ### After Making Changes to app.R
 1. Edit `shiny_app/app.R` on your local machine
-2. Run: `./update_app.sh`
+2. Run: `./update_app.sh` (from deployment directory)
 3. Refresh browser
 
 ### After Updating Database
 1. Rebuild database: `python scripts/python/data_processing/create_sqlite_db.py`
-2. Run: `./deploy_to_oracle.sh` (uploads new database)
+2. Upload new database:
+   ```bash
+   rsync -avz shiny_app/data/predictions.db root@DROPLET_IP:/srv/shiny-server/soorena/data/
+   ssh root@DROPLET_IP "systemctl restart shiny-server"
+   ```
 3. Refresh browser
-
----
-
-## Server Specifications
-
-Your Oracle Cloud VM:
-- **OS**: Ubuntu 22.04 LTS
-- **CPU**: 2 Ampere A1 cores (ARM64)
-- **RAM**: 12 GB
-- **Storage**: 50 GB boot volume
-- **Network**: Public IPv4 address
-- **Cost**: FREE forever
-
-Perfect for:
-- Research databases
-- Shiny apps
-- Small to medium traffic
-- 24/7 availability
 
 ---
 
 ## Security Notes
 
-1. **SSH Key**: Keep your private key secure
+1. **SSH Key:** Keep your private SSH key secure
    - Don't commit it to git
    - Don't share it
    - Store it safely (e.g., `~/.ssh/`)
 
-2. **Firewall**: Only ports 22 (SSH) and 3838 (Shiny) are open
+2. **Firewall:** Ports 22 (SSH), 80 (HTTP), 443 (HTTPS), and 3838 (Shiny) are open
 
-3. **Updates**: Regularly update your server
+3. **Updates:** Regularly update your server
    ```bash
-   ssh -i ~/Downloads/ssh-key-*.key ubuntu@YOUR_IP
+   ssh root@DROPLET_IP
    sudo apt update && sudo apt upgrade -y
    ```
 
-4. **Access Control**: Consider IP whitelisting for sensitive data
+4. **Access Control:** Consider IP whitelisting for sensitive data
 
 ---
 
@@ -224,36 +227,32 @@ Perfect for:
 ### App won't load
 1. Check Shiny Server status:
    ```bash
-   ssh -i ~/Downloads/ssh-key-*.key ubuntu@YOUR_IP "sudo systemctl status shiny-server"
+   ssh root@DROPLET_IP "sudo systemctl status shiny-server"
    ```
 
 2. Check logs:
    ```bash
-   ssh -i ~/Downloads/ssh-key-*.key ubuntu@YOUR_IP "sudo tail -f /var/log/shiny-server.log"
+   ssh root@DROPLET_IP "sudo tail -f /var/log/shiny-server.log"
    ```
 
 3. Verify database exists:
    ```bash
-   ssh -i ~/Downloads/ssh-key-*.key ubuntu@YOUR_IP "ls -lh /srv/shiny-server/soorena/data/"
+   ssh root@DROPLET_IP "ls -lh /srv/shiny-server/soorena/data/"
    ```
 
-### Can't SSH into server
+### Can't SSH into droplet
 1. Verify IP address is correct
-2. Check SSH key path
-3. Verify key permissions: `chmod 400 ~/Downloads/ssh-key-*.key`
+2. Check SSH key is added to DigitalOcean
+3. Verify key permissions: `chmod 400 ~/.ssh/id_rsa`
 
 ### Port 3838 not accessible
-1. Check Oracle Cloud Security List (is port 3838 open?)
-2. Check Ubuntu firewall: `sudo ufw status`
+1. Check DigitalOcean firewall settings
+2. Check Ubuntu firewall: `ssh root@DROPLET_IP "sudo ufw status"`
 
----
-
-## Support
-
-1. Check the detailed guide: [oracle_cloud_setup.md](oracle_cloud_setup.md)
-2. Check server logs for errors
-3. Verify all prerequisites are met
-4. Review the troubleshooting section above
+### GitHub Actions deployment fails
+1. Verify all three secrets are set correctly (`DO_SSH_KEY`, `DO_HOST`, `DO_USER`)
+2. Check Actions tab on GitHub for error logs
+3. Ensure the droplet is running and SSH accessible
 
 ---
 
@@ -263,24 +262,30 @@ Before running deployment scripts, verify:
 
 - [ ] Database exists: `shiny_app/data/predictions.db`
 - [ ] Database is up to date (run `create_sqlite_db.py` if needed)
-- [ ] Team photos exist: `shiny_app/www/images/team/*.jpg`
 - [ ] app.R has no syntax errors
-- [ ] You have Oracle Cloud account
-- [ ] You have VM created with Ubuntu
-- [ ] You have SSH private key downloaded
-- [ ] Port 3838 is open in Security List
-- [ ] Good internet connection (6GB upload)
+- [ ] You have a DigitalOcean droplet created (Ubuntu 22.04, 2+ GB RAM)
+- [ ] You have SSH access to the droplet
+- [ ] GitHub secrets are configured (if using CI/CD)
+- [ ] Firewall allows port 3838
 
 ---
 
 ## Success Indicators
 
 Your deployment is successful when:
-- You can access `http://YOUR_IP:3838/soorena/` in browser
+- You can access `http://DROPLET_IP:3838/soorena/` in browser
 - Dashboard loads with all tabs working
 - Data Explorer shows records
 - Statistics charts display correctly
 - Filters work properly
-- Team photos appear on About Us page
+- Images load on all pages
 - No errors in browser console
 - No errors in Shiny Server logs
+
+---
+
+## Support
+
+For detailed setup instructions, see:
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Step-by-step DigitalOcean setup
+- [USING_EXISTING_DROPLET.md](USING_EXISTING_DROPLET.md) - Deploy to existing server

@@ -1,5 +1,9 @@
 # SOORENA Prediction Pipeline - Python Dependencies
-# For pip-only users (alternative to conda environment.yml)
+# For pip-only users (production deployment)
+#
+# NOTE: For development, use the conda environment (environment.yml) which includes
+# additional packages for Jupyter notebooks and analysis. This file contains only
+# the core dependencies needed to run the prediction pipeline in production.
 
 # Core ML/NLP
 torch>=2.0.0

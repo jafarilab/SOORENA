@@ -583,13 +583,13 @@ time.sleep(0.5)  # 500ms delay
 
 ### System Requirements
 
-**Minimum (Oracle Cloud Free Tier):**
-- 1 GB RAM
+**Minimum:**
+- 2 GB RAM
 - 1 vCPU
 - 50 GB Storage
 - Ubuntu 22.04
 
-**Recommended (DigitalOcean):**
+**Recommended:**
 - 4 GB RAM
 - 2 vCPUs
 - 80 GB Storage

@@ -194,7 +194,7 @@ SOORENA_2/
 
 **Database:** SQLite
 
-**Deployment:** DigitalOcean, Oracle Cloud, Shiny Server
+**Deployment:** DigitalOcean, Shiny Server
 
 ---
 
