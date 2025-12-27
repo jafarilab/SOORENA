@@ -16,7 +16,11 @@ DB_PATH <- "data/predictions.db"
 
 if (!file.exists(DB_PATH)) {
   stop(paste("Database not found:", DB_PATH, "\n",
-             "Please run create_sqlite_database.py first to create the database."))
+             "Build it from the merged CSV using:\n",
+             "  python scripts/python/data_processing/create_sqlite_db.py \\\n",
+             "    --input shiny_app/data/predictions.csv \\\n",
+             "    --output shiny_app/data/predictions.db\n",
+             "See docs/README.md for the full workflow."))
 }
 
 # Create database connection

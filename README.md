@@ -144,7 +144,6 @@ SOORENA_2/
 │   │   ├── data_processing/     # Data preparation & merging
 │   │   ├── training/            # Model training & evaluation
 │   │   └── prediction/          # Prediction scripts
-│   └── shell/                   # Shell scripts for pipelines
 │
 ├── utils/                       # Python utilities
 │   ├── dataset.py              # PyTorch dataset classes
@@ -165,18 +164,19 @@ SOORENA_2/
 
 ## Documentation
 
-### Getting Started
-- [docs/README_PREDICTION.md](docs/README_PREDICTION.md) — Run predictions on new data
-- [docs/README_PREDICTION_PIPELINE.md](docs/README_PREDICTION_PIPELINE.md) — End-to-end pipeline
+### Start Here (End-to-end)
+- [docs/README.md](docs/README.md) — Full reproducible workflow (training → prediction → Shiny → deployment)
 
 ### Data & Training
 - [docs/README_DATA_PREPARATION.md](docs/README_DATA_PREPARATION.md) — Data preprocessing
 - [docs/README_TRAINING.md](docs/README_TRAINING.md) — Model training (Stage 1 & 2)
-- [docs/README_ENRICHMENT.md](docs/README_ENRICHMENT.md) — Protein name enrichment
+- [docs/README_UNUSED_UNLABELED.md](docs/README_UNUSED_UNLABELED.md) — Unused unlabeled predictions → metadata → enrichment
+- [docs/README_PREDICTION_NEW_DATA.md](docs/README_PREDICTION_NEW_DATA.md) — New (3M) predictions → filter → enrichment → merge
 
 ### App & Deployment
 - [docs/README_SHINY_APP.md](docs/README_SHINY_APP.md) — Shiny app usage
-- [deployment/README.md](deployment/README.md) — Deployment
+- [deployment/README.md](deployment/README.md) — Deployment (scripts + guides)
+- [docs/README_ARCHITECTURE.md](docs/README_ARCHITECTURE.md) — Repository architecture & code map
 
 ### Data Descriptions
 - [data/processed/README.md](data/processed/README.md)  — Processed data explanation

@@ -245,12 +245,6 @@ scripts/
 │       ├── (removed)                    # Legacy single-paper test removed
 │       ├── predict_unused_unlabeled.py  # Predict unused training data
 │       └── predict_new_data.py          # Predict new PubMed data
-│
-└── shell/
-    ├── (removed)                        # Legacy pipeline scripts removed
-    ├── (removed)                        # Legacy new predictions scripts removed
-    ├── (removed)                        # Legacy Windows script removed
-    └── (removed)                        # Legacy enrichment removed
 ```
 
 ---
@@ -260,11 +254,11 @@ scripts/
 #### Data Processing Scripts
 
 **prepare_data.py**
-- Loads PubMed and UniProt data
+- Loads PubMed and AutoregDB data
 - Merges on PMID
 - Normalizes mechanism terms
 - Filters rare terms (< 35 examples)
-- Splits into train/test sets
+- Splits into train/val/test sets (stratified)
 - Output: `data/processed/modeling_dataset.csv`
 
 **enrich_pubtator_csv.py**
@@ -286,7 +280,6 @@ scripts/
 
 **train_stage1.py**
 - Binary classification training
-- Uses weighted loss for imbalance
 - Saves best model based on validation F1
 - Checkpoints every epoch
 - Output: `models/stage1_best.pt`

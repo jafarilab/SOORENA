@@ -2,6 +2,17 @@
 
 This directory contains deployment scripts and documentation for the SOORENA Shiny application.
 
+## Recommended: CI/CD (GitHub Actions)
+
+If you are using the GitHub Actions workflow in `.github/workflows/deploy.yml`, a merge to `main` will:
+- Sync `shiny_app/app.R`
+- Sync `shiny_app/www/`
+- Restart Shiny Server on the droplet
+
+Important:
+- The workflow **does not upload** `shiny_app/data/predictions.db`.
+- You must upload the database separately (e.g., `rsync`/`scp`) to `/srv/shiny-server/soorena/data/predictions.db`.
+
 ## Hosting Options
 
 ### Option 1: Oracle Cloud
@@ -23,7 +34,8 @@ This directory contains deployment scripts and documentation for the SOORENA Shi
 ### Documentation
 - **`README.md`** - This file
 - **`1GB_RAM_INSTRUCTIONS.md`** - Oracle Cloud setup guide (1GB RAM instance)
-- **`DIGITALOCEAN_INSTRUCTIONS.md`** - Digital Ocean setup guide
+- **`DEPLOYMENT_GUIDE.md`** - DigitalOcean setup guide
+- **`USING_EXISTING_DROPLET.md`** - Deploy to an existing server/droplet
 
 ### Oracle Cloud Scripts
 - **`server_setup_1GB.sh`** - Oracle Cloud server configuration
@@ -59,18 +71,18 @@ For app.R changes only:
 
 ## Scripts Usage
 
-### server_setup.sh
-**Purpose**: Install R, Shiny Server, and all dependencies on your Oracle Cloud VM
+### server_setup_digitalocean.sh / server_setup_1GB.sh
+**Purpose**: Install R, Shiny Server, and all dependencies on a fresh Ubuntu server
 
-**Run on**: The Oracle Cloud VM (via SSH)
+**Run on**: The server (via SSH)
 
 **Usage**:
 ```bash
-# SSH into your VM first
-ssh -i ~/Downloads/ssh-key-*.key ubuntu@YOUR_PUBLIC_IP
+# SSH into your server first
+ssh root@YOUR_PUBLIC_IP
 
 # Then run the setup script
-bash server_setup.sh
+bash server_setup_digitalocean.sh
 ```
 
 **What it does**:
