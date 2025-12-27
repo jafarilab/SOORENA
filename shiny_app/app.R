@@ -1533,6 +1533,7 @@ server <- function(input, output, session) {
 
   # Track current page for server-side pagination
   current_page <- reactiveVal(1)
+  table_sort <- reactiveVal(NULL)
   page_size <- reactive({
     size <- as.numeric(input$rows_per_page)
     if (is.null(size) || is.na(size)) DEFAULT_PAGE_SIZE else size
@@ -1823,18 +1824,49 @@ server <- function(input, output, session) {
 		      choices = year_choices,
 		      selected = "",
 		      server = FALSE)
-	    updateSelectizeInput(session, "year_to",
-	      choices = year_choices,
-	      selected = "",
-	      server = FALSE)
-	  })
+    updateSelectizeInput(session, "year_to",
+      choices = year_choices,
+      selected = "",
+      server = FALSE)
+  })
 
-		  # Reset pagination whenever filters change
-			  observeEvent(list(input$journal, input$type, input$polarity, input$os, input$ac, input$record_ac, input$protein_id,
-			                    input$protein_name, input$gene_name, input$pmid, input$author,
-			                    input$source_mode, input$year_from, input$year_to, input$month, input$search, input$match_exact, input$rows_per_page), {
-			    current_page(1)
-			  })
+  observeEvent(input$result_table_order, {
+    ord <- input$result_table_order
+    if (is.null(ord) || length(ord) == 0) {
+      if (!is.null(table_sort())) {
+        table_sort(NULL)
+        current_page(1)
+      }
+      return()
+    }
+
+    first <- ord[[1]]
+    if (is.null(first) || length(first) < 2) return()
+
+    idx <- suppressWarnings(as.integer(first[[1]]))
+    dir <- as.character(first[[2]])
+    if (is.na(idx) || is.null(dir) || !nzchar(dir)) {
+      if (!is.null(table_sort())) {
+        table_sort(NULL)
+        current_page(1)
+      }
+      return()
+    }
+    if (!(dir %in% c("asc", "desc"))) return()
+
+    prev <- table_sort()
+    if (!is.null(prev) && isTRUE(prev$idx == idx) && isTRUE(prev$dir == dir)) return()
+
+    table_sort(list(idx = idx, dir = dir))
+    current_page(1)
+  }, ignoreInit = TRUE)
+
+  # Reset pagination whenever filters change
+  observeEvent(list(input$journal, input$type, input$polarity, input$os, input$ac, input$record_ac, input$protein_id,
+                    input$protein_name, input$gene_name, input$pmid, input$author,
+                    input$source_mode, input$year_from, input$year_to, input$month, input$search, input$match_exact, input$rows_per_page), {
+    current_page(1)
+  })
 
   # Download csv button
   output$download_csv <- downloadHandler(
@@ -1904,6 +1936,8 @@ server <- function(input, output, session) {
 			    updateSelectizeInput(session, "month", selected = character(0))
 			    updateCheckboxInput(session, "match_exact", value = FALSE)
 			    updateTextInput(session, "search", value = "")
+			    table_sort(NULL)
+			    current_page(1)
 			  })
 
 	  observeEvent(input$polarity, {
@@ -1975,17 +2009,75 @@ server <- function(input, output, session) {
     }
   })
 
-  # Filtering Logic - Build SQL query dynamically with LIMIT
-	  filtered_data <- reactive({
-	    filters <- build_filter_query()
-	    offset <- (current_page() - 1) * page_size()
-	    query <- paste(
-	      "SELECT *",
-	      filters$where,
-	      "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, CAST(PMID AS INTEGER)",
-	      "LIMIT ? OFFSET ?"
-	    )
-	    params <- c(filters$params, page_size(), offset)
+	  # Filtering Logic - Build SQL query dynamically with LIMIT
+		  filtered_data <- reactive({
+		    filters <- build_filter_query()
+		    offset <- (current_page() - 1) * page_size()
+
+		    dt_cols <- c(
+		      "AC",
+		      "PMID",
+		      "UniProt AC",
+		      "Autoregulatory Type",
+		      "Polarity",
+		      "Mechanism Probability",
+		      "Type Confidence",
+		      "Title",
+		      "Abstract",
+		      "Journal",
+		      "Authors",
+		      "Year",
+		      "Month",
+		      "Source",
+		      "Protein Name",
+		      "Gene Name",
+		      "Protein ID",
+		      "OS"
+		    )
+
+		    sort_map <- list(
+		      "AC" = list(expr = "AC", missing = "AC IS NULL OR TRIM(AC) = ''"),
+		      "PMID" = list(expr = "CAST(PMID AS INTEGER)", missing = "PMID IS NULL OR TRIM(PMID) = ''"),
+		      "UniProt AC" = list(expr = "UniProtKB_accessions", missing = "UniProtKB_accessions IS NULL OR TRIM(UniProtKB_accessions) = ''"),
+		      "Autoregulatory Type" = list(expr = "Autoregulatory_Type", missing = "Autoregulatory_Type IS NULL OR TRIM(Autoregulatory_Type) = ''"),
+		      "Polarity" = if (db_has_polarity) list(expr = "Polarity", missing = "Polarity IS NULL OR TRIM(Polarity) = ''") else NULL,
+		      "Mechanism Probability" = list(expr = "Mechanism_Probability", missing = "Mechanism_Probability IS NULL"),
+		      "Type Confidence" = list(expr = "Type_Confidence", missing = "Type_Confidence IS NULL"),
+		      "Title" = list(expr = "Title", missing = "Title IS NULL OR TRIM(Title) = ''"),
+		      "Abstract" = list(expr = "Abstract", missing = "Abstract IS NULL OR TRIM(Abstract) = ''"),
+		      "Journal" = list(expr = "Journal", missing = "Journal IS NULL OR TRIM(Journal) = ''"),
+		      "Authors" = list(expr = "Authors", missing = "Authors IS NULL OR TRIM(Authors) = ''"),
+		      "Year" = list(expr = "CAST(Year AS INTEGER)", missing = "Year IS NULL"),
+		      "Month" = list(expr = "Month", missing = "Month IS NULL OR TRIM(Month) = ''"),
+		      "Source" = list(expr = "Source", missing = "Source IS NULL OR TRIM(Source) = ''"),
+		      "Protein Name" = list(expr = "Protein_Name", missing = "Protein_Name IS NULL OR TRIM(Protein_Name) = ''"),
+		      "Gene Name" = list(expr = "Gene_Name", missing = "Gene_Name IS NULL OR TRIM(Gene_Name) = ''"),
+		      "Protein ID" = list(expr = "Protein_ID", missing = "Protein_ID IS NULL OR TRIM(Protein_ID) = ''"),
+		      "OS" = list(expr = "OS", missing = "OS IS NULL OR TRIM(OS) = ''")
+		    )
+
+		    order_clause <- "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, CAST(PMID AS INTEGER)"
+		    sort <- table_sort()
+		    if (!is.null(sort) && !is.null(sort$idx) && !is.null(sort$dir)) {
+		      idx <- suppressWarnings(as.integer(sort$idx))
+		      dir <- as.character(sort$dir)
+		      if (!is.na(idx) && idx >= 0 && idx < length(dt_cols) && dir %in% c("asc", "desc")) {
+		        col <- dt_cols[[idx + 1]]
+		        spec <- sort_map[[col]]
+		        if (!is.null(spec) && !is.null(spec$expr) && nzchar(spec$expr)) {
+		          tie_break <- if (col == "PMID") "" else ", CAST(PMID AS INTEGER)"
+		          order_clause <- paste0("ORDER BY (", spec$missing, ") ASC, ", spec$expr, " ", toupper(dir), tie_break)
+		        }
+		      }
+		    }
+
+		    query <- paste(
+		      "SELECT *",
+		      filters$where,
+		      order_clause,
+		      "LIMIT ? OFFSET ?"
+		    )
+		    params <- c(filters$params, page_size(), offset)
 
 	    result <- dbGetQuery(conn, query, params = params)
 
@@ -2433,7 +2525,17 @@ server <- function(input, output, session) {
 
  	output$result_table <- renderDT({
  	  data <- filtered_data()
- 
+
+	  sort <- table_sort()
+	  dt_order <- list()
+	  if (!is.null(sort) && !is.null(sort$idx) && !is.null(sort$dir)) {
+	    idx <- suppressWarnings(as.integer(sort$idx))
+	    dir <- as.character(sort$dir)
+	    if (!is.na(idx) && idx >= 0 && idx < ncol(data) && dir %in% c("asc", "desc")) {
+	      dt_order <- list(list(idx, dir))
+	    }
+	  }
+ 	 
  	  data <- data %>% select(
 	    AC,
 	    PMID,
@@ -2535,20 +2637,20 @@ server <- function(input, output, session) {
     )
   )
 
-  datatable(
-    data,
-    escape = FALSE,
-    rownames = FALSE,
-	    options = list(
-	      pageLength = page_size(),  # Show all loaded rows for current page size
-	      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
-	      scrollX = TRUE,
-	      dom = 't',  # Only show table (no info text at bottom)
-	      order = list(),
-	      columnDefs = list(
-	        list(
-	          targets = 1,  # PMID column (rendered as HTML link)
-	          render = JS(
+	  datatable(
+	    data,
+	    escape = FALSE,
+	    rownames = FALSE,
+		    options = list(
+		      pageLength = page_size(),  # Show all loaded rows for current page size
+		      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
+		      scrollX = TRUE,
+		      dom = 't',  # Only show table (no info text at bottom)
+		      order = dt_order,
+		      columnDefs = list(
+		        list(
+		          targets = 1,  # PMID column (rendered as HTML link)
+		          render = JS(
 	            "function(data, type, row, meta) {",
 	            "  if (type === 'sort' || type === 'type') {",
 	            "    var m = String(data).match(/\\d+/);",
@@ -2571,16 +2673,22 @@ server <- function(input, output, session) {
         "  $(this.api().table().header()).find('th').css('text-align', 'center');",
         "}"
       )
-    ),
-    callback = JS("
-      table.on('click', '.view-btn', function() {
-        var text = $(this).data('text');
-        var field = $(this).data('field');
-        Shiny.setInputValue('show_full_text', { field: field, text: text }, {priority: 'event'});
-      });
-    ")
-  )
-})
+	    ),
+	    callback = JS("
+	      table.off('order.dt');
+	      table.on('order.dt', function() {
+	        Shiny.setInputValue('result_table_order', table.order(), {priority: 'event'});
+	      });
+
+	      table.off('click', '.view-btn');
+	      table.on('click', '.view-btn', function() {
+	        var text = $(this).data('text');
+	        var field = $(this).data('field');
+	        Shiny.setInputValue('show_full_text', { field: field, text: text }, {priority: 'event'});
+	      });
+	    ")
+	  )
+	})
 
 
 
