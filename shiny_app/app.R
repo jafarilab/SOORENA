@@ -2651,6 +2651,7 @@ server <- function(input, output, session) {
 		      scrollX = TRUE,
 		      dom = 't',  # Only show table (no info text at bottom)
 		      order = dt_order,
+		      ordering = TRUE,  # Enable column header sorting
 		      columnDefs = list(
 		        list(
 		          targets = 1,  # PMID column (rendered as HTML link)
@@ -2668,7 +2669,7 @@ server <- function(input, output, session) {
 	        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
 	      ),
 	      # Server-side processing: only load current page, not all rows
-	      serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
+	      serverSide = TRUE,  # Enable server-side mode to sort entire dataset, not just current page
       deferRender = TRUE,
       scroller = FALSE,
       # Center column headers
