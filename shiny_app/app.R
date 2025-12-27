@@ -2060,7 +2060,7 @@ server <- function(input, output, session) {
 		      "OS" = list(expr = "OS", missing = "OS IS NULL OR TRIM(OS) = ''")
 		    )
 
-		    order_clause <- "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, CAST(PMID AS INTEGER)"
+		    order_clause <- "ORDER BY Title IS NULL, CAST(PMID AS INTEGER)"
 		    sort <- table_sort()
 		    if (!is.null(sort) && !is.null(sort$idx) && !is.null(sort$dir)) {
 		      idx <- suppressWarnings(as.integer(sort$idx))
@@ -2699,14 +2699,6 @@ server <- function(input, output, session) {
 	          nextDir = 'desc';
 	        } else if (currentDir === 'desc') {
 	          nextDir = '';
-	        }
-
-	        // Update DataTables visual state (sort indicators) without re-sorting data
-	        // draw(false) prevents re-drawing the table, just updates the sort arrows
-	        if (nextDir === '') {
-	          table.order([]).draw(false);
-	        } else {
-	          table.order([[colIdx, nextDir]]).draw(false);
 	        }
 
 	        // Send to Shiny for server-side processing
