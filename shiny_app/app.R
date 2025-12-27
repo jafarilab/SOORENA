@@ -2701,6 +2701,14 @@ server <- function(input, output, session) {
 	          nextDir = '';
 	        }
 
+	        // Update DataTables visual state (sort indicators) without re-sorting data
+	        // draw(false) prevents re-drawing the table, just updates the sort arrows
+	        if (nextDir === '') {
+	          table.order([]).draw(false);
+	        } else {
+	          table.order([[colIdx, nextDir]]).draw(false);
+	        }
+
 	        // Send to Shiny for server-side processing
 	        if (nextDir === '') {
 	          Shiny.setInputValue('result_table_order', [], {priority: 'event'});
@@ -2708,7 +2716,7 @@ server <- function(input, output, session) {
 	          Shiny.setInputValue('result_table_order', [[colIdx, nextDir]], {priority: 'event'});
 	        }
 
-	        // Prevent DataTables from sorting the current page
+	        // Prevent event bubbling
 	        e.stopImmediatePropagation();
 	        return false;
 	      });
