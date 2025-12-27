@@ -119,13 +119,13 @@ Optimizer: AdamW
 3. **Filter positives** - Keep papers predicted to have mechanisms
 4. **Run Stage 2** - Multi-class classification on positives
 5. **Merge results** - Combine predictions with metadata
-6. **Enrich (optional)** - Add protein names from UniProt
+6. **Enrich (optional)** - Add protein and gene names (PubTator + UniProt)
 7. **Create database** - Convert to SQLite for Shiny app
 
 **Output:**
 - `results/new_predictions.csv` - 3.6M+ predictions
 - `shiny_app/data/predictions.db` - SQLite database
-- `shiny_app/data/predictions_for_app.csv` - CSV version
+- `shiny_app/data/predictions.csv` - CSV version
 
 ---
 
@@ -230,11 +230,11 @@ scripts/
 ├── python/
 │   ├── data_processing/
 │   │   ├── prepare_data.py              # Main data preparation
-│   │   ├── enrich_protein_names.py      # UniProt enrichment (sequential)
-│   │   ├── enrich_protein_names_parallel.py  # UniProt enrichment (parallel)
+│   │   ├── enrich_pubtator_csv.py       # PubTator enrichment (CSV)
 │   │   ├── create_sqlite_db.py          # CSV → SQLite conversion
-│   │   ├── merge_final_shiny_data.py    # Merge all datasets
-│   │   └── rebuild_final_dataset.py     # Rebuild complete dataset
+│   │   ├── merge_final_shiny_data.py    # Merge autoregulatory datasets
+│   │   ├── merge_enriched_predictions.py # Merge enriched prediction CSVs
+│   │   └── (removed)                    # Legacy rebuild script removed
 │   │
 │   ├── training/
 │   │   ├── train_stage1.py              # Binary classification training
@@ -242,15 +242,9 @@ scripts/
 │   │   └── evaluate.py                  # Model evaluation
 │   │
 │   └── prediction/
-│       ├── predict.py                   # Single paper test
+│       ├── (removed)                    # Legacy single-paper test removed
 │       ├── predict_unused_unlabeled.py  # Predict unused training data
 │       └── predict_new_data.py          # Predict new PubMed data
-│
-└── shell/
-    ├── run_complete_pipeline.sh         # Full prediction pipeline
-    ├── run_new_predictions.sh           # New data predictions (Linux/Mac)
-    ├── run_new_predictions.bat          # New data predictions (Windows)
-    └── enrich_existing_data.sh          # Protein enrichment pipeline
 ```
 
 ---
@@ -260,23 +254,17 @@ scripts/
 #### Data Processing Scripts
 
 **prepare_data.py**
-- Loads PubMed and UniProt data
+- Loads PubMed and AutoregDB data
 - Merges on PMID
 - Normalizes mechanism terms
 - Filters rare terms (< 35 examples)
-- Splits into train/test sets
+- Splits into train/val/test sets (stratified)
 - Output: `data/processed/modeling_dataset.csv`
 
-**enrich_protein_names.py**
-- Queries UniProt API for protein names
-- Adds protein information to predictions
-- Uses caching to avoid redundant queries
-- Sequential processing (slower but stable)
-
-**enrich_protein_names_parallel.py**
-- Parallel version of enrichment
-- Uses multiprocessing for speed
-- Requires careful rate limiting
+**enrich_pubtator_csv.py**
+- Enriches prediction CSVs using PubTator + UniProt
+- Adds UniProtKB_accessions / Protein / Gene fields
+- Uses PMID → GeneID → UniProt mapping
 
 **create_sqlite_db.py**
 - Converts CSV predictions to SQLite
@@ -292,7 +280,6 @@ scripts/
 
 **train_stage1.py**
 - Binary classification training
-- Uses weighted loss for imbalance
 - Saves best model based on validation F1
 - Checkpoints every epoch
 - Output: `models/stage1_best.pt`
@@ -312,10 +299,8 @@ scripts/
 
 #### Prediction Scripts
 
-**predict.py**
-- Single paper test utility
-- Demonstrates end-to-end inference
-- Useful for debugging and demos
+**predict_new_data.py**
+- Main prediction entry point for new data
 
 **predict_unused_unlabeled.py**
 - Predicts on papers not used in training
@@ -598,13 +583,13 @@ time.sleep(0.5)  # 500ms delay
 
 ### System Requirements
 
-**Minimum (Oracle Cloud Free Tier):**
-- 1 GB RAM
+**Minimum:**
+- 2 GB RAM
 - 1 vCPU
 - 50 GB Storage
 - Ubuntu 22.04
 
-**Recommended (DigitalOcean):**
+**Recommended:**
 - 4 GB RAM
 - 2 vCPUs
 - 80 GB Storage

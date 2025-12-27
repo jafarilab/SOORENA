@@ -1,264 +1,137 @@
-# Shiny App - Interactive Data Exploration
+# Shiny App (SOORENA)
 
-This document explains how to use the R Shiny web application for exploring autoregulatory mechanism predictions.
+This document explains how to run and use the SOORENA Shiny dashboard.
 
-## Overview
+The app reads from a local SQLite database:
+- `shiny_app/data/predictions.db`
 
-The Shiny app provides an interactive interface to:
-- Browse all predictions (~3.25M papers)
-- Filter by mechanism type, confidence, year, journal
-- Search by PMID, protein, gene, keyword
-- View detailed paper information
-- Export filtered results
-- Visualize prediction statistics
+---
 
-## Quick Start
+## 1) Run Locally
 
-### Launch the App
+### Requirements
+
+- R ≥ 4.0
+- A built database: `shiny_app/data/predictions.db`
+
+### Install R packages
+
+```r
+install.packages(c(
+  "shiny", "DT", "dplyr", "DBI", "RSQLite",
+  "shinyjs", "htmltools", "plotly", "ggplot2",
+  "shinycssloaders", "rsconnect"
+))
+```
+
+### Build the SQLite database (if missing)
+
+From repo root:
+
+```bash
+python scripts/python/data_processing/create_sqlite_db.py \
+  --input shiny_app/data/predictions.csv \
+  --output shiny_app/data/predictions.db
+```
+
+For the full workflow (training → prediction → merge → DB), see `docs/README.md`.
+
+### Launch the app
 
 ```bash
 cd shiny_app
 Rscript -e "shiny::runApp('app.R')"
 ```
 
-**OR** from repository root:
+Stop the app with `Ctrl+C` in the terminal.
 
-```bash
-cd shiny_app && Rscript -e "shiny::runApp('app.R')"
-```
-
-The app will open in your default web browser at: `http://127.0.0.1:XXXX`
+---
 
-### Stop the App
+## 2) What’s in the database?
 
-Press `Ctrl+C` in the terminal where the app is running.
+The Shiny app database is **autoregulatory-only** (no “non-autoregulatory” rows).
 
-## Prerequisites
-
-### R Installation
-
-**Required R version:** ≥ 4.0.0
-
-Check your R version:
-```bash
-R --version
-```
-
-### Required R Packages
-
-Install dependencies:
-
-```r
-install.packages(c(
-  "shiny",
-  "DT",
-  "dplyr",
-  "ggplot2",
-  "plotly",
-  "shinythemes",
-  "shinyWidgets"
-))
-```
+Two accession concepts exist:
 
-### Data File
+- `AC` = **SOORENA record ID** (unique per row): `SOORENA_<PMID>_<n>`
+- `UniProtKB_accessions` = **UniProtKB accession number(s)** (comma-separated when available)
 
-**Required:** `shiny_app/data/predictions_for_app.csv`
-
-If this file doesn't exist, run:
-```bash
-bash scripts/shell/run_complete_pipeline.sh
-```
+Polarity is derived directly from the mechanism type:
+- `+` = positive (e.g., autophosphorylation, autocatalytic, autoinducer)
+- `–` = negative (e.g., autoinhibition, autoubiquitination, autolysis)
+- `±` = mixed/depends (autoregulation)
 
-## App Features
+---
 
-### 1. Data Table (Main View)
+## 3) Search Tab
 
-**Interactive table with:**
-- Sortable columns (click column headers)
-- Search box (searches all columns)
-- Pagination (10/25/50/100 rows per page)
-- Column filtering
+### A) Fast search (Title/Abstract)
 
-**Columns displayed:**
-- PMID (clickable link to PubMed)
-- Title
-- Has Mechanism (Yes/No)
-- Mechanism Probability
-- Autoregulatory Type
-- Source (Ground Truth / Training Negatives / Model Predictions)
-- Year
-- Journal
+- **Title/Abstract search** field supports:
+  - **Contains** (partial match)
+  - **Exact match**
 
-### 2. Filters Panel (Sidebar)
+### B) Core filters (top row)
 
-**Filter by:**
+- `Autoregulatory Type`
+- `Polarity` (`+`, `–`, `±`)
+- `Year range` (From/To)
+- `Data Source` (`All`, `UniProt`, `Non-UniProt`)
 
-**Mechanism Status:**
-- ☑️ With mechanism
-- ☑️ Without mechanism
+Polarity behavior:
+- If none are selected, the app treats it as **no polarity filtering** (shows all).
+- Selecting a subset restricts results to that subset.
 
-**Autoregulatory Type:**
-- All types
-- Transcription
-- Translation
-- Protein stability
-- Alternative splicing
-- DNA binding
-- Localization
-- Post-translational modification
-- Non-autoregulatory
+### C) More filters (collapsible)
 
-**Confidence Threshold:**
-- Slider: 0.0 - 1.0
-- Only show predictions above threshold
+**Publication & Metadata**
+- `Journal`
+- `OS` (organism)
+- `Author`
+- `Publication Month`
 
-**Publication Year:**
-- Range slider
-- Filter by year range
+**Proteins & IDs**
+- `Protein Name`
+- `Gene Name`
+- `Protein ID`
+- `PMID`
+- `UniProt AC` (search within `UniProtKB_accessions`)
+- `AC (Record ID)`
 
-**Source:**
-- UniProt (Ground Truth)
-- Training Negatives
-- Model Predictions (Unused)
-- New PubMed Predictions
+### D) Table sorting + pagination
 
-**Search:**
-- Search by PMID, keywords, protein name, gene name
-- Case-insensitive
-- Searches Title, Abstract, Protein Name, Gene Name columns
+- Clicking a column header sorts the **entire filtered dataset** (not just the current page).
+- Pagination controls the SQL query (`LIMIT/OFFSET`), so filtering and sorting stay consistent across pages.
 
-### 3. Statistics Tab
+---
 
-**Summary statistics:**
-- Total papers loaded
-- Papers with mechanisms
-- Papers without mechanisms
-- Breakdown by mechanism type
-- Breakdown by source
-- Year distribution
-- Confidence score distribution
+## 4) Statistics Tab
 
-**Visualizations:**
-- Bar charts for mechanism type distribution
-- Pie charts for source breakdown
-- Histograms for confidence scores
-- Timeline of publication years
+The Statistics tab updates based on the **current Search filters** and includes:
+- Total matching papers
+- Source mix (UniProt vs Non‑UniProt)
+- Autoregulatory type distribution
+- Publication timeline
+- Top journals
+- Model benchmark tables
 
-### 4. Export Functionality
+---
 
-**Export filtered results:**
-- Button: "Download Filtered Data (CSV)"
-- Downloads current filtered view
-- Includes all columns
+## 5) Ontology Tab
 
-**Export formats:**
-- CSV (default)
-- Can be opened in Excel, Google Sheets, etc.
+The ontology tab provides definitions and related terms for each mechanism type.
+Polarity annotations (`+ / – / ±`) are displayed alongside mechanisms for clarity.
 
-## Data Sources
+---
 
-The app displays data from 4 sources:
+## 6) Troubleshooting
 
-| Source | Papers | Description | Color Code |
-|--------|--------|-------------|------------|
-| **UniProt (Ground Truth)** | 1,332 | Manually curated autoregulatory proteins | 🟢 Green |
-| **Training Negatives** | 2,664 | Papers used as negative examples in training | 🔵 Blue |
-| **Model Predictions (Unused)** | ~250K | Predictions on unused PubMed papers | 🟡 Yellow |
-| **New PubMed Predictions** | ~3M | Predictions on new PubMed data | 🟠 Orange |
+**App fails with “Database not found”**
+- Build `shiny_app/data/predictions.db` using `scripts/python/data_processing/create_sqlite_db.py`
 
-## Understanding the Data
-
-### Has Mechanism
-
-- **Yes:** Paper discusses autoregulatory mechanisms
-- **No:** Paper does not discuss autoregulatory mechanisms
-
-### Mechanism Probability
-
-**Confidence score (0-1) for "Has Mechanism" prediction:**
-
-- `0.9-1.0`: Very confident (has mechanism)
-- `0.7-0.9`: Confident
-- `0.5-0.7`: Moderate confidence
-- `0.0-0.5`: Likely no mechanism
-
-**Note:** Ground Truth papers have probability = 1.0 (100% confident)
-
-### Autoregulatory Type
-
-**7 mechanism types:**
-
-1. **Transcription** - Transcriptional auto-regulation
-2. **Translation** - Translational auto-regulation
-3. **Protein Stability** - Protein stability regulation
-4. **Alternative Splicing** - Splicing-mediated regulation
-5. **DNA Binding** - DNA binding-mediated regulation
-6. **Localization** - Localization-based regulation
-7. **Post-translational Modification** - PTM-mediated regulation
-
-**Special value:**
-- **non-autoregulatory** - Papers without mechanisms
-
-### Type Confidence
-
-**Confidence score (0-1) for mechanism type prediction:**
-
-- `0.8-1.0`: High confidence
-- `0.6-0.8`: Moderate confidence
-- `0.4-0.6`: Low confidence (uncertain)
-- `< 0.4`: Very uncertain
-
-**Note:** Ground Truth and Training Negatives have fixed confidence values.
-
-### Protein ID
-
-**Format:** `AC_PMID`
-
-Examples:
-- `P12345_38000001` - UniProt accession P12345, PMID 38000001
-- `NA_38000002` - No UniProt accession, PMID 38000002
-
-**Only Ground Truth papers have UniProt accessions.**
-
-## Common Use Cases
-
-### Find High-Confidence Transcription Papers
-
-1. Set "Mechanism Probability" slider to 0.8-1.0
-2. Select "Transcription" in Autoregulatory Type
-3. Click "Has Mechanism: Yes"
-
-### Browse New Predictions from 2024
-
-1. Set "Year" slider to 2024-2024
-2. Select "New PubMed Predictions" in Source
-3. Browse results
-
-### Search for Specific Protein
-
-1. Enter protein name in Search box (e.g., "p53")
-2. Results show papers mentioning that protein
-3. Export results if needed
-
-### Find Papers Similar to Known Mechanism
-
-1. Filter by "UniProt (Ground Truth)" source
-2. Find paper with mechanism of interest
-3. Note the mechanism type
-4. Clear source filter
-5. Filter by same mechanism type
-6. Browse model predictions
-
-## Performance
-
-### Loading Time
-
-| Dataset Size | Initial Load | Filter/Search |
-|--------------|-------------|---------------|
-| 10K papers | 1-2 seconds | Instant |
-| 100K papers | 5-10 seconds | < 1 second |
-| 1M papers | 30-60 seconds | 1-2 seconds |
-| 3M papers | 90-180 seconds | 2-5 seconds |
+**App feels slow**
+- First load depends on DB size and disk speed.
+- Filtering/sorting is SQL-backed; adding indexes is handled by `create_sqlite_db.py`.
 
 **Tip:** Loading 3.25M rows takes ~2-3 minutes. Be patient on first load!
 
@@ -275,7 +148,7 @@ Examples:
 ## Troubleshooting
 
 **Issue:** App won't start - "Error: file not found"
-**Solution:** Ensure `shiny_app/data/predictions_for_app.csv` exists. Run `bash scripts/shell/run_complete_pipeline.sh`
+**Solution:** Ensure `shiny_app/data/predictions.db` exists by running the prediction workflow in `docs/README_PREDICTION_NEW_DATA.md`.
 
 **Issue:** App very slow to load
 **Solution:** Normal for large datasets (3M+ rows). Wait 2-3 minutes for initial load.
@@ -290,7 +163,7 @@ Examples:
 **Solution:** Apply at least one filter first, then export.
 
 **Issue:** Can't filter by protein name
-**Solution:** Ensure enrichment was run: `bash scripts/shell/enrich_existing_data.sh`
+**Solution:** Ensure PubTator enrichment was run on the dataset before building the DB.
 
 ## Advanced: Running on Server
 
@@ -373,8 +246,8 @@ Edit the `DT::renderDataTable()` section to show/hide columns.
 shiny_app/
 ├── app.R                    # Main application file
 ├── data/
-│   ├── predictions_for_app.csv          # Main dataset (3.25M rows)
-│   └── predictions_for_app_enriched.csv # With protein names (optional)
+│   ├── predictions.csv                  # Main dataset (CSV)
+│   └── predictions.db                   # SQLite DB used by the app
 └── www/                     # Static assets (logos, CSS)
 ```
 

@@ -37,15 +37,20 @@ python scripts/python/data_processing/prepare_data.py
 ### Step 2: Data Cleaning
 
 **Text Normalization:**
-- Combines title + abstract into single text field
-- Removes extra whitespace
-- Converts to lowercase
-- Removes special characters (keeps alphanumeric + basic punctuation)
+- Combines **Title + Abstract** into a single `text` field (`Title. Abstract`)
+- Decodes HTML entities
+- Removes URLs and email addresses
+- Normalizes whitespace (collapses repeated spaces)
 
 **Term Normalization:**
-- Standardizes mechanism type names
-- Removes rare mechanism types (< 10 occurrences)
-- Creates binary `has_mechanism` flag
+- Standardizes spelling/variants to common labels:
+  - `autoregulatory` → `autoregulation`
+  - `autoinhibitory` → `autoinhibition`
+  - `autocatalysis` → `autocatalytic`
+  - `autoinduction` → `autoinducer`
+- Lowercases all terms
+- Removes rare mechanism types with fewer than `config.STAGE2_MIN_EXAMPLES` examples (default: 35)
+- Creates binary `has_mechanism` flag (`Terms != ""`)
 
 ### Step 3: Create Train/Val/Test Splits
 
@@ -94,7 +99,7 @@ All files saved to `data/processed/`:
 |--------|------|-------------|---------|
 | `PMID` | int | PubMed ID (unique identifier) | `12345678` |
 | `text` | str | Combined title + abstract (cleaned) | `"protein regulation mechanism..."` |
-| `Terms` | str | Mechanism types (comma-separated) | `"transcription, translation"` |
+| `Terms` | str | Mechanism types (comma-separated) | `"autophosphorylation, autoregulation"` |
 | `has_mechanism` | bool | Has autoregulatory mechanism? | `True` / `False` |
 
 ### Additional Columns
@@ -118,21 +123,21 @@ The script performs automatic validation:
 
 ## Mechanism Type Distribution
 
-After filtering (≥10 occurrences), you'll have 7 mechanism types:
+After filtering (≥ `config.STAGE2_MIN_EXAMPLES` occurrences), the pipeline keeps 7 mechanism types:
 
-1. Transcription
-2. Translation
-3. Protein stability
-4. Alternative splicing
-5. DNA binding
-6. Localization
-7. Post-translational modification
+1. autophosphorylation
+2. autoregulation
+3. autocatalytic
+4. autoinhibition
+5. autoubiquitination
+6. autolysis
+7. autoinducer
 
 ## Reproducibility
 
 **Key Settings:**
 - `RANDOM_SEED = 42` (in `config.py`)
-- `MIN_SAMPLES_PER_CLASS = 10`
+- `STAGE2_MIN_EXAMPLES = 35` (minimum examples per mechanism type)
 - Stratified splitting enabled
 
 **To reproduce exact splits:**

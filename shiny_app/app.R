@@ -16,7 +16,11 @@ DB_PATH <- "data/predictions.db"
 
 if (!file.exists(DB_PATH)) {
   stop(paste("Database not found:", DB_PATH, "\n",
-             "Please run create_sqlite_database.py first to create the database."))
+             "Build it from the merged CSV using:\n",
+             "  python scripts/python/data_processing/create_sqlite_db.py \\\n",
+             "    --input shiny_app/data/predictions.csv \\\n",
+             "    --output shiny_app/data/predictions.db\n",
+             "See docs/README.md for the full workflow."))
 }
 
 # Create database connection
@@ -106,6 +110,24 @@ ontology_key_map <- c(
   # Add more aliases here if your data contains other variants
 )
 
+# Polarity is derived deterministically from mechanism class (no separate model).
+# Symbols: "+" positive/self-amplifying, "–" negative/self-limiting, "±" context-dependent.
+polarity_symbol_map <- c(
+  Autocatalysis = "+",
+  Autophosphorylation = "+",
+  Autoubiquitination = "–",
+  Autoregulation = "±",
+  Autoinhibition = "–",
+  Autolysis = "–",
+  Autoinduction = "+"
+)
+
+get_polarity_symbol <- function(key) {
+  sym <- polarity_symbol_map[[key]]
+  if (is.null(sym) || is.na(sym) || sym == "") return("Unknown")
+  sym
+}
+
 # Ontology path helper for display
 get_ontology_path <- function(key) {
   enzymatic <- c("Autokinase","Autophosphorylation","Autoubiquitination","Autolysis","Autocatalysis")
@@ -124,6 +146,7 @@ header_ui <- div(
   div(class = "header-logos",
       img(src = "logoHelsinki.png"),
       img(src = "logoUBC.png"),
+      img(src = "Tampere.png", alt = "Tampere University"),
       img(src = "logoJafariLab.png")
   )
 )
@@ -188,12 +211,248 @@ ui <- navbarPage(
           .header-logos img {
             height: 120px;
           }
-          .filter-panel {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+	          .filter-panel {
+	            background-color: #ffffff;
+	            padding: 20px;
+	            border-radius: 8px;
+	            margin: 20px 30px;
+	            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+	          }
+	          .filter-top-row {
+	            display: flex;
+	            align-items: flex-end;
+	            justify-content: flex-start;
+	            gap: 12px 16px;
+	            flex-wrap: wrap;
+	          }
+	          .filter-top-left {
+	            display: flex;
+	            align-items: flex-end;
+	            justify-content: flex-start;
+	            gap: 12px 16px;
+	            flex-wrap: wrap;
+	            flex: 1 1 520px;
+	          }
+	          .filter-top-search {
+	            flex: 1 1 520px;
+	            max-width: 720px;
+	            min-width: 280px;
+	          }
+	          .filter-top-search .shiny-input-container {
+	            width: 100%;
+	          }
+	          .filter-top-search .form-group {
+	            margin-bottom: 0;
+	          }
+	          .search-label-row {
+	            display: flex;
+	            align-items: center;
+	            justify-content: space-between;
+	            gap: 12px;
+	            margin-bottom: 6px;
+	          }
+	          .filter-top-row .search-label-row .control-label {
+	            margin: 0;
+	          }
+	          .filter-top-right {
+	            display: flex;
+	            align-items: flex-end;
+	            justify-content: flex-start;
+	            gap: 12px;
+	            flex-wrap: wrap;
+	            margin-left: auto;
+	          }
+	          .filter-top-row .form-group {
+	            margin-bottom: 0;
+	          }
+	          .filter-top-row .control-label {
+	            margin-bottom: 6px;
+	            font-weight: 600;
+	          }
+          .match-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(217, 119, 66, 0.12);
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+          }
+	          .match-exact-toggle .form-group {
+	            margin: 0;
+	          }
+	          .match-exact-toggle .control-label {
+	            display: none;
+	          }
+	          .match-exact-toggle .checkbox {
+	            margin: 0;
+	          }
+	          .match-exact-toggle .checkbox label {
+	            position: relative;
+	            margin: 0;
+	            padding: 8px 12px;
+	            border-radius: 999px;
+	            border: 1px solid #d1d5db;
+	            background: #ffffff;
+	            font-weight: 700;
+	            color: #1a2332;
+	            cursor: pointer;
+	            user-select: none;
+	            display: inline-flex;
+	            align-items: center;
+	            justify-content: center;
+	            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+	            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+	          }
+	          .match-exact-toggle .checkbox input[type=checkbox] {
+	            position: absolute;
+	            opacity: 0;
+	            width: 0;
+	            height: 0;
+	          }
+	          .match-exact-toggle .checkbox label:has(input:checked) {
+	            background: rgba(217, 119, 66, 0.14);
+	            border-color: rgba(217, 119, 66, 0.75);
+	            box-shadow: 0 4px 12px rgba(217, 119, 66, 0.12);
+	          }
+          .btn-clear {
+            background: #ffffff !important;
+            border: 1px solid rgba(217, 119, 66, 0.7) !important;
+            color: #d97742 !important;
+            font-weight: 700;
+          }
+	          .btn-clear:hover {
+	            background: rgba(217, 119, 66, 0.08) !important;
+	            border-color: rgba(217, 119, 66, 0.95) !important;
+	          }
+	          .help-icon {
+	            text-decoration: none !important;
+	          }
+          details.more-filters {
+            margin-top: 14px;
+            border: 1px solid #f0e6d6;
+            border-radius: 10px;
+            background: #fbf7f0;
+            padding: 10px 12px;
+          }
+          details.more-filters summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: #1a2332;
+            list-style: none;
+            outline: none;
+          }
+          details.more-filters summary::-webkit-details-marker {
+            display: none;
+          }
+          details.more-filters summary:after {
+            content: \"▾\";
+            float: right;
+            color: #d97742;
+            font-weight: 700;
+          }
+          details.more-filters[open] summary:after {
+            content: \"▴\";
+          }
+          .filter-card {
+            margin-top: 12px;
+            background: #ffffff;
+            border: 1px solid #f0e6d6;
+            border-radius: 10px;
+            padding: 14px;
+          }
+          .filter-card h4 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #1a2332;
+            font-weight: 700;
+          }
+          .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            margin-left: 6px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: #64748b;
+            font-size: 12px;
+            cursor: help;
+          }
+          .polarity-toggle .shiny-options-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          }
+          .polarity-toggle label.checkbox-inline {
+            position: relative;
+            margin: 0;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            font-weight: 800;
+            color: #1a2332;
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 46px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+          }
+          .polarity-toggle label.checkbox-inline input[type=checkbox] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"+\"]) {
+            border-color: rgba(34, 197, 94, 0.35);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"–\"]) {
+            border-color: rgba(239, 68, 68, 0.35);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"±\"]) {
+            border-color: rgba(99, 102, 241, 0.35);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"+\"]:checked) {
+            background: rgba(34, 197, 94, 0.14);
+            border-color: rgba(34, 197, 94, 0.7);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.18);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"–\"]:checked) {
+            background: rgba(239, 68, 68, 0.14);
+            border-color: rgba(239, 68, 68, 0.7);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.14);
+          }
+          .polarity-toggle label.checkbox-inline:has(input[value=\"±\"]:checked) {
+            background: rgba(99, 102, 241, 0.14);
+            border-color: rgba(99, 102, 241, 0.7);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.14);
+          }
+          .year-range-group > label {
+            font-weight: 600;
+            margin-bottom: 6px;
+          }
+          .year-range-inputs {
+            display: flex;
+            gap: 10px;
+          }
+          .year-range-inputs .form-group {
+            margin-bottom: 0;
+            flex: 1;
+          }
+          .year-range-inputs .selectize-input {
+            border-radius: 6px;
+          }
+          .source-select .form-group {
+            margin-bottom: 0;
           }
           .btn-warning {
             margin-top: 10px;
@@ -394,7 +653,7 @@ ui <- navbarPage(
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
           }
-          @media (max-width: 768px) {
+	          @media (max-width: 768px) {
             .header-section {
               flex-direction: column;
               align-items: center;
@@ -419,15 +678,18 @@ ui <- navbarPage(
             .header-logos img {
               height: 56px;
             }
-            .filter-panel {
-              margin: 12px;
-              padding: 16px;
-            }
-            .table-toolbar {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 12px;
-            }
+		            .filter-panel {
+		              margin: 12px;
+		              padding: 16px;
+		            }
+		            .filter-top-right {
+		              margin-left: 0;
+		            }
+		            .table-toolbar {
+		              flex-direction: column;
+		              align-items: flex-start;
+		              gap: 12px;
+		            }
             .table-toolbar__left {
               flex-wrap: wrap;
             }
@@ -568,52 +830,119 @@ ui <- navbarPage(
       # Header section
       header_ui,
 
-      # Search and Filter Controls
-  # Search and Filter Controls
-  div(class = "filter-panel",
-    fluidRow(
-      column(
-        width = 8,
-        fluidRow(
-          column(3, textInput("protein_id", "Protein ID", placeholder = "Search protein ID...")),
-          column(3, textInput("ac", "AC", placeholder = "Search AC...")),
-          column(3, selectInput("has_mechanism", "Has Mechanism", choices = c("All", "Yes", "No"))),
-          column(3, selectizeInput("os", "OS",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select OS...')))
-        ),
-        fluidRow(
-          column(3, textInput("pmid", "PMID", placeholder = "Search PMID...")),
-          column(3, textInput("author", "Author", placeholder = "Search author...")),
-          column(3, selectizeInput("journal", "Journal",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select journal...'))),
-          column(3, selectInput("source", "Data Source", choices = c("All", "UniProt", "Non-UniProt")))
-        ),
-        fluidRow(
-          column(3, selectizeInput("type", "Autoregulatory Type",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select type...'))),
-          column(3, selectizeInput("year", "Publication Year",
-                                choices = NULL,
-                                multiple = TRUE,
-                                options = list(placeholder = 'Select year...'))),
-          column(3, selectInput("month", "Publication Month",
-                                choices = c("All", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
-                                multiple = TRUE))
-        )
-      ),
-      column(
-        width = 4,
-        textAreaInput("search", "Search Title / Abstract", placeholder = "Type or paste any text...", height = "120px"),
-        actionButton("reset_filters", "Reset Filters", class = "btn-warning")
-      )
-    )
-  ),
+	      # Search and Filter Controls
+				  div(class = "filter-panel",
+				    div(
+				      class = "filter-top-row",
+				      div(
+				        class = "filter-top-left",
+				        div(
+				          class = "filter-top-search",
+				          div(
+				            class = "search-label-row",
+				            tags$label("Title/Abstract search", `for` = "search", class = "control-label"),
+				            div(
+				              class = "match-exact-toggle",
+				              checkboxInput("match_exact", label = "Exact match", value = FALSE)
+				            )
+				          ),
+				          textInput("search", NULL, placeholder = "Search title or abstract...")
+				        )
+				      ),
+				      div(
+				        class = "filter-top-right",
+				        div(class = "match-pill", textOutput("match_count_badge", inline = TRUE)),
+				        actionButton("reset_filters", "Clear all", class = "btn-clear")
+				      )
+				    ),
+				    tags$hr(style = "margin: 14px 0; border-top: 1px solid #eee;"),
+				    fluidRow(
+				      column(4,
+				             selectizeInput("type", "Autoregulatory Type",
+			                            choices = NULL,
+			                            multiple = TRUE,
+			                            options = list(placeholder = "Select type..."))),
+			      column(3,
+			             div(class = "polarity-toggle",
+				                 checkboxGroupInput(
+				                   "polarity",
+				                   tags$span(
+				                     "Polarity",
+			                     actionLink(
+			                       "polarity_help",
+			                       label = "i",
+			                       class = "help-icon",
+			                       title = "Click for polarity definitions"
+			                     )
+				                   ),
+				                   choices = c("+", "–", "±"),
+				                   selected = c("+", "–", "±"),
+				                   inline = TRUE
+				                 ))),
+			      column(3,
+			             div(class = "year-range-group",
+			                 tags$label("Year range"),
+			                 div(class = "year-range-inputs",
+			                     selectizeInput("year_from", NULL,
+		                                    choices = c(""),
+		                                    selected = "",
+		                                    multiple = FALSE,
+		                                    options = list(placeholder = "From...")),
+		                     selectizeInput("year_to", NULL,
+		                                    choices = c(""),
+		                                    selected = "",
+			                                    multiple = FALSE,
+			                                    options = list(placeholder = "To..."))
+			                 ))),
+			      column(2,
+			             div(class = "source-select",
+			                 selectInput(
+			                   "source_mode",
+			                   "Data Source",
+			                   choices = c("All" = "all", "UniProt" = "UniProt", "Non-UniProt" = "Non-UniProt"),
+			                   selected = "all"
+			                 )))
+			    ),
+		    tags$details(
+		      class = "more-filters",
+		      tags$summary(textOutput("more_filters_title", container = span)),
+		      div(class = "filter-card",
+		        h4("Publication & Metadata"),
+		        fluidRow(
+		          column(3,
+		                 selectizeInput("journal", "Journal",
+		                                choices = NULL,
+		                                multiple = TRUE,
+		                                options = list(placeholder = "Select journal..."))),
+		          column(3,
+		                 selectizeInput("os", "OS",
+		                                choices = NULL,
+		                                multiple = TRUE,
+		                                options = list(placeholder = "Select OS..."))),
+		          column(3, textInput("author", "Author", placeholder = "Search author...")),
+		          column(3,
+		                 selectizeInput("month", "Publication Month",
+		                                choices = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		                                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+		                                multiple = TRUE,
+		                                options = list(placeholder = "Select month..."))),
+		        )
+		      ),
+		      div(class = "filter-card",
+		        h4("Proteins & IDs"),
+		        fluidRow(
+		          column(4, textInput("protein_name", "Protein Name", placeholder = "Search protein name...")),
+		          column(4, textInput("gene_name", "Gene Name", placeholder = "Search gene name...")),
+		          column(4, textInput("protein_id", "Protein ID", placeholder = "Search protein ID..."))
+		        ),
+		        fluidRow(
+		          column(4, textInput("pmid", "PMID", placeholder = "Search PMID...")),
+		          column(4, textInput("ac", "UniProt AC", placeholder = "Search UniProt accession...")),
+		          column(4, textInput("record_ac", "AC (Record ID)", placeholder = "Search record AC..."))
+		        )
+		      )
+		    )
+		  ),
 
         # Display Table with loading spinner
         div(class = "table-toolbar-wrap", style = "margin: 0 30px 20px 30px;",
@@ -647,25 +976,19 @@ ui <- navbarPage(
       header_ui,
 
       # Dataset Statistics Section
-      div(class = "stats-panel",
-        div(class = "stats-header",
-          div(
-            h2("Dataset Statistics", class = "stats-title"),
-            p("Based on current filters", class = "stats-subtitle")
-          ),
-          div(class = "stats-pill", "Live filtered view")
-        ),
+	      div(class = "stats-panel",
+	        div(class = "stats-header",
+	          div(
+	            h2("Dataset Statistics", class = "stats-title"),
+	            p("Based on current filters", class = "stats-subtitle"),
+	            div(class = "stats-subtitle", textOutput("stat_filters_summary"))
+	          ),
+	          div(class = "stats-pill", "Live filtered view")
+	        ),
         div(class = "stats-grid stats-grid--top",
           div(class = "stat-card stat-card--chart",
             h4("Total Matching Papers", class = "stat-card__title"),
             div(class = "stat-value-centered", textOutput("stat_total_papers", inline = TRUE))
-          ),
-          div(class = "stat-card stat-card--chart",
-            div(class = "stat-card__header",
-              h4("Has Mechanism", class = "stat-card__title"),
-              span(class = "stat-card__meta", "Yes vs No")
-            ),
-            withSpinner(plotlyOutput("stat_mechanism_plot", height = "230px"), type = 6, color = "#2c3e50")
           ),
           div(class = "stat-card stat-card--chart",
             div(class = "stat-card__header",
@@ -765,6 +1088,13 @@ ui <- navbarPage(
           p(style = "font-size: 16px; color: #555; margin-top: 20px;",
             "A structured classification of self-directed biochemical processes identified and categorized by the SOORENA pipeline."),
 
+          div(style = "margin: 14px 0 22px 0; padding: 12px 14px; background: #f5f1e8; border: 1px solid #e8dcc8; border-radius: 10px;",
+            tags$span(style = "font-weight: 700; color: #1a2332; margin-right: 8px;", "Polarity legend:"),
+            tags$span(style = "display: inline-block; margin-right: 10px;", tags$b("+"), " positive / self-amplifying"),
+            tags$span(style = "display: inline-block; margin-right: 10px;", tags$b("–"), " negative / self-limiting"),
+            tags$span(style = "display: inline-block;", tags$b("±"), " context-dependent")
+          ),
+
           # Ontology Tree
           h3("Hierarchical Structure", style = "color: #1a2332; margin-top: 40px; font-weight: 600;"),
 
@@ -799,7 +1129,7 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-catalytic chemistry"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    tags$a(href = '#autocatalytic', class = 'tree-link', style = "font-size: 14px;", "→ Autocatalytic Reaction")
+                    tags$a(href = '#autocatalytic', class = 'tree-link', style = "font-size: 14px;", "→ Autocatalytic Reaction (+)")
                   )
                 )
               ),
@@ -810,8 +1140,8 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Protein self-modification (post-translational)"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    div(tags$a(href = '#autophosphorylation', class = 'tree-link', style = "font-size: 14px;", "→ Autophosphorylation")),
-                    div(tags$a(href = '#autoubiquitination', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoubiquitination"))
+                    div(tags$a(href = '#autophosphorylation', class = 'tree-link', style = "font-size: 14px;", "→ Autophosphorylation (+)")),
+                    div(tags$a(href = '#autoubiquitination', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoubiquitination (–)"))
                   )
                 )
               ),
@@ -822,8 +1152,8 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Intrinsic regulatory control"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    div(tags$a(href = '#autoregulation', class = 'tree-link', style = "font-size: 14px;", "→ Autoregulation of Gene Expression")),
-                    div(tags$a(href = '#autoinhibition', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoinhibition within Proteins"))
+                    div(tags$a(href = '#autoregulation', class = 'tree-link', style = "font-size: 14px;", "→ Autoregulation of Gene Expression (±)")),
+                    div(tags$a(href = '#autoinhibition', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoinhibition within Proteins (–)"))
                   )
                 )
               ),
@@ -834,7 +1164,7 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Self-degradation and lysis"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    tags$a(href = '#autolysis', class = 'tree-link', style = "font-size: 14px;", "→ Autolysis")
+                    tags$a(href = '#autolysis', class = 'tree-link', style = "font-size: 14px;", "→ Autolysis (–)")
                   )
                 )
               ),
@@ -845,7 +1175,7 @@ ui <- navbarPage(
                 div(class = "ontology-tree-node", style = "margin-left: 25px; background: #fef5f0; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #d97742;",
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Population-level self-signaling"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
-                    tags$a(href = '#autoinducer', class = 'tree-link', style = "font-size: 14px;", "→ Autoinducer Molecules in Quorum Sensing")
+                    tags$a(href = '#autoinducer', class = 'tree-link', style = "font-size: 14px;", "→ Autoinducer Molecules in Quorum Sensing (+)")
                   )
                 )
               )
@@ -860,7 +1190,7 @@ ui <- navbarPage(
           # 1. Autocatalytic Reaction
           div(id = "autocatalytic", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("1. Autocatalytic Reaction", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("1. Autocatalytic Reaction (+)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A chemical reaction in which its product or intermediate accelerates the same reaction. Supports nonlinear self-reinforcement and chemical self-organization."),
 
@@ -885,7 +1215,7 @@ ui <- navbarPage(
           # 2. Autophosphorylation
           div(id = "autophosphorylation", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("2. Autophosphorylation", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
+              h4("2. Autophosphorylation (+)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A protein kinase phosphorylates its own amino acid residues (cis or trans), tuning its conformation, catalytic activity, localization, and signaling dynamics."),
 
@@ -911,7 +1241,7 @@ ui <- navbarPage(
           # 3. Autoubiquitination
           div(id = "autoubiquitination", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("3. Autoubiquitination", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("3. Autoubiquitination (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "An E3 ubiquitin ligase attaches ubiquitin to itself, altering its stability, proteasomal targeting, and signaling functions depending on chain type and site."),
 
@@ -937,7 +1267,7 @@ ui <- navbarPage(
           # 4. Autoregulation
           div(id = "autoregulation", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("4. Autoregulation of Gene Expression", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
+              h4("4. Autoregulation of Gene Expression (±)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A gene product regulates transcription of the same gene through positive or negative feedback, tuning gene expression dynamics, noise, and homeostasis."),
 
@@ -963,7 +1293,7 @@ ui <- navbarPage(
           # 5. Autoinducer
           div(id = "autoinducer", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("5. Autoinducer Molecules in Quorum Sensing", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("5. Autoinducer Molecules in Quorum Sensing (+)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Small diffusible molecules synthesized and detected by bacteria. Their accumulation with increasing cell density triggers coordinated community-wide transcriptional changes."),
 
@@ -989,7 +1319,7 @@ ui <- navbarPage(
           # 6. Autoinhibition
           div(id = "autoinhibition", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("6. Autoinhibition within Proteins", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
+              h4("6. Autoinhibition within Proteins (–)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Intrinsic structural interactions prevent inappropriate activation of a protein, maintaining it in an inactive state until relieved by ligand binding, structural rearrangement, or post-translational modification."),
 
@@ -1015,7 +1345,7 @@ ui <- navbarPage(
           # 7. Autolysis
           div(id = "autolysis", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("7. Autolysis", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("7. Autolysis (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Self-degradation mediated by endogenous lytic enzymes, occurring during programmed cell death, post-mortem breakdown, or engineered microbial lysis systems."),
 
@@ -1077,14 +1407,23 @@ ui <- navbarPage(
       ),
 
       # Project Description
-      div(class = "about-description",
-        style = "max-width: 900px; margin: 0 auto 60px auto; padding: 0 20px;",
-        p("SOORENA is a comprehensive database for exploring autoregulatory mechanisms in proteins.
-          Our machine learning-powered platform analyzes millions of scientific publications to identify
-          and classify autoregulatory protein mechanisms, providing researchers with unprecedented access
-          to this critical biological information.",
-          style = "font-size: 1.1em; line-height: 1.8; color: #34495e; text-align: center;")
-      ),
+	      div(class = "about-description",
+	        style = "max-width: 900px; margin: 0 auto 60px auto; padding: 0 20px;",
+	        p("SOORENA is a comprehensive database for exploring autoregulatory mechanisms in proteins.
+	          Our machine learning-powered platform analyzes millions of scientific publications to identify
+	          and classify autoregulatory protein mechanisms, providing researchers with unprecedented access
+	          to this critical biological information.",
+	          style = "font-size: 1.1em; line-height: 1.8; color: #34495e; text-align: center;")
+	        ,
+	        p(
+	          tags$a(
+	            href = "https://www.biorxiv.org/content/10.1101/2025.11.03.685842v1",
+	            target = "_blank",
+	            "Read the BioRxiv manuscript"
+	          ),
+	          style = "font-size: 1.05em; line-height: 1.6; color: #34495e; text-align: center;"
+	        )
+	      ),
 
       # Team Section Header
       div(class = "about-team-header",
@@ -1193,9 +1532,12 @@ server <- function(input, output, session) {
 
   # Open a per-session database connection
   conn <- dbConnect(RSQLite::SQLite(), DB_PATH)
+  db_columns <- dbGetQuery(conn, "PRAGMA table_info(predictions)")$name
+  db_has_polarity <- "Polarity" %in% db_columns
 
   # Track current page for server-side pagination
   current_page <- reactiveVal(1)
+  table_sort <- reactiveVal(NULL)
   page_size <- reactive({
     size <- as.numeric(input$rows_per_page)
     if (is.null(size) || is.na(size)) DEFAULT_PAGE_SIZE else size
@@ -1219,87 +1561,198 @@ server <- function(input, output, session) {
   }
 
   # Build WHERE clause and parameter list based on current filters
-  build_filter_query <- function() {
-    query <- "FROM predictions WHERE 1=1"
-    params <- list()
+		  build_filter_query <- function() {
+		    query <- "FROM predictions WHERE 1=1"
+		    params <- list()
+		    match_mode <- if (isTRUE(input$match_exact)) "exact" else "contains"
 
     # Journal filter
-    if (!is.null(input$journal) && !"All" %in% input$journal && length(input$journal) > 0) {
+    if (!is.null(input$journal) && length(input$journal) > 0) {
       placeholders <- paste(rep("?", length(input$journal)), collapse = ",")
       query <- paste(query, "AND Journal IN (", placeholders, ")")
       params <- c(params, as.list(input$journal))
     }
 
     # Type filter
-    if (!is.null(input$type) && !"All" %in% input$type && length(input$type) > 0) {
+    if (!is.null(input$type) && length(input$type) > 0) {
       placeholders <- paste(rep("?", length(input$type)), collapse = ",")
       query <- paste(query, "AND Autoregulatory_Type IN (", placeholders, ")")
       params <- c(params, as.list(input$type))
     }
 
+    # Polarity filter (optional).
+    # When all polarity options are selected, treat it as "no filter" for clarity/performance.
+    if (!is.null(input$polarity) && length(input$polarity) > 0) {
+      selected <- as.character(input$polarity)
+      selected <- selected[!is.na(selected) & trimws(selected) != ""]
+
+      # Normalize "-" to the en-dash used in the UI.
+      selected[selected == "-"] <- "–"
+
+      all_polarities <- c("+", "–", "±")
+      if (length(selected) > 0 && !setequal(selected, all_polarities)) {
+        if (db_has_polarity) {
+          placeholders <- paste(rep("?", length(selected)), collapse = ",")
+          query <- paste(query, "AND Polarity IN (", placeholders, ")")
+          params <- c(params, as.list(selected))
+        } else {
+          # Backwards-compatible fallback for older DBs without a Polarity column.
+          pol_conditions <- c()
+          if ("+" %in% selected) {
+            pol_conditions <- c(pol_conditions, "lower(Autoregulatory_Type) IN ('autocatalytic','autophosphorylation','autoinducer')")
+          }
+          if ("–" %in% selected) {
+            pol_conditions <- c(pol_conditions, "lower(Autoregulatory_Type) IN ('autoinhibition','autoubiquitination','autolysis')")
+          }
+          if ("±" %in% selected) {
+            pol_conditions <- c(pol_conditions, "lower(Autoregulatory_Type) IN ('autoregulation')")
+          }
+          if (length(pol_conditions) > 0) {
+            query <- paste(query, "AND (", paste(pol_conditions, collapse = " OR "), ")")
+          }
+        }
+      }
+    }
+
     # OS filter
-    if (!is.null(input$os) && !"All" %in% input$os && length(input$os) > 0) {
+    if (!is.null(input$os) && length(input$os) > 0) {
       placeholders <- paste(rep("?", length(input$os)), collapse = ",")
       query <- paste(query, "AND OS IN (", placeholders, ")")
       params <- c(params, as.list(input$os))
     }
 
-    # AC search
-    if (!is.null(input$ac) && nzchar(input$ac)) {
-      query <- paste(query, "AND AC LIKE ?")
-      params <- c(params, paste0("%", input$ac, "%"))
-    }
+	    # UniProtKB accessions search
+	    if (!is.null(input$ac) && nzchar(input$ac)) {
+	      value <- trimws(input$ac)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND (',' || REPLACE(UPPER(UniProtKB_accessions), ' ', '') || ',') LIKE ?")
+	        params <- c(params, paste0("%,", toupper(gsub(" ", "", value)), ",%"))
+	      } else {
+	        query <- paste(query, "AND UPPER(UniProtKB_accessions) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Protein ID search
-    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
-      query <- paste(query, "AND Protein_ID LIKE ?")
-      params <- c(params, paste0("%", input$protein_id, "%"))
-    }
+	    # Record AC (unique per-row ID) search
+	    if (!is.null(input$record_ac) && nzchar(input$record_ac)) {
+	      value <- trimws(input$record_ac)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND AC = ?")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(AC) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # PMID search
-    if (!is.null(input$pmid) && nzchar(input$pmid)) {
-      query <- paste(query, "AND PMID LIKE ?")
-      params <- c(params, paste0("%", input$pmid, "%"))
-    }
+	    # Protein ID search
+	    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
+	      value <- trimws(input$protein_id)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Protein_ID = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Protein_ID) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Author search
-    if (!is.null(input$author) && nzchar(input$author)) {
-      query <- paste(query, "AND Authors LIKE ?")
-      params <- c(params, paste0("%", input$author, "%"))
-    }
+	    # Protein Name search
+	    if (!is.null(input$protein_name) && nzchar(input$protein_name)) {
+	      value <- trimws(input$protein_name)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Protein_Name = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Protein_Name) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Has Mechanism filter
-    if (!is.null(input$has_mechanism) && input$has_mechanism != "All") {
-      query <- paste(query, "AND Has_Mechanism = ?")
-      params <- c(params, input$has_mechanism)
-    }
+	    # Gene Name search
+	    if (!is.null(input$gene_name) && nzchar(input$gene_name)) {
+	      value <- trimws(input$gene_name)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Gene_Name = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Gene_Name) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Source filter
-    if (!is.null(input$source) && input$source != "All") {
-      query <- paste(query, "AND Source = ?")
-      params <- c(params, input$source)
-    }
+	    # PMID search
+	    if (!is.null(input$pmid) && nzchar(input$pmid)) {
+	      value <- trimws(input$pmid)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND PMID = ?")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND PMID LIKE ?")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
 
-    # Year filter
-    if (!is.null(input$year) && !"All" %in% input$year && length(input$year) > 0) {
-      placeholders <- paste(rep("?", length(input$year)), collapse = ",")
-      query <- paste(query, "AND Year IN (", placeholders, ")")
-      params <- c(params, as.list(input$year))
+	    # Author search
+	    if (!is.null(input$author) && nzchar(input$author)) {
+	      value <- trimws(input$author)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND Authors = ? COLLATE NOCASE")
+	        params <- c(params, value)
+	      } else {
+	        query <- paste(query, "AND UPPER(Authors) LIKE UPPER(?)")
+	        params <- c(params, paste0("%", value, "%"))
+	      }
+	    }
+
+    # Source filter (segmented control)
+	    if (!is.null(input$source_mode) && nzchar(input$source_mode) && input$source_mode != "all") {
+	      query <- paste(query, "AND Source = ?")
+	      params <- c(params, input$source_mode)
+	    }
+
+    # Year range filter (optional)
+    year_from <- NA_integer_
+    year_to <- NA_integer_
+    if (!is.null(input$year_from) && nzchar(input$year_from)) {
+      year_from <- suppressWarnings(as.integer(trimws(input$year_from)))
     }
+    if (!is.null(input$year_to) && nzchar(input$year_to)) {
+      year_to <- suppressWarnings(as.integer(trimws(input$year_to)))
+    }
+    if (!is.na(year_from) && !is.na(year_to) && year_from > year_to) {
+      tmp <- year_from
+      year_from <- year_to
+      year_to <- tmp
+    }
+	    if (!is.na(year_from)) {
+	      query <- paste(query, "AND CAST(Year AS INTEGER) >= ?")
+	      params <- c(params, year_from)
+	    }
+	    if (!is.na(year_to)) {
+	      query <- paste(query, "AND CAST(Year AS INTEGER) <= ?")
+	      params <- c(params, year_to)
+	    }
 
     # Month filter
-    if (!is.null(input$month) && !"All" %in% input$month && length(input$month) > 0) {
+    if (!is.null(input$month) && length(input$month) > 0) {
       placeholders <- paste(rep("?", length(input$month)), collapse = ",")
       query <- paste(query, "AND Month IN (", placeholders, ")")
       params <- c(params, as.list(input$month))
     }
 
-    # Title / Abstract search
-    if (!is.null(input$search) && nzchar(input$search)) {
-      query <- paste(query, "AND (Title LIKE ? OR Abstract LIKE ?)")
-      search_pattern <- paste0("%", input$search, "%")
-      params <- c(params, search_pattern, search_pattern)
-    }
+	    # Title / Abstract search
+	    if (!is.null(input$search) && nzchar(input$search)) {
+	      value <- trimws(input$search)
+	      if (match_mode == "exact") {
+	        query <- paste(query, "AND (Title = ? COLLATE NOCASE OR Abstract = ? COLLATE NOCASE)")
+	        params <- c(params, value, value)
+	      } else {
+	        query <- paste(query, "AND (UPPER(Title) LIKE UPPER(?) OR UPPER(Abstract) LIKE UPPER(?))")
+	        search_pattern <- paste0("%", value, "%")
+	        params <- c(params, search_pattern, search_pattern)
+	      }
+	    }
 
     list(where = query, params = params)
   }
@@ -1336,7 +1789,7 @@ server <- function(input, output, session) {
        LIMIT 100")$Journal
 
     updateSelectizeInput(session, "journal",
-      choices = c("All" = "All", top_journals),
+      choices = top_journals,
       server = FALSE)
 
     # Load top 100 most common organisms (OS has 9000+ unique values!)
@@ -1348,7 +1801,7 @@ server <- function(input, output, session) {
        LIMIT 100")$OS
 
     updateSelectizeInput(session, "os",
-      choices = c("All" = "All", top_os),
+      choices = top_os,
       server = FALSE)
 
     # Load all autoregulatory types (only ~10 values)
@@ -1358,24 +1811,64 @@ server <- function(input, output, session) {
        ORDER BY Autoregulatory_Type")$Autoregulatory_Type
 
     updateSelectizeInput(session, "type",
-      choices = c("All" = "All", all_types),
+      choices = all_types,
       server = FALSE)
 
-    # Load all years (only ~50 values)
-    all_years <- dbGetQuery(conn,
-      "SELECT DISTINCT Year FROM predictions
-       WHERE Year IS NOT NULL
-       ORDER BY Year DESC")$Year
+		    # Load all years (only ~50 values)
+		    all_years <- dbGetQuery(conn,
+		      "SELECT DISTINCT Year FROM predictions
+		       WHERE Year IS NOT NULL
+		       ORDER BY Year DESC")$Year
 
-    updateSelectizeInput(session, "year",
-      choices = c("All" = "All", all_years),
+		    year_nums <- suppressWarnings(as.integer(as.character(all_years)))
+			    year_nums <- year_nums[!is.na(year_nums) & year_nums >= 1800 & year_nums <= (as.integer(format(Sys.Date(), "%Y")) + 1)]
+		    year_nums <- sort(unique(year_nums), decreasing = TRUE)
+		    year_choices <- c("", as.character(year_nums))
+		    updateSelectizeInput(session, "year_from",
+		      choices = year_choices,
+		      selected = "",
+		      server = FALSE)
+    updateSelectizeInput(session, "year_to",
+      choices = year_choices,
+      selected = "",
       server = FALSE)
   })
 
+  observeEvent(input$result_table_order, {
+    ord <- input$result_table_order
+    if (is.null(ord) || length(ord) == 0) {
+      if (!is.null(table_sort())) {
+        table_sort(NULL)
+        current_page(1)
+      }
+      return()
+    }
+
+    first <- ord[[1]]
+    if (is.null(first) || length(first) < 2) return()
+
+    idx <- suppressWarnings(as.integer(first[[1]]))
+    dir <- as.character(first[[2]])
+    if (is.na(idx) || is.null(dir) || !nzchar(dir)) {
+      if (!is.null(table_sort())) {
+        table_sort(NULL)
+        current_page(1)
+      }
+      return()
+    }
+    if (!(dir %in% c("asc", "desc"))) return()
+
+    prev <- table_sort()
+    if (!is.null(prev) && isTRUE(prev$idx == idx) && isTRUE(prev$dir == dir)) return()
+
+    table_sort(list(idx = idx, dir = dir))
+    current_page(1)
+  }, ignoreInit = TRUE)
+
   # Reset pagination whenever filters change
-  observeEvent(list(input$journal, input$type, input$os, input$ac, input$protein_id,
-                    input$pmid, input$author, input$has_mechanism, input$source,
-                    input$year, input$month, input$search, input$rows_per_page), {
+  observeEvent(list(input$journal, input$type, input$polarity, input$os, input$ac, input$record_ac, input$protein_id,
+                    input$protein_name, input$gene_name, input$pmid, input$author,
+                    input$source_mode, input$year_from, input$year_to, input$month, input$search, input$match_exact, input$rows_per_page), {
     current_page(1)
   })
 
@@ -1386,6 +1879,29 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       data <- filtered_data()
+      # Keep the download consistent with the visible table (no Has Mechanism column).
+      keep <- c(
+        "AC",
+        "PMID",
+        "UniProt AC",
+        "Autoregulatory Type",
+        "Polarity",
+        "Mechanism Probability",
+        "Type Confidence",
+        "Title",
+        "Abstract",
+        "Journal",
+        "Authors",
+        "Year",
+        "Month",
+        "Source",
+        "Protein Name",
+        "Gene Name",
+        "Protein ID",
+        "OS"
+      )
+      keep <- keep[keep %in% colnames(data)]
+      data <- data[, keep, drop = FALSE]
       # Convert underscores back to spaces for column names
       colnames(data) <- gsub("_", " ", colnames(data))
       write.csv(data, file, row.names = FALSE)
@@ -1405,26 +1921,60 @@ server <- function(input, output, session) {
       ))
     })
 
-  # Reset all filters to default state
-  observeEvent(input$reset_filters, {
-    updateTextInput(session, "protein_id", value = "")
-    updateTextInput(session, "ac", value = "")
-    updateTextInput(session, "pmid", value = "")
-    updateTextInput(session, "author", value = "")
-    updateSelectInput(session, "journal", selected = "All")
-    updateSelectInput(session, "os", selected = "All")
-    updateSelectInput(session, "type", selected = "All")
-    updateSelectInput(session, "has_mechanism", selected = "All")
-    updateSelectInput(session, "source", selected = "All")
-    updateSelectInput(session, "year", selected = "All")
-    updateSelectInput(session, "month", selected = "All")
-    updateTextAreaInput(session, "search", value = "")
-  })
+		  # Reset all filters to default state
+			  observeEvent(input$reset_filters, {
+			    updateTextInput(session, "protein_id", value = "")
+			    updateTextInput(session, "protein_name", value = "")
+			    updateTextInput(session, "gene_name", value = "")
+			    updateTextInput(session, "ac", value = "")
+			    updateTextInput(session, "record_ac", value = "")
+			    updateTextInput(session, "pmid", value = "")
+			    updateTextInput(session, "author", value = "")
+			    updateSelectizeInput(session, "journal", selected = character(0))
+			    updateSelectizeInput(session, "os", selected = character(0))
+			    updateSelectizeInput(session, "type", selected = character(0))
+			    updateCheckboxGroupInput(session, "polarity", selected = c("+", "–", "±"))
+			    updateSelectInput(session, "source_mode", selected = "all")
+			    updateSelectizeInput(session, "year_from", selected = "")
+			    updateSelectizeInput(session, "year_to", selected = "")
+			    updateSelectizeInput(session, "month", selected = character(0))
+			    updateCheckboxInput(session, "match_exact", value = FALSE)
+			    updateTextInput(session, "search", value = "")
+			    table_sort(NULL)
+			    current_page(1)
+			  })
 
-  # Get total count of matching rows (for "Showing X of Y" display)
-  total_count <- reactive({
-    filters <- build_filter_query()
-    query <- paste("SELECT COUNT(*) as count", filters$where)
+	  observeEvent(input$polarity, {
+	    selected <- input$polarity
+	    if (is.null(selected) || length(selected) == 0) {
+	      updateCheckboxGroupInput(session, "polarity", selected = c("+", "–", "±"))
+	    }
+	  }, ignoreInit = TRUE)
+
+	  observeEvent(input$polarity_help, {
+	    showModal(modalDialog(
+	      title = "Polarity",
+	      div(
+	        p("Polarity is derived from the inferred autoregulatory mechanism:"),
+	        tags$ul(
+	          tags$li(tags$b("+"), " positive / self-amplifying (e.g., autocatalysis, autophosphorylation, autoinduction)"),
+	          tags$li(tags$b("–"), " negative / self-limiting (e.g., autoinhibition, autoubiquitination, autolysis)"),
+	          tags$li(tags$b("±"), " context-dependent (e.g., autoregulation)")
+	        ),
+	        p(style = "margin-top: 10px;",
+	          "Tip: If you want to see everything, leave all three selected (default)."
+	        )
+	      ),
+	      easyClose = TRUE,
+	      footer = modalButton("Close"),
+	      size = "m"
+	    ))
+	  })
+
+	  # Get total count of matching rows (for "Showing X of Y" display)
+	  total_count <- reactive({
+	    filters <- build_filter_query()
+	    query <- paste("SELECT COUNT(*) as count", filters$where)
 
     if (length(filters$params) > 0) {
       count_result <- dbGetQuery(conn, query, params = filters$params)
@@ -1435,32 +1985,153 @@ server <- function(input, output, session) {
     return(count_result$count)
   })
 
-  # Filtering Logic - Build SQL query dynamically with LIMIT
-  filtered_data <- reactive({
-    filters <- build_filter_query()
-    offset <- (current_page() - 1) * page_size()
-    query <- paste(
-      "SELECT *",
-      filters$where,
-      "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, PMID",
-      "LIMIT ? OFFSET ?"
-    )
-    params <- c(filters$params, page_size(), offset)
+  output$match_count_badge <- renderText({
+    total <- as.numeric(total_count()[1])
+    if (is.na(total)) total <- 0
+    paste0(format(total, big.mark = ","), " matches")
+  })
 
-    result <- dbGetQuery(conn, query, params = params)
+  output$more_filters_title <- renderText({
+    active <- 0
 
-    # Convert column names back to spaces for display
-    colnames(result) <- gsub("_", " ", colnames(result))
+    if (!is.null(input$journal) && length(input$journal) > 0) active <- active + 1
+    if (!is.null(input$os) && length(input$os) > 0) active <- active + 1
+    if (!is.null(input$month) && length(input$month) > 0) active <- active + 1
 
-    # Replace Autoregulatory Type 'NA' and 'none' values with 'non-autoregulatory'
-    if ("Autoregulatory Type" %in% colnames(result)) {
-      result$`Autoregulatory Type` <- ifelse(
-        is.na(result$`Autoregulatory Type`) |
+    if (!is.null(input$author) && nzchar(trimws(input$author))) active <- active + 1
+    if (!is.null(input$protein_name) && nzchar(trimws(input$protein_name))) active <- active + 1
+    if (!is.null(input$gene_name) && nzchar(trimws(input$gene_name))) active <- active + 1
+    if (!is.null(input$protein_id) && nzchar(trimws(input$protein_id))) active <- active + 1
+    if (!is.null(input$pmid) && nzchar(trimws(input$pmid))) active <- active + 1
+    if (!is.null(input$ac) && nzchar(trimws(input$ac))) active <- active + 1
+    if (!is.null(input$record_ac) && nzchar(trimws(input$record_ac))) active <- active + 1
+
+    if (active > 0) {
+      paste0("More filters (", active, ")")
+    } else {
+      "More filters"
+    }
+  })
+
+	  # Filtering Logic - Build SQL query dynamically with LIMIT
+		  filtered_data <- reactive({
+		    filters <- build_filter_query()
+		    offset <- (current_page() - 1) * page_size()
+
+		    dt_cols <- c(
+		      "AC",
+		      "PMID",
+		      "UniProt AC",
+		      "Autoregulatory Type",
+		      "Polarity",
+		      "Mechanism Probability",
+		      "Type Confidence",
+		      "Title",
+		      "Abstract",
+		      "Journal",
+		      "Authors",
+		      "Year",
+		      "Month",
+		      "Source",
+		      "Protein Name",
+		      "Gene Name",
+		      "Protein ID",
+		      "OS"
+		    )
+
+		    sort_map <- list(
+		      "AC" = list(expr = "AC", missing = "AC IS NULL OR TRIM(AC) = ''"),
+		      "PMID" = list(expr = "CAST(PMID AS INTEGER)", missing = "PMID IS NULL OR TRIM(PMID) = ''"),
+		      "UniProt AC" = list(expr = "UniProtKB_accessions", missing = "UniProtKB_accessions IS NULL OR TRIM(UniProtKB_accessions) = ''"),
+		      "Autoregulatory Type" = list(expr = "Autoregulatory_Type", missing = "Autoregulatory_Type IS NULL OR TRIM(Autoregulatory_Type) = ''"),
+		      "Polarity" = if (db_has_polarity) list(expr = "Polarity", missing = "Polarity IS NULL OR TRIM(Polarity) = ''") else NULL,
+		      "Mechanism Probability" = list(expr = "Mechanism_Probability", missing = "Mechanism_Probability IS NULL"),
+		      "Type Confidence" = list(expr = "Type_Confidence", missing = "Type_Confidence IS NULL"),
+		      "Title" = list(expr = "Title", missing = "Title IS NULL OR TRIM(Title) = ''"),
+		      "Abstract" = list(expr = "Abstract", missing = "Abstract IS NULL OR TRIM(Abstract) = ''"),
+		      "Journal" = list(expr = "Journal", missing = "Journal IS NULL OR TRIM(Journal) = ''"),
+		      "Authors" = list(expr = "Authors", missing = "Authors IS NULL OR TRIM(Authors) = ''"),
+		      "Year" = list(expr = "CAST(Year AS INTEGER)", missing = "Year IS NULL"),
+		      "Month" = list(expr = "Month", missing = "Month IS NULL OR TRIM(Month) = ''"),
+		      "Source" = list(expr = "Source", missing = "Source IS NULL OR TRIM(Source) = ''"),
+		      "Protein Name" = list(expr = "Protein_Name", missing = "Protein_Name IS NULL OR TRIM(Protein_Name) = ''"),
+		      "Gene Name" = list(expr = "Gene_Name", missing = "Gene_Name IS NULL OR TRIM(Gene_Name) = ''"),
+		      "Protein ID" = list(expr = "Protein_ID", missing = "Protein_ID IS NULL OR TRIM(Protein_ID) = ''"),
+		      "OS" = list(expr = "OS", missing = "OS IS NULL OR TRIM(OS) = ''")
+		    )
+
+		    order_clause <- "ORDER BY CASE WHEN Source = 'UniProt' THEN 0 ELSE 1 END, Title IS NULL, CAST(PMID AS INTEGER)"
+		    sort <- table_sort()
+		    if (!is.null(sort) && !is.null(sort$idx) && !is.null(sort$dir)) {
+		      idx <- suppressWarnings(as.integer(sort$idx))
+		      dir <- as.character(sort$dir)
+		      if (!is.na(idx) && idx >= 0 && idx < length(dt_cols) && dir %in% c("asc", "desc")) {
+		        col <- dt_cols[[idx + 1]]
+		        spec <- sort_map[[col]]
+		        if (!is.null(spec) && !is.null(spec$expr) && nzchar(spec$expr)) {
+		          tie_break <- if (col == "PMID") "" else ", CAST(PMID AS INTEGER)"
+		          order_clause <- paste0("ORDER BY (", spec$missing, ") ASC, ", spec$expr, " ", toupper(dir), tie_break)
+		        }
+		      }
+		    }
+
+		    query <- paste(
+		      "SELECT *",
+		      filters$where,
+		      order_clause,
+		      "LIMIT ? OFFSET ?"
+		    )
+		    params <- c(filters$params, page_size(), offset)
+
+	    result <- dbGetQuery(conn, query, params = params)
+
+	    # Convert column names back to spaces for display
+	    colnames(result) <- gsub("_", " ", colnames(result))
+	    if ("UniProtKB accessions" %in% colnames(result)) {
+	      colnames(result)[colnames(result) == "UniProtKB accessions"] <- "UniProt AC"
+	    }
+
+	    # Replace Autoregulatory Type 'NA' and 'none' values with 'non-autoregulatory'
+	    if ("Autoregulatory Type" %in% colnames(result)) {
+	      result$`Autoregulatory Type` <- ifelse(
+	        is.na(result$`Autoregulatory Type`) |
           trimws(result$`Autoregulatory Type`) == "" |
           tolower(trimws(result$`Autoregulatory Type`)) == "none",
         "non-autoregulatory",
         result$`Autoregulatory Type`
       )
+    }
+
+    # Ensure Polarity exists (some older DB builds may not have the column).
+    if (!("Polarity" %in% colnames(result))) {
+      result$Polarity <- NA_character_
+    }
+
+    # If Polarity is missing/blank, derive it deterministically from Autoregulatory Type.
+    pol_empty <- is.na(result$Polarity) | trimws(as.character(result$Polarity)) == ""
+    if (any(pol_empty) && ("Autoregulatory Type" %in% colnames(result))) {
+      types <- result$`Autoregulatory Type`
+
+      to_key <- function(type) {
+        if (is.na(type) || trimws(type) == "" || tolower(trimws(type)) == "non-autoregulatory") return(NA_character_)
+        raw  <- trimws(type)
+        norm <- gsub("[^A-Za-z]", "", raw)
+        norm <- paste0(toupper(substr(norm, 1, 1)), tolower(substr(norm, 2, nchar(norm))))
+        mapped <- if (norm %in% names(ontology_key_map)) ontology_key_map[[norm]] else NA_character_
+        if (!is.na(mapped)) return(mapped)
+        norm
+      }
+
+      keys <- vapply(types, to_key, character(1))
+      symbols <- vapply(keys, function(k) {
+        if (is.na(k) || k == "") return(NA_character_)
+        sym <- get_polarity_symbol(k)
+        if (is.na(sym) || sym == "" || sym == "Unknown") return(NA_character_)
+        if (sym == "-") return("–")
+        sym
+      }, character(1))
+
+      result$Polarity[pol_empty] <- symbols[pol_empty]
     }
 
     return(result)
@@ -1500,99 +2171,148 @@ server <- function(input, output, session) {
     paste0("Page ", page, " of ", max_page)
   })
 
-  # Statistics tab outputs
-  # Dataset statistics (reactive based on filtered data)
-  output$stat_total_papers <- renderText({
-    total <- as.numeric(total_count()[1])
-    if (is.na(total)) total <- 0
-    format(total, big.mark = ",")
-  })
+	  # Statistics tab outputs
+	  # Dataset statistics (reactive based on filtered data)
+	  output$stat_total_papers <- renderText({
+	    total <- as.numeric(total_count()[1])
+	    if (is.na(total)) total <- 0
+	    format(total, big.mark = ",")
+	  })
 
-  output$stat_mechanism_plot <- renderPlotly({
-    is_mobile <- is_mobile_output("stat_mechanism_plot")
-    filters <- build_filter_query()
-    query <- paste(
-      "SELECT Has_Mechanism AS label, COUNT(*) as n",
-      filters$where,
-      "GROUP BY Has_Mechanism"
-    )
-    res <- if (length(filters$params) > 0) {
-      dbGetQuery(conn, query, params = filters$params)
-    } else {
-      dbGetQuery(conn, query)
-    }
-    if (nrow(res) == 0) {
-      res <- data.frame(label = character(0), n = numeric(0))
-    }
-    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
-    res$label <- factor(res$label, levels = c("Yes", "No", "Unknown"))
-    res <- res[order(res$label), ]
-    color_map <- c("Yes" = "#d97742", "No" = "#1a2332", "Unknown" = "#94a3b8")
-    text_info <- if (is_mobile) "percent" else "label+percent"
-    text_size <- if (is_mobile) 10 else 12
+	  output$stat_filters_summary <- renderText({
+	    summarize_values <- function(label, values, max_items = 3) {
+	      if (is.null(values) || length(values) == 0) return(NULL)
+	      values <- as.character(values)
+	      values <- values[!is.na(values) & trimws(values) != ""]
+	      if (length(values) == 0) return(NULL)
+	      if (length(values) > max_items) {
+	        shown <- paste(values[seq_len(max_items)], collapse = ", ")
+	        return(paste0(label, ": ", shown, " +", length(values) - max_items))
+	      }
+	      paste0(label, ": ", paste(values, collapse = ", "))
+	    }
 
-    p <- plot_ly(
-      labels = res$label,
-      values = res$n,
-      text = format(res$n, big.mark = ","),
-      type = 'pie',
-      hole = 0.55,
-      sort = FALSE,
-      marker = list(colors = unname(color_map[as.character(res$label)])),
-      textinfo = text_info,
-      textposition = 'inside',
-      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
-      textfont = list(size = text_size)
-    ) %>%
-      layout(
-        showlegend = FALSE,
-        margin = list(l = 10, r = 10, t = 10, b = 10)
-      )
-    apply_plotly_config(p, is_mobile)
-  })
+	    parts <- c()
 
-  output$stat_source_plot <- renderPlotly({
-    is_mobile <- is_mobile_output("stat_source_plot")
-    filters <- build_filter_query()
-    query <- paste(
-      "SELECT Source AS label, COUNT(*) as n",
-      filters$where,
-      "GROUP BY Source"
-    )
-    res <- if (length(filters$params) > 0) {
-      dbGetQuery(conn, query, params = filters$params)
-    } else {
-      dbGetQuery(conn, query)
-    }
-    if (nrow(res) == 0) {
-      res <- data.frame(label = character(0), n = numeric(0))
-    }
-    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
-    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
-    res <- res[order(res$label), ]
-    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
-    text_info <- if (is_mobile) "percent" else "label+percent"
-    text_size <- if (is_mobile) 10 else 12
+	    # Only show non-default / user-provided filters (keeps it screenshot-friendly).
+	    if (!is.null(input$type) && length(input$type) > 0) {
+	      parts <- c(parts, summarize_values("Type", input$type, max_items = 2))
+	    }
 
-    p <- plot_ly(
-      labels = res$label,
-      values = res$n,
-      text = format(res$n, big.mark = ","),
-      type = 'pie',
-      hole = 0.55,
-      sort = FALSE,
-      marker = list(colors = unname(color_map[as.character(res$label)])),
-      textinfo = text_info,
-      textposition = 'inside',
-      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
-      textfont = list(size = text_size)
-    ) %>%
-      layout(
-        showlegend = FALSE,
-        margin = list(l = 10, r = 10, t = 10, b = 10)
-      )
-    apply_plotly_config(p, is_mobile)
-  })
+		    if (!is.null(input$polarity) && length(input$polarity) > 0) {
+		      selected <- as.character(input$polarity)
+		      selected <- selected[!is.na(selected) & trimws(selected) != ""]
+		      selected[selected == "-"] <- "–"
+		      if (length(selected) > 0 && !setequal(selected, c("+", "–", "±"))) {
+		        parts <- c(parts, summarize_values("Polarity", selected, max_items = 3))
+		      }
+		    }
+
+	    from <- suppressWarnings(as.integer(trimws(as.character(input$year_from))))
+	    to <- suppressWarnings(as.integer(trimws(as.character(input$year_to))))
+	    if (!is.na(from) && !is.na(to)) {
+	      if (from > to) {
+	        tmp <- from
+	        from <- to
+	        to <- tmp
+	      }
+	      parts <- c(parts, paste0("Year: ", from, "–", to))
+	    } else if (!is.na(from)) {
+	      parts <- c(parts, paste0("Year: ≥", from))
+	    } else if (!is.na(to)) {
+	      parts <- c(parts, paste0("Year: ≤", to))
+	    }
+
+	    if (!is.null(input$month) && length(input$month) > 0) {
+	      parts <- c(parts, summarize_values("Month", input$month, max_items = 4))
+	    }
+
+	    if (!is.null(input$source_mode) && nzchar(input$source_mode) && input$source_mode != "all") {
+	      parts <- c(parts, paste0("Source: ", input$source_mode))
+	    }
+
+	    if (!is.null(input$journal) && length(input$journal) > 0) {
+	      parts <- c(parts, summarize_values("Journal", input$journal, max_items = 2))
+	    }
+
+	    if (!is.null(input$os) && length(input$os) > 0) {
+	      parts <- c(parts, summarize_values("OS", input$os, max_items = 1))
+	    }
+
+	    if (!is.null(input$pmid) && nzchar(input$pmid)) {
+	      parts <- c(parts, paste0("PMID: ", trimws(input$pmid)))
+	    }
+	    if (!is.null(input$ac) && nzchar(input$ac)) {
+	      parts <- c(parts, paste0("UniProt AC: ", trimws(input$ac)))
+	    }
+	    if (!is.null(input$record_ac) && nzchar(input$record_ac)) {
+	      parts <- c(parts, paste0("AC: ", trimws(input$record_ac)))
+	    }
+	    if (!is.null(input$protein_id) && nzchar(input$protein_id)) {
+	      parts <- c(parts, paste0("Protein ID: ", trimws(input$protein_id)))
+	    }
+	    if (!is.null(input$protein_name) && nzchar(input$protein_name)) {
+	      parts <- c(parts, paste0("Protein: ", trimws(input$protein_name)))
+	    }
+	    if (!is.null(input$gene_name) && nzchar(input$gene_name)) {
+	      parts <- c(parts, paste0("Gene: ", trimws(input$gene_name)))
+	    }
+	    if (!is.null(input$author) && nzchar(input$author)) {
+	      parts <- c(parts, paste0("Author: ", trimws(input$author)))
+	    }
+	    if (!is.null(input$search) && nzchar(input$search)) {
+	      q <- trimws(input$search)
+	      if (nchar(q) > 70) q <- paste0(substr(q, 1, 67), "...")
+	      parts <- c(parts, paste0("Text: “", q, "”"))
+	    }
+
+	    parts <- parts[!is.na(parts) & parts != ""]
+	    if (length(parts) == 0) return("No filters applied")
+	    paste(parts, collapse = " • ")
+	  })
+
+		  output$stat_source_plot <- renderPlotly({
+		    is_mobile <- is_mobile_output("stat_source_plot")
+		    filters <- build_filter_query()
+		    query <- paste(
+	      "SELECT Source AS label, COUNT(*) as n",
+	      filters$where,
+	      "GROUP BY Source"
+	    )
+	    res <- if (length(filters$params) > 0) {
+	      dbGetQuery(conn, query, params = filters$params)
+	    } else {
+	      dbGetQuery(conn, query)
+	    }
+	    if (nrow(res) == 0) {
+	      res <- data.frame(label = character(0), n = numeric(0))
+	    }
+		    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
+		    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
+		    res <- res[order(res$label), ]
+		    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
+		    text_size <- if (is_mobile) 10 else 12
+		    text_info <- if (is_mobile) "percent" else "label+percent"
+
+		    p <- plot_ly(
+		      labels = res$label,
+		      values = res$n,
+		      text = format(res$n, big.mark = ","),
+		      type = 'pie',
+		      hole = 0.55,
+		      sort = FALSE,
+		      marker = list(colors = unname(color_map[as.character(res$label)])),
+		      textinfo = text_info,
+		      textposition = 'inside',
+		      hovertemplate = "<b>%{label}</b><br>Papers: %{text}<extra></extra>",
+		      textfont = list(size = text_size)
+		    ) %>%
+		      layout(
+		        showlegend = FALSE,
+		        margin = list(l = 10, r = 10, t = 10, b = 10)
+		      )
+		    apply_plotly_config(p, is_mobile)
+		  })
 
   output$stat_type_plot <- renderPlotly({
     is_mobile <- is_mobile_output("stat_type_plot")
@@ -1807,54 +2527,79 @@ server <- function(input, output, session) {
   }, striped = TRUE, hover = TRUE, bordered = TRUE, width = "100%", align = 'lcccc')
 
 
-output$result_table <- renderDT({
-  data <- filtered_data()
+ 	output$result_table <- renderDT({
+ 	  data <- filtered_data()
 
-  data <- data %>% select(
-    AC, `Protein Name`, `Gene Name`, `Protein ID`, OS, PMID, Title, Abstract, Journal, Authors, Year, Month, Source,
-    `Has Mechanism`, `Mechanism Probability`, `Autoregulatory Type`, `Type Confidence`
-  )
+	  sort <- table_sort()
+	  dt_order <- list()
+	  if (!is.null(sort) && !is.null(sort$idx) && !is.null(sort$dir)) {
+	    idx <- suppressWarnings(as.integer(sort$idx))
+	    dir <- as.character(sort$dir)
+	    if (!is.na(idx) && idx >= 0 && idx < ncol(data) && dir %in% c("asc", "desc")) {
+	      dt_order <- list(list(idx, dir))
+	    }
+	  }
+ 	 
+ 	  data <- data %>% select(
+	    AC,
+	    PMID,
+	    `UniProt AC`,
+	    `Autoregulatory Type`,
+	    Polarity,
+	    `Mechanism Probability`,
+	    `Type Confidence`,
+	    Title,
+	    Abstract,
+	    Journal,
+	    Authors,
+	    Year,
+	    Month,
+	    Source,
+	    `Protein Name`,
+	    `Gene Name`,
+	    `Protein ID`,
+	    OS
+ 	  )
 
-  # Add row numbers as first column
-  data <- data %>% mutate(`#` = row_number(), .before = 1)
-
-  # Make PMID a clickable link to PubMed
-  data$PMID <- ifelse(
-    !is.na(data$PMID) & data$PMID != "",
+	  # Make PMID a clickable link to PubMed
+	  data$PMID <- ifelse(
+	    !is.na(data$PMID) & data$PMID != "",
     paste0('<a href="https://pubmed.ncbi.nlm.nih.gov/', data$PMID,
            '" target="_blank" style="color: #0366d6; text-decoration: none;">',
            data$PMID, '</a>'),
     data$PMID
-  )
+	  )
 
-  # Make AC a clickable link to UniProt (first AC if multiple)
-  data$AC <- ifelse(
-    !is.na(data$AC) & data$AC != "",
-    sapply(data$AC, function(ac) {
-      first_ac <- trimws(strsplit(ac, ",")[[1]][1])
-      full_ac <- safe_cell(ac, 30, "AC")
+	  # Make UniProtKB accessions clickable to UniProt (first accession if multiple)
+	  uniprot_col <- "UniProt AC"
+	  data[[uniprot_col]] <- ifelse(
+	    !is.na(data[[uniprot_col]]) & data[[uniprot_col]] != "",
+	    sapply(data[[uniprot_col]], function(ac) {
+	      first_ac <- trimws(strsplit(ac, ",")[[1]][1])
+      full_ac <- safe_cell(ac, 30, uniprot_col)
       paste0('<a href="https://www.uniprot.org/uniprotkb/', first_ac,
              '" target="_blank" style="color: #0366d6; text-decoration: none;">',
              full_ac, '</a>')
     }),
-    safe_cell(data$AC, 30, "AC")
-  )
+    safe_cell(data[[uniprot_col]], 30, uniprot_col)
+	  )
 
-  data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
-  data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
+	  data$AC <- safe_cell(data$AC, 25, "AC")
+	  data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
+	  data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
 
   # Clean up Protein ID: hide "NA_####" entries (show blank instead)
   data$`Protein ID` <- ifelse(
     grepl("^NA_", data$`Protein ID`),
     "",  # Show blank for NA_#### entries
     safe_cell(data$`Protein ID`, 25, "Protein ID")
-  )
+	  )
 
-  data$OS <- safe_cell(data$OS, 40, "OS")
-  data$Title <- safe_cell(data$Title, 50, "Title")
-  data$Abstract <- safe_cell(data$Abstract, 50, "Abstract")
-  data$Journal <- safe_cell(data$Journal, 40, "Journal")
-  data$Authors <- safe_cell(data$Authors, 50, "Authors")
+	  data$OS <- safe_cell(data$OS, 40, "OS")
+	  data$Title <- safe_cell(data$Title, 50, "Title")
+	  data$Abstract <- safe_cell(data$Abstract, 50, "Abstract")
+	  data$Journal <- safe_cell(data$Journal, 40, "Journal")
+	  data$Authors <- safe_cell(data$Authors, 50, "Authors")
 
   getOntologyDetails <- function(type) {
     if (is.na(type) || type == "non-autoregulatory" || trimws(type) == "") {
@@ -1865,17 +2610,19 @@ output$result_table <- renderDT({
     norm <- paste0(toupper(substr(norm,1,1)), tolower(substr(norm,2,nchar(norm))))
     mapped <- if (norm %in% names(ontology_key_map)) ontology_key_map[[norm]] else NA_character_
     key    <- if (!is.na(mapped)) mapped else norm
-    info <- ontology_info[[key]]
-    if (is.null(info)) return(paste0("Ontology information not found for: ", htmltools::htmlEscape(raw)))
-    path <- get_ontology_path(key)
-    paste0(
-      "<b>Ontology Path</b><br>", htmltools::htmlEscape(path), "<br><br>",
-      "<b>Definition</b><br>", htmltools::htmlEscape(info$Definition), "<br><br>",
-      "<b>Synonym:</b> ", htmltools::htmlEscape(info$Synonym), "<br><br>",
-      "<b>Antonym:</b> ", htmltools::htmlEscape(info$Antonym), "<br><br>",
-      "<b>Related:</b> ", htmltools::htmlEscape(info$Related)
-    )
-  }
+	    info <- ontology_info[[key]]
+	    if (is.null(info)) return(paste0("Ontology information not found for: ", htmltools::htmlEscape(raw)))
+	    path <- get_ontology_path(key)
+	    pol <- get_polarity_symbol(key)
+	    paste0(
+	      "<b>Ontology Path</b><br>", htmltools::htmlEscape(path), "<br><br>",
+	      "<b>Polarity</b><br>", htmltools::htmlEscape(pol), "<br><br>",
+	      "<b>Definition</b><br>", htmltools::htmlEscape(info$Definition), "<br><br>",
+	      "<b>Synonym:</b> ", htmltools::htmlEscape(info$Synonym), "<br><br>",
+	      "<b>Antonym:</b> ", htmltools::htmlEscape(info$Antonym), "<br><br>",
+	      "<b>Related:</b> ", htmltools::htmlEscape(info$Related)
+	    )
+	  }
 
   type_values <- data$`Autoregulatory Type`
   safe_types <- vapply(type_values, function(val) {
@@ -1894,23 +2641,34 @@ output$result_table <- renderDT({
     )
   )
 
-  datatable(
-    data,
-    escape = FALSE,
-    rownames = FALSE,  # Disable built-in row numbers (we have our own # column)
-    options = list(
-      pageLength = page_size(),  # Show all loaded rows for current page size
-      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
-      scrollX = TRUE,
-      dom = 't',  # Only show table (no info text at bottom)
-      order = list(),
-      columnDefs = list(
-        list(targets = 0, orderable = FALSE, width = "40px", className = "dt-center"),  # Row number column - centered
-        list(targets = c(11, 12, 13, 14, 15, 16, 17), className = "dt-center"),  # Year, Month, Source, Has Mechanism, Mechanism Probability, Autoregulatory Type, Type Confidence - centered
-        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
-      ),
-      # Server-side processing: only load current page, not all rows
-      serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
+	  datatable(
+	    data,
+	    escape = FALSE,
+	    rownames = FALSE,
+		    options = list(
+		      pageLength = page_size(),  # Show all loaded rows for current page size
+		      lengthMenu = PAGE_SIZE_OPTIONS,  # Allow selectable page sizes
+		      scrollX = TRUE,
+		      dom = 't',  # Only show table (no info text at bottom)
+		      order = dt_order,
+		      columnDefs = list(
+		        list(
+		          targets = 1,  # PMID column (rendered as HTML link)
+		          render = JS(
+	            "function(data, type, row, meta) {",
+	            "  if (type === 'sort' || type === 'type') {",
+	            "    var m = String(data).match(/\\d+/);",
+	            "    return m ? parseInt(m[0], 10) : 0;",
+	            "  }",
+	            "  return data;",
+	            "}"
+	          )
+	        ),
+	        list(targets = c(3, 4, 5, 6, 11, 12, 13), className = "dt-center"),  # Type, Polarity, probabilities, date, source
+	        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
+	      ),
+	      # Server-side processing: only load current page, not all rows
+	      serverSide = FALSE,  # Keep as FALSE since we're already filtering with SQL
       deferRender = TRUE,
       scroller = FALSE,
       # Center column headers
@@ -1919,16 +2677,22 @@ output$result_table <- renderDT({
         "  $(this.api().table().header()).find('th').css('text-align', 'center');",
         "}"
       )
-    ),
-    callback = JS("
-      table.on('click', '.view-btn', function() {
-        var text = $(this).data('text');
-        var field = $(this).data('field');
-        Shiny.setInputValue('show_full_text', { field: field, text: text }, {priority: 'event'});
-      });
-    ")
-  )
-})
+	    ),
+	    callback = JS("
+	      table.off('order.dt');
+	      table.on('order.dt', function() {
+	        Shiny.setInputValue('result_table_order', table.order(), {priority: 'event'});
+	      });
+
+	      table.off('click', '.view-btn');
+	      table.on('click', '.view-btn', function() {
+	        var text = $(this).data('text');
+	        var field = $(this).data('field');
+	        Shiny.setInputValue('show_full_text', { field: field, text: text }, {priority: 'event'});
+	      });
+	    ")
+	  )
+	})
 
 
 

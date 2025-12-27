@@ -11,7 +11,7 @@ echo "======================================================================"
 echo ""
 
 # Configuration
-read -p "Enter your Oracle Cloud VM Public IP: " SERVER_IP
+read -p "Enter your server Public IP: " SERVER_IP
 read -p "Enter path to your SSH private key: " SSH_KEY
 
 # Expand tilde
