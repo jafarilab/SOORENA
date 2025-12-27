@@ -2698,7 +2698,7 @@ server <- function(input, output, session) {
 
   # Patch Notes Table Data
   patch_notes_data <- data.frame(
-    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10"),
+    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11"),
     Description = c(
       paste(
         "<ul>",
@@ -2777,9 +2777,27 @@ server <- function(input, output, session) {
         "<li>Pagination messaging: page status now clamps to available pages; removed table info banner</li>",
         "<li>UI layout: consolidated pagination controls with Download CSV aligned on the right for cleaner toolbar</li>",
         "</ul>"
+      ),
+      paste(
+        "<ul>",
+        "<li><strong>Data Quality:</strong> Database now contains only autoregulatory mechanisms — all non-autoregulatory and mechanism-less entries removed for consistency</li>",
+        "<li><strong>UniProt Accessions (AC):</strong> Added unique row identifier (AC) with standardized UniProtKB_accessions field throughout database and UI</li>",
+        "<li><strong>Clickable Links:</strong> PMID and UniProt AC columns now link directly to PubMed and UniProt databases for easy reference access</li>",
+        "<li><strong>Polarity Column:</strong> Reintroduced Polarity with deterministic assignment (+/−/±) based on mechanism type, with visual legend and help modal explaining positive/negative feedback loops</li>",
+        "<li><strong>Column Reordering:</strong> Optimized column order for better workflow — AC, PMID, Title, Abstract, Mechanism Type, Polarity, Confidence, Year, Month, Journal, Source</li>",
+        "<li><strong>Advanced Filtering:</strong> Complete filter UI overhaul with organized panels, polarity filter, year range slider, source toggles, and collapsible advanced options</li>",
+        "<li><strong>Global Column Filters:</strong> Search filters now apply to entire dataset across all pages, not just current page — with dynamic match count display</li>",
+        "<li><strong>Exact Match Mode:</strong> Added exact/partial match toggle for precise text searching in Title, Abstract, and other fields</li>",
+        "<li><strong>Server-Side Sorting:</strong> Implemented efficient server-side sorting with automatic pagination reset when sort order changes</li>",
+        "<li><strong>Filter Summary Panel:</strong> Real-time summary showing active filters and result counts for better query transparency</li>",
+        "<li><strong>Enhanced Statistics:</strong> Updated all statistics visualizations to reflect autoregulatory-only dataset; added pie chart for source distribution with improved mobile layout</li>",
+        "<li><strong>Ontology Updates:</strong> Ontology tab now includes AC examples and improved mechanism definitions with polarity context</li>",
+        "<li><strong>Date Enrichment:</strong> Publication Year and Month now populated from PubMed metadata for all records (previously 'Unknown')</li>",
+        "<li><strong>Improved Robustness:</strong> Better error handling for PubMed API rate limits and transient HTTP errors during enrichment</li>",
+        "</ul>"
       )
     ),
-    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08"),
+    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08", "2025-12-27"),
     stringsAsFactors = FALSE
   )
 
