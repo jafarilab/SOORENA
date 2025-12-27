@@ -2669,7 +2669,7 @@ server <- function(input, output, session) {
 	        list(targets = "_all", orderSequence = c("asc","desc",""), className = "dt-left")  # All other columns - left aligned
 	      ),
 	      # Server-side processing: only load current page, not all rows
-	      serverSide = TRUE,  # Enable server-side mode to sort entire dataset, not just current page
+	      serverSide = FALSE,  # Client-side mode, but we prevent default sorting in callback
       deferRender = TRUE,
       scroller = FALSE,
       # Center column headers
@@ -2680,9 +2680,37 @@ server <- function(input, output, session) {
       )
 	    ),
 	    callback = JS("
-	      table.off('order.dt');
-	      table.on('order.dt', function() {
-	        Shiny.setInputValue('result_table_order', table.order(), {priority: 'event'});
+	      // Prevent DataTables from sorting client-side; handle server-side instead
+	      table.off('click', 'th');
+	      $(table.table().header()).on('click', 'th', function(e) {
+	        var colIdx = table.column(this).index();
+	        if (colIdx === null || colIdx === undefined) return;
+
+	        // Get current order state for this column
+	        var currentOrder = table.order();
+	        var currentDir = null;
+	        if (currentOrder.length > 0 && currentOrder[0][0] === colIdx) {
+	          currentDir = currentOrder[0][1];
+	        }
+
+	        // Determine next direction: asc -> desc -> none -> asc
+	        var nextDir = 'asc';
+	        if (currentDir === 'asc') {
+	          nextDir = 'desc';
+	        } else if (currentDir === 'desc') {
+	          nextDir = '';
+	        }
+
+	        // Send to Shiny for server-side processing
+	        if (nextDir === '') {
+	          Shiny.setInputValue('result_table_order', [], {priority: 'event'});
+	        } else {
+	          Shiny.setInputValue('result_table_order', [[colIdx, nextDir]], {priority: 'event'});
+	        }
+
+	        // Prevent DataTables from sorting the current page
+	        e.stopImmediatePropagation();
+	        return false;
 	      });
 
 	      table.off('click', '.view-btn');
