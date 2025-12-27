@@ -128,6 +128,18 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Run Full Pipeline (Automated)
+
+The entire workflow can be run with a single command:
+
+```bash
+./scripts/run_full_pipeline.sh
+```
+
+This orchestrates all phases: training, predictions, enrichment, database building, and deployment.
+
+For individual phases or manual step-by-step execution, see [docs/README.md](docs/README.md) or [scripts/README.md](scripts/README.md).
+
 ---
 
 ## Repository Structure
@@ -139,11 +151,17 @@ SOORENA_2/
 ├── requirements.txt             # Python dependencies
 ├── environment.yml              # Conda environment
 │
-├── scripts/                     # All executable scripts
-│   ├── python/
-│   │   ├── data_processing/     # Data preparation & merging
-│   │   ├── training/            # Model training & evaluation
-│   │   └── prediction/          # Prediction scripts
+├── scripts/                     # Executable scripts
+│   ├── run_full_pipeline.sh     # Full end-to-end automation
+│   ├── run_training.sh          # Training pipeline
+│   ├── run_unused_predictions.sh  # Unused predictions flow
+│   ├── run_new_predictions.sh   # 3M predictions flow
+│   ├── run_merge_and_deploy.sh  # Merge & deployment
+│   ├── README.md                # Automation documentation
+│   └── python/
+│       ├── data_processing/     # Data preparation & merging
+│       ├── training/            # Model training & evaluation
+│       └── prediction/          # Prediction scripts
 │
 ├── utils/                       # Python utilities
 │   ├── dataset.py              # PyTorch dataset classes
@@ -166,6 +184,7 @@ SOORENA_2/
 
 ### Start Here (End-to-end)
 - [docs/README.md](docs/README.md) — Full reproducible workflow (training → prediction → Shiny → deployment)
+- [scripts/README.md](scripts/README.md) — Automation scripts (recommended workflow)
 
 ### Data & Training
 - [docs/README_DATA_PREPARATION.md](docs/README_DATA_PREPARATION.md) — Data preprocessing
@@ -250,7 +269,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
