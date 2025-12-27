@@ -2804,7 +2804,7 @@ server <- function(input, output, session) {
   # Render Patch Notes Table
   output$patch_notes_table <- DT::renderDataTable({
     DT::datatable(
-      patch_notes_data,
+      patch_notes_data[nrow(patch_notes_data):1, ],  # Reverse order: latest first
       options = list(
         pageLength = 10,
         autoWidth = FALSE,
