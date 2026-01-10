@@ -1,0 +1,169 @@
+---
+title: "OtherRes"
+author: "Mohieddin Jafari"
+date: "2025-06-06"
+output: html_document
+---
+
+# Omnipath database (no. 68)
+```{r}
+library(OmnipathR)
+library(dplyr)
+datasets <- list(
+  omnipath_interactions = list(),
+  omnipath = list(),
+  pathwayextra = list(),
+  kinaseextra = list(),
+  ligrecextra = list(),
+  post_translational = list(),
+  dorothea = list(dorothea_levels = c("A", "B")),
+  tf_target = list(),
+  transcriptional = list(dorothea_levels = c("A", "B")),
+  collectri = list(),
+  mirna_target = list(),
+  tf_mirna = list(),
+  lncrna_mrna = list(),
+  small_molecule = list(),
+  all_interactions = list(dorothea_levels = c("A", "B"))
+)
+
+# Loop through each dataset 
+for (name in names(datasets)) {
+  cat("Checking:", name, "\n")
+  
+  # Call the function with its arguments
+  data <- do.call(name, datasets[[name]])
+  
+  # Ensure columns are present
+  if (all(c("source", "target") %in% colnames(data))) {
+    # Check for matches based on genesymbol, based on protein AC was not succesful!
+    data$match <- data$source_genesymbol == data$target_genesymbol
+    print(table(data$match))
+  } else {
+    cat("  - Skipped: 'source' or 'target' column missing\n")
+  }
+  
+  cat("\n")
+}
+
+# Downloaded on 6.Jun.2025
+# Create a list to store matched rows from each dataset
+matched_list <- list()
+
+for (name in names(datasets)) {
+  cat("Checking:", name, "\n")
+  
+  data <- do.call(name, datasets[[name]])
+  
+  if (all(c("source", "target") %in% colnames(data))) {
+    data$match <- data$source_genesymbol == data$target_genesymbol
+    
+    # Extract rows where match is TRUE
+    matched <- data[data$match == TRUE, ]
+    
+    # Store in list
+    matched_list[[name]] <- matched
+    
+    cat("  - Matches found:", nrow(matched), "\n")
+  } else {
+    cat("  - Skipped: 'source' or 'target' column missing\n")
+  }
+  
+  cat("\n")
+}
+
+matched_df <- bind_rows(matched_list, .id = "dataset")
+
+library(writexl)
+write_xlsx(matched_df, "/Users/mohi/Documents/PaymanNickchi/SOORENA/data/raw/otherResource/OmniAll.xlsx")
+```
+
+
+# TRUST (no. 61)
+```{r}
+human_df <- read.delim("/Users/mohi/Downloads/trrust_rawdata.human.tsv", header = F, stringsAsFactors = FALSE)
+mouse_df <- read.delim("/Users/mohi/Downloads/trrust_rawdata.mouse.tsv", header = F, stringsAsFactors = FALSE)
+
+# Add origin column
+mouse_df$origin <- "mouse"
+human_df$origin <- "human"
+
+# Combine the two dataframes by rows
+combined_df <- rbind(mouse_df, human_df)
+
+combined_df$match <- combined_df$V1==combined_df$V2
+
+table(combined_df$match)
+# Filter rows where match == TRUE
+true_matches <- combined_df[combined_df$match == TRUE, ]
+
+install.packages("writexl")
+# Load library
+library(writexl)
+write_xlsx(true_matches, "/Users/mohi/Documents/PaymanNickchi/SOORENA/data/raw/otherResource/TRUST.xlsx")
+```
+
+#Signor (no. 1813)
+```{r}
+# PTMs
+
+rat_df <- read.delim("/Users/mohi/Downloads/R_norvegicus_phosphorylations_06_06_25.tsv", header = T, stringsAsFactors = FALSE)
+human_df <- read.delim("/Users/mohi/Downloads/human_phosphorylations_06_06_25.tsv", header = T, stringsAsFactors = FALSE)
+mouse_df <- read.delim("/Users/mohi/Downloads/M_musculus_phosphorylations_06_06_25.tsv", header = T, stringsAsFactors = FALSE)
+
+# Add origin column
+mouse_df$origin <- "Mus musculus (Mouse)"
+human_df$origin <- "Homo sapiens (Human)"
+rat_df$origin <- "Rattus norvegicus (Rat)"
+
+# Combine the two dataframes by rows
+combined_df_ptm <- rbind(mouse_df, human_df, rat_df)
+
+combined_df_ptm$match <- combined_df_ptm$ENTITYA==combined_df_ptm$ENTITYB
+
+table(combined_df_ptm$match)
+```
+
+```{r}
+# Interaction net
+rat_df <- read.delim("/Users/mohi/Downloads/all_data_R_norvegicus_06_06_25.tsv", header = T, stringsAsFactors = FALSE)
+human_df <- read.delim("/Users/mohi/Downloads/all_data_06_06_25.tsv", header = T, stringsAsFactors = FALSE)
+mouse_df <- read.delim("/Users/mohi/Downloads/all_data_M_musculus_06_06_25.tsv", header = T, stringsAsFactors = FALSE)
+
+# Add origin column
+mouse_df$origin <- "Mus musculus (Mouse)"
+human_df$origin <- "Homo sapiens (Human)"
+rat_df$origin <- "Rattus norvegicus (Rat)"
+
+# Combine the two dataframes by rows
+combined_df_net <- rbind(mouse_df, human_df, rat_df)
+
+combined_df_net$match <- combined_df_net$ENTITYA==combined_df_net$ENTITYB
+
+table(combined_df_net$match)
+
+```
+```{r}
+#combined Signor
+signor <- rbind(combined_df_ptm[combined_df_ptm$match == TRUE, ], combined_df_net[combined_df_net$match == TRUE, ])
+
+write_xlsx(signor, "/Users/mohi/Documents/PaymanNickchi/SOORENA/data/raw/otherResource/Signor.xlsx")
+```
+
+# STRING-db (Zero)
+```{r}
+# there is not any self loop in this database for human
+string_df <- read.delim("~/Downloads/9606.protein.links.v12.0.txt.gz", header = TRUE, sep = " ", stringsAsFactors = FALSE)
+
+# Add a match column
+string_df$match <- string_df$protein1 == string_df$protein2
+
+# Extract matching rows
+self_interactions <- string_df[string_df$match == TRUE, ]
+
+# View how many self-links exist
+table(string_df$match)
+
+```
+
+
