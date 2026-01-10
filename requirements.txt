@@ -16,6 +16,7 @@ pandas>=2.2.0
 numpy>=1.26.0
 scikit-learn>=1.4.0
 pyreadr>=0.5.0
+openpyxl>=3.1.0  # For reading Excel files (external resources integration)
 
 # Date parsing
 python-dateutil>=2.8.0

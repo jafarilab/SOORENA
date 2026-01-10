@@ -18,6 +18,7 @@ dependencies:
   - ipywidgets
   - jupyter-dash
   - pyreadr
+  - openpyxl  # For reading Excel files (external resources integration)
   - tqdm
   - nb_conda_kernels
   - numpy

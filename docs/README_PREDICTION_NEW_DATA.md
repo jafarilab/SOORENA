@@ -109,13 +109,41 @@ python scripts/python/data_processing/merge_enriched_predictions.py \
 ```
 
 This merge step also generates a **database-specific unique row identifier**:
-- `AC` = `SOORENA_<PMID>_<n>` (keeps duplicate PMIDs as separate rows)
-
-
+- `AC` = `SOORENA-<SourceCode>-<PMID>-<n>` (keeps duplicate PMIDs as separate rows)
+- Source codes: `U`=UniProt, `P`=Predicted (Non-UniProt), `O`=OmniPath, `S`=SIGNOR, `T`=TRRUST
 
 ---
 
-## 7) Build SQLite DB (from merged enriched CSV)
+## 7) Integrate External Resources (OmniPath, SIGNOR, TRRUST)
+
+Add curated self-loop data from external biological databases:
+
+```bash
+python scripts/python/data_processing/integrate_external_resources.py \
+  --input shiny_app/data/predictions.csv \
+  --output shiny_app/data/predictions.csv \
+  --others-dir others/
+```
+
+**What this does:**
+- Reads external resource files from `others/` directory:
+  - `OmniAll.xlsx` (OmniPath protein-protein interactions)
+  - `Signor.xlsx` (SIGNOR signaling/phosphorylation data)
+  - `TRUST.xlsx` (TRRUST transcription factor autoregulation)
+- Extracts self-loop entries (where source = target)
+- Maps mechanism types to SOORENA categories
+- Adds entries with `Source` = "OmniPath", "SIGNOR", or "TRRUST"
+- Sets `Mechanism_Probability = 1.0` (curated, not predicted)
+
+**Requirements:**
+- Place external resource Excel files in `others/` directory
+- Files are optional; missing files are skipped with a warning
+
+More detail: `docs/README_EXTERNAL_RESOURCES.md`
+
+---
+
+## 8) Build SQLite DB (from merged enriched CSV)
 
 Create the Shiny app database directly from the merged enriched CSV:
 

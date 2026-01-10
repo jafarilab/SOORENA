@@ -92,6 +92,7 @@ Run the entire pipeline end-to-end:
 **What it does:**
 
 - Merges unused + 3M enriched datasets
+- Integrates external resources (OmniPath, SIGNOR, TRRUST)
 - Builds SQLite database for Shiny app
 - Optionally deploys to DigitalOcean
 
@@ -99,8 +100,17 @@ Run the entire pipeline end-to-end:
 
 **Outputs:**
 
-- `shiny_app/data/predictions.csv`
+- `shiny_app/data/predictions.csv` (includes external resources)
 - `shiny_app/data/predictions.db`
+
+**External Resources (optional):**
+
+Place these files in `others/` directory to include curated self-loop data:
+- `others/OmniAll.xlsx` (OmniPath)
+- `others/Signor.xlsx` (SIGNOR)
+- `others/TRUST.xlsx` (TRRUST)
+
+If files are missing, the script continues without them.
 
 ---
 
@@ -272,6 +282,7 @@ run_full_pipeline.sh (orchestrator)
     |
     +-> run_merge_and_deploy.sh
         +-> merge_enriched_predictions.py
+        +-> integrate_external_resources.py  <-- NEW (OmniPath, SIGNOR, TRRUST)
         +-> create_sqlite_db.py
         +-> rsync + ssh (deploy)
 ```

@@ -1,6 +1,6 @@
 #!/bin/bash
 # SOORENA Merge & Deploy
-# Runs: Merge enriched datasets, Build SQLite database, Deploy to production
+# Runs: Merge enriched datasets, Integrate external resources, Build SQLite database, Deploy to production
 
 set -e
 
@@ -32,7 +32,15 @@ if [ $MISSING_FILES -eq 1 ]; then
     exit 1
 fi
 
-echo "[1/3] Merging enriched datasets..."
+# Check for external resources (optional, warn if missing)
+EXTERNAL_RESOURCES=0
+if [ -d "others" ]; then
+    if [ -f "others/OmniAll.xlsx" ] || [ -f "others/Signor.xlsx" ] || [ -f "others/TRUST.xlsx" ]; then
+        EXTERNAL_RESOURCES=1
+    fi
+fi
+
+echo "[1/4] Merging enriched datasets..."
 python scripts/python/data_processing/merge_enriched_predictions.py \
   --base results/unused_predictions_autoregulatory_only_metadata_enriched.csv \
   --new results/new_predictions_autoregulatory_only_enriched.csv \
@@ -40,7 +48,20 @@ python scripts/python/data_processing/merge_enriched_predictions.py \
 echo "Complete."
 echo ""
 
-echo "[2/3] Building SQLite database..."
+echo "[2/4] Integrating external resources (OmniPath, SIGNOR, TRRUST)..."
+if [ $EXTERNAL_RESOURCES -eq 1 ]; then
+    python scripts/python/data_processing/integrate_external_resources.py \
+      --input shiny_app/data/predictions.csv \
+      --output shiny_app/data/predictions.csv \
+      --others-dir others/
+    echo "Complete."
+else
+    echo "Warning: No external resources found in others/ directory. Skipping."
+    echo "To add external resources, place OmniAll.xlsx, Signor.xlsx, and TRUST.xlsx in others/"
+fi
+echo ""
+
+echo "[3/4] Building SQLite database..."
 python scripts/python/data_processing/create_sqlite_db.py \
   --input shiny_app/data/predictions.csv \
   --output shiny_app/data/predictions.db
@@ -49,7 +70,7 @@ DB_SIZE=$(du -h shiny_app/data/predictions.db | cut -f1)
 echo "Complete. Database size: $DB_SIZE"
 echo ""
 
-echo "[3/3] Deploy to production?"
+echo "[4/4] Deploy to production?"
 echo "Target: 143.198.38.37"
 echo ""
 read -p "Deploy now? (y/N): " -n 1 -r

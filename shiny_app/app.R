@@ -899,7 +899,12 @@ ui <- navbarPage(
 			                 selectInput(
 			                   "source_mode",
 			                   "Data Source",
-			                   choices = c("All" = "all", "UniProt" = "UniProt", "Non-UniProt" = "Non-UniProt"),
+			                   choices = c("All" = "all",
+			                               "UniProt" = "UniProt",
+			                               "Non-UniProt" = "Non-UniProt",
+			                               "OmniPath" = "OmniPath",
+			                               "SIGNOR" = "SIGNOR",
+			                               "TRRUST" = "TRRUST"),
 			                   selected = "all"
 			                 )))
 			    ),
@@ -993,7 +998,7 @@ ui <- navbarPage(
           div(class = "stat-card stat-card--chart",
             div(class = "stat-card__header",
               h4("Source Mix", class = "stat-card__title"),
-              span(class = "stat-card__meta", "UniProt vs Non-UniProt")
+              span(class = "stat-card__meta", "Data Source Distribution")
             ),
             withSpinner(plotlyOutput("stat_source_plot", height = "230px"), type = 6, color = "#2c3e50")
           )
@@ -1707,7 +1712,7 @@ server <- function(input, output, session) {
 
     # Source filter (segmented control)
 	    if (!is.null(input$source_mode) && nzchar(input$source_mode) && input$source_mode != "all") {
-	      query <- paste(query, "AND Source = ?")
+	      query <- paste(query, "AND Source = ? COLLATE NOCASE")
 	      params <- c(params, input$source_mode)
 	    }
 
@@ -1761,7 +1766,7 @@ server <- function(input, output, session) {
   safe_cell <- function(text, max_chars, field) {
     vapply(seq_along(text), function(i) {
       val <- text[i]
-      if (is.na(val) || trimws(val) == "") return("—")
+      if (is.na(val) || trimws(val) == "" || trimws(val) == "Unknown") return("")
       trimmed <- trimws(val)
       escaped_full <- htmltools::htmlEscape(trimmed)
       if (nchar(trimmed) > max_chars) {
@@ -2288,9 +2293,9 @@ server <- function(input, output, session) {
 	      res <- data.frame(label = character(0), n = numeric(0))
 	    }
 		    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
-		    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "Unknown"))
+		    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "OmniPath", "SIGNOR", "TRRUST", "Unknown"))
 		    res <- res[order(res$label), ]
-		    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "Unknown" = "#94a3b8")
+		    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "OmniPath" = "#3498db", "SIGNOR" = "#27ae60", "TRRUST" = "#9b59b6", "Unknown" = "#94a3b8")
 		    text_size <- if (is_mobile) 10 else 12
 		    text_info <- if (is_mobile) "percent" else "label+percent"
 

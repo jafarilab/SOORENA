@@ -7,8 +7,9 @@ This page is the **single starting point** for reproducing the SOORENA pipeline 
 3. Generate predictions (unused unlabeled + new PubMed data)
 4. Enrich predictions with PubTator/UniProt (+ optional PubMed metadata fill)
 5. Merge datasets for the Shiny app
-6. Build the SQLite database
-7. Run locally and deploy to DigitalOcean
+6. Integrate external resources (OmniPath, SIGNOR, TRRUST)
+7. Build the SQLite database
+8. Run locally and deploy to DigitalOcean
 
 ---
 
@@ -18,6 +19,7 @@ This page is the **single starting point** for reproducing the SOORENA pipeline 
 - **Training:** `docs/README_TRAINING.md`
 - **Unused unlabeled workflow:** `docs/README_UNUSED_UNLABELED.md`
 - **New 3M workflow:** `docs/README_PREDICTION_NEW_DATA.md`
+- **External resources:** `docs/README_EXTERNAL_RESOURCES.md`
 - **Shiny app usage:** `docs/README_SHINY_APP.md`
 - **Architecture reference:** `docs/README_ARCHITECTURE.md`
 - **DigitalOcean deployment (detailed):** `deployment/README.md`
@@ -168,8 +170,32 @@ python scripts/python/data_processing/merge_enriched_predictions.py \
 What this produces:
 - `shiny_app/data/predictions.csv` (the final CSV for the app)
 - A **database-specific unique row identifier**:
-  - `AC = SOORENA_<PMID>_<n>` (duplicate PMIDs are kept as separate rows)
+  - `AC = SOORENA-<SourceCode>-<PMID>-<n>` (duplicate PMIDs are kept as separate rows)
+  - Source codes: `U`=UniProt, `P`=Predicted (Non-UniProt), `O`=OmniPath, `S`=SIGNOR, `T`=TRRUST
 - `UniProtKB_accessions` remains as the comma-separated UniProtKB accession numbers (when available).
+
+### D) Integrate external resources (OmniPath, SIGNOR, TRRUST)
+
+Add curated self-loop data from external databases as additional entries:
+
+```bash
+python scripts/python/data_processing/integrate_external_resources.py \
+  --input shiny_app/data/predictions.csv \
+  --output shiny_app/data/predictions.csv \
+  --others-dir others/
+```
+
+**External resources included:**
+
+| Database | Description | Entries |
+|----------|-------------|---------|
+| OmniPath | Protein-protein interactions with self-loops | ~76 |
+| SIGNOR | Phosphorylation and signaling self-loops | ~3,274 |
+| TRRUST | Transcriptional autoregulation | ~59 |
+
+These entries are marked with their respective `Source` values (OmniPath, SIGNOR, TRRUST) and have `Mechanism_Probability = 1.0` since they are curated, not predicted.
+
+More detail: `docs/README_EXTERNAL_RESOURCES.md`
 
 ---
 
