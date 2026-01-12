@@ -747,7 +747,8 @@ ui <- navbarPage(
             }
             #stat_type_plot,
             #stat_year_plot,
-            #stat_journal_plot {
+            #stat_journal_plot,
+            #stat_probability_plot {
               height: 260px !important;
             }
             .modebar {
@@ -1021,6 +1022,16 @@ ui <- navbarPage(
           div(class = "stat-card stat-card--wide",
             h4("Top Journals", class = "stat-card__title"),
             withSpinner(plotlyOutput("stat_journal_plot", height = "320px"), type = 6, color = "#2c3e50")
+          )
+        ),
+        div(class = "stats-grid stats-grid--one",
+          div(class = "stat-card stat-card--wide",
+            div(class = "stat-card__header",
+              h4("Mechanism Probability Distribution", class = "stat-card__title"),
+              span(class = "stat-card__meta", "Stage 1 model confidence scores")
+            ),
+            div(class = "chart-note", "Distribution of confidence scores (0-1) for autoregulatory mechanism detection. Use this to inform filtering thresholds."),
+            withSpinner(plotlyOutput("stat_probability_plot", height = "340px"), type = 6, color = "#2c3e50")
           )
         )
       ),
@@ -2537,6 +2548,111 @@ server <- function(input, output, session) {
         yaxis = list(title = "", automargin = TRUE, tickfont = list(size = tick_size)),
         margin = list(l = left_margin, r = right_margin, t = 10, b = bottom_margin)
       )
+    apply_plotly_config(p, is_mobile)
+  })
+
+  output$stat_probability_plot <- renderPlotly({
+    is_mobile <- is_mobile_output("stat_probability_plot")
+    filters <- build_filter_query()
+
+    # Query to get all Mechanism_Probability values
+    query <- paste(
+      "SELECT Mechanism_Probability",
+      filters$where,
+      "AND Mechanism_Probability IS NOT NULL"
+    )
+
+    res <- if (length(filters$params) > 0) {
+      dbGetQuery(conn, query, params = filters$params)
+    } else {
+      dbGetQuery(conn, query)
+    }
+
+    if (nrow(res) == 0 || all(is.na(res$Mechanism_Probability))) {
+      p <- plot_ly() %>%
+        layout(
+          annotations = list(
+            text = "No probability data available",
+            showarrow = FALSE,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5
+          )
+        )
+      return(apply_plotly_config(p, is_mobile))
+    }
+
+    # Create bins for histogram (0-1 range, 20 bins)
+    probs <- res$Mechanism_Probability
+    probs <- probs[!is.na(probs) & probs >= 0 & probs <= 1]
+
+    if (length(probs) == 0) {
+      p <- plot_ly() %>%
+        layout(
+          annotations = list(
+            text = "No valid probability data",
+            showarrow = FALSE,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5
+          )
+        )
+      return(apply_plotly_config(p, is_mobile))
+    }
+
+    # Calculate statistics for annotation
+    mean_prob <- mean(probs)
+    median_prob <- median(probs)
+
+    # Create histogram
+    p <- plot_ly(
+      x = probs,
+      type = 'histogram',
+      nbinsx = 20,
+      marker = list(
+        color = '#d97742',
+        line = list(color = 'white', width = 1)
+      ),
+      hovertemplate = "Probability: %{x:.2f}<br>Count: %{y}<extra></extra>"
+    ) %>%
+      layout(
+        xaxis = list(
+          title = if (is_mobile) "Probability" else "Mechanism Probability",
+          range = c(0, 1),
+          tickfont = list(size = if (is_mobile) 10 else 12)
+        ),
+        yaxis = list(
+          title = if (is_mobile) "Count" else "Number of Predictions",
+          tickfont = list(size = if (is_mobile) 10 else 12)
+        ),
+        margin = list(
+          l = if (is_mobile) 40 else 60,
+          r = if (is_mobile) 20 else 40,
+          t = if (is_mobile) 30 else 40,
+          b = if (is_mobile) 40 else 50
+        ),
+        bargap = 0.05,
+        annotations = list(
+          list(
+            x = 0.98,
+            y = 0.98,
+            xref = "paper",
+            yref = "paper",
+            text = sprintf("Mean: %.3f<br>Median: %.3f", mean_prob, median_prob),
+            showarrow = FALSE,
+            xanchor = "right",
+            yanchor = "top",
+            bgcolor = "rgba(255, 255, 255, 0.8)",
+            bordercolor = "#d97742",
+            borderwidth = 1,
+            borderpad = 4,
+            font = list(size = if (is_mobile) 10 else 11)
+          )
+        )
+      )
+
     apply_plotly_config(p, is_mobile)
   })
 
