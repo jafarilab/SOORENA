@@ -2677,6 +2677,73 @@ server <- function(input, output, session) {
 	      serverSide = FALSE,  # Client-side mode, but we prevent default sorting in callback
       deferRender = TRUE,
       scroller = FALSE,
+      # Add info icons with tooltips to column headers
+      headerCallback = JS(
+        "function(thead, data, start, end, display) {",
+        "  var tooltips = {",
+        "    'AC': 'SOORENA accession ID. Format: SOORENA-{Source}-{PMID}-{Counter}. Source codes: U=UniProt, P=Predicted, O=OmniPath, S=SIGNOR, T=TRRUST',",
+        "    'PMID': 'PubMed identifier. Click to view the publication on PubMed',",
+        "    'UniProt AC': 'UniProtKB accession number(s). Click to view protein entry on UniProt. May contain multiple comma-separated accessions',",
+        "    'Autoregulatory Type': 'Classification of autoregulatory mechanism (e.g., Autophosphorylation, Autoubiquitination). Click the magnifying glass icon for detailed ontology information',",
+        "    'Polarity': 'Direction of regulation: + (positive/activation), – (negative/inhibition), ± (context-dependent)',",
+        "    'Mechanism Probability': 'ML model confidence that this entry describes an autoregulatory mechanism (0-1 scale, where 1.0 = curated or highest confidence)',",
+        "    'Type Confidence': 'ML model confidence in the specific autoregulatory type classification (0-1 scale)',",
+        "    'Title': 'Title of the publication from PubMed',",
+        "    'Abstract': 'Abstract text from the publication',",
+        "    'Journal': 'Journal name where the publication appeared',",
+        "    'Authors': 'List of publication authors',",
+        "    'Year': 'Publication year',",
+        "    'Month': 'Publication month',",
+        "    'Source': 'Data source: UniProt (curated), Predicted (ML predictions), OmniPath/SIGNOR/TRRUST (external databases)',",
+        "    'Protein Name': 'Full name of the protein from UniProt',",
+        "    'Gene Name': 'Gene symbol for the protein',",
+        "    'Protein ID': 'UniProt protein identifier',",
+        "    'OS': 'Organism/species (e.g., Homo sapiens, Mus musculus)'",
+        "  };",
+        "  ",
+        "  // Add CSS for info icon (only once)",
+        "  if (!$('#column-info-icon-style').length) {",
+        "    $('<style id=\"column-info-icon-style\">' +",
+        "      '.col-info-icon {' +",
+        "      '  display: inline-block;' +",
+        "      '  width: 16px;' +",
+        "      '  height: 16px;' +",
+        "      '  line-height: 16px;' +",
+        "      '  border-radius: 50%;' +",
+        "      '  border: 1.5px solid #6c757d;' +",
+        "      '  color: #6c757d;' +",
+        "      '  font-size: 11px;' +",
+        "      '  font-weight: bold;' +",
+        "      '  font-style: italic;' +",
+        "      '  text-align: center;' +",
+        "      '  margin-left: 5px;' +",
+        "      '  cursor: help;' +",
+        "      '  vertical-align: middle;' +",
+        "      '  font-family: Georgia, serif;' +",
+        "      '}' +",
+        "      '.col-info-icon:hover {' +",
+        "      '  background-color: #6c757d;' +",
+        "      '  color: white;' +",
+        "      '  border-color: #6c757d;' +",
+        "      '}' +",
+        "      '</style>').appendTo('head');",
+        "  }",
+        "  ",
+        "  $(thead).find('th').each(function() {",
+        "    var $th = $(this);",
+        "    var colName = $th.text().trim().replace(/\\s*i$/, '').trim();",
+        "    ",
+        "    // Remove any existing info icon",
+        "    $th.find('.col-info-icon').remove();",
+        "    ",
+        "    if (tooltips[colName]) {",
+        "      var icon = $('<span class=\"col-info-icon\" title=\"' + ",
+        "        tooltips[colName].replace(/\"/g, '&quot;') + '\">i</span>');",
+        "      $th.append(' ').append(icon);",
+        "    }",
+        "  });",
+        "}"
+      ),
       # Center column headers
       initComplete = JS(
         "function(settings, json) {",
@@ -2732,7 +2799,7 @@ server <- function(input, output, session) {
 
   # Patch Notes Table Data
   patch_notes_data <- data.frame(
-    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11"),
+    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11", "0.0.12"),
     Description = c(
       paste(
         "<ul>",
@@ -2829,9 +2896,19 @@ server <- function(input, output, session) {
         "<li><strong>Date Enrichment:</strong> Publication Year and Month now populated from PubMed metadata for all records (previously 'Unknown')</li>",
         "<li><strong>Improved Robustness:</strong> Better error handling for PubMed API rate limits and transient HTTP errors during enrichment</li>",
         "</ul>"
+      ),
+      paste(
+        "<ul>",
+        "<li><strong>External Resources Integration:</strong> Added curated autoregulatory data from external biological databases: OmniPath (protein-protein interactions), SIGNOR (signaling/phosphorylation), and TRRUST (transcriptional regulation). These appear as separate Source entries alongside UniProt and Predicted data</li>",
+        "<li><strong>External Resources Enrichment:</strong> External resource entries automatically enriched with publication metadata (Title, Abstract, Journal, Authors, Date, Protein Name) using cached PubMed/UniProt lookups for faster subsequent runs</li>",
+        "<li><strong>Column Help Icons:</strong> Added small circled 'i' icons next to column headers. Hover over any icon to see a tooltip explaining what the column contains (AC format, data sources, confidence scores, etc.)</li>",
+        "<li><strong>AC Format Standardization:</strong> Updated SOORENA accession IDs to consistent dash format (SOORENA-{Source}-{PMID}-{Counter}) with clear source codes (U=UniProt, P=Predicted, O=OmniPath, S=SIGNOR, T=TRRUST)</li>",
+        "<li><strong>AC Documentation:</strong> Added comprehensive AC format documentation explaining the ID structure, source codes, and counter meaning</li>",
+        "<li><strong>Invalid PMID Handling:</strong> External resource entries with missing PMIDs now use 'UNKNOWN' for clarity instead of invalid placeholders</li>",
+        "</ul>"
       )
     ),
-    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08", "2025-12-27"),
+    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08", "2025-12-27", "2026-01-12"),
     stringsAsFactors = FALSE
   )
 
