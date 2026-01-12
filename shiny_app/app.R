@@ -1763,7 +1763,8 @@ server <- function(input, output, session) {
   }
 
   # Simple helper to safely truncate and escape text while keeping the magnifier button
-  safe_cell <- function(text, max_chars, field) {
+  # Now stores AC identifier instead of full text to avoid HTML attribute length limits
+  safe_cell <- function(text, max_chars, field, row_ids = NULL) {
     vapply(seq_along(text), function(i) {
       val <- text[i]
       if (is.na(val) || trimws(val) == "" || trimws(val) == "Unknown") return("")
@@ -1771,10 +1772,12 @@ server <- function(input, output, session) {
       escaped_full <- htmltools::htmlEscape(trimmed)
       if (nchar(trimmed) > max_chars) {
         truncated <- htmltools::htmlEscape(substr(trimmed, 1, max_chars))
+        # Store row AC identifier instead of full text to avoid browser attribute length limits
+        row_id <- if (!is.null(row_ids)) row_ids[i] else ""
         paste0(
           truncated, "... ",
           '<button class=\"btn btn-link btn-sm view-btn\" data-field=\"', field,
-          '\" data-text=\"', escaped_full, '\">🔍</button>'
+          '\" data-row-id=\"', row_id, '\">🔍</button>'
         )
       } else {
         escaped_full
@@ -1914,12 +1917,45 @@ server <- function(input, output, session) {
   )
 
 
-  # Show Full text
+  # Show Full text - query database by AC to avoid HTML attribute length limits
     observeEvent(input$show_full_text, {
+      req(input$show_full_text$row_id, input$show_full_text$field)
+
+      # Map display field names to database column names
+      field_map <- c(
+        "AC" = "AC",
+        "Title" = "Title",
+        "Abstract" = "Abstract",
+        "Journal" = "Journal",
+        "Authors" = "Authors",
+        "Protein Name" = "Protein_Name",
+        "Gene Name" = "Gene_Name",
+        "Protein ID" = "Protein_ID",
+        "OS" = "OS",
+        "UniProt AC" = "UniProtKB_accessions"
+      )
+
+      field_display <- input$show_full_text$field
+      field_db <- field_map[[field_display]]
+
+      if (is.null(field_db)) {
+        field_db <- field_display  # Fallback if not in map
+      }
+
+      # Query database for full text by AC
+      query <- sprintf("SELECT %s FROM predictions WHERE AC = ?", field_db)
+      result <- dbGetQuery(conn, query, params = list(input$show_full_text$row_id))
+
+      full_text <- if (nrow(result) > 0 && !is.na(result[[1]][1])) {
+        as.character(result[[1]][1])
+      } else {
+        "(No data available)"
+      }
+
       showModal(modalDialog(
-        title = paste("Full", input$show_full_text$field),
+        title = paste("Full", field_display),
         HTML(paste0("<div style='white-space: pre-wrap; font-family: sans-serif;'>",
-                    input$show_full_text$text, "</div>")),
+                    htmltools::htmlEscape(full_text), "</div>")),
         easyClose = TRUE,
         footer = modalButton("Close"),
         size = "m"
@@ -2566,6 +2602,9 @@ server <- function(input, output, session) {
 	    OS
  	  )
 
+	  # Store original AC identifiers for magnifier button lookups
+	  row_acs <- data$AC
+
 	  # Make PMID a clickable link to PubMed
 	  data$PMID <- ifelse(
 	    !is.na(data$PMID) & data$PMID != "",
@@ -2579,32 +2618,33 @@ server <- function(input, output, session) {
 	  uniprot_col <- "UniProt AC"
 	  data[[uniprot_col]] <- ifelse(
 	    !is.na(data[[uniprot_col]]) & data[[uniprot_col]] != "",
-	    sapply(data[[uniprot_col]], function(ac) {
+	    sapply(seq_along(data[[uniprot_col]]), function(i) {
+	      ac <- data[[uniprot_col]][i]
 	      first_ac <- trimws(strsplit(ac, ",")[[1]][1])
-      full_ac <- safe_cell(ac, 30, uniprot_col)
+      full_ac <- safe_cell(ac, 30, uniprot_col, row_acs[i])
       paste0('<a href="https://www.uniprot.org/uniprotkb/', first_ac,
              '" target="_blank" style="color: #0366d6; text-decoration: none;">',
              full_ac, '</a>')
     }),
-    safe_cell(data[[uniprot_col]], 30, uniprot_col)
+    safe_cell(data[[uniprot_col]], 30, uniprot_col, row_acs)
 	  )
 
-	  data$AC <- safe_cell(data$AC, 25, "AC")
-	  data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name")
-	  data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name")
+	  data$AC <- safe_cell(data$AC, 25, "AC", row_acs)
+	  data$`Protein Name` <- safe_cell(data$`Protein Name`, 50, "Protein Name", row_acs)
+	  data$`Gene Name` <- safe_cell(data$`Gene Name`, 30, "Gene Name", row_acs)
 
   # Clean up Protein ID: hide "NA_####" entries (show blank instead)
   data$`Protein ID` <- ifelse(
     grepl("^NA_", data$`Protein ID`),
     "",  # Show blank for NA_#### entries
-    safe_cell(data$`Protein ID`, 25, "Protein ID")
+    safe_cell(data$`Protein ID`, 25, "Protein ID", row_acs)
 	  )
 
-	  data$OS <- safe_cell(data$OS, 40, "OS")
-	  data$Title <- safe_cell(data$Title, 50, "Title")
-	  data$Abstract <- safe_cell(data$Abstract, 50, "Abstract")
-	  data$Journal <- safe_cell(data$Journal, 40, "Journal")
-	  data$Authors <- safe_cell(data$Authors, 50, "Authors")
+	  data$OS <- safe_cell(data$OS, 40, "OS", row_acs)
+	  data$Title <- safe_cell(data$Title, 50, "Title", row_acs)
+	  data$Abstract <- safe_cell(data$Abstract, 50, "Abstract", row_acs)
+	  data$Journal <- safe_cell(data$Journal, 40, "Journal", row_acs)
+	  data$Authors <- safe_cell(data$Authors, 50, "Authors", row_acs)
 
   getOntologyDetails <- function(type) {
     if (is.na(type) || type == "non-autoregulatory" || trimws(type) == "") {
@@ -2787,9 +2827,9 @@ server <- function(input, output, session) {
 
 	      table.off('click', '.view-btn');
 	      table.on('click', '.view-btn', function() {
-	        var text = $(this).data('text');
+	        var row_id = $(this).data('row-id');
 	        var field = $(this).data('field');
-	        Shiny.setInputValue('show_full_text', { field: field, text: text }, {priority: 'event'});
+	        Shiny.setInputValue('show_full_text', { field: field, row_id: row_id }, {priority: 'event'});
 	      });
 	    ")
 	  )
