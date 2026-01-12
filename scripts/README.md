@@ -92,25 +92,29 @@ Run the entire pipeline end-to-end:
 **What it does:**
 
 - Merges unused + 3M enriched datasets
+- Enriches external resources with Title, Abstract, Journal, Authors, Date, Protein Name (cached)
 - Integrates external resources (OmniPath, SIGNOR, TRRUST)
 - Builds SQLite database for Shiny app
 - Optionally deploys to DigitalOcean
 
-**Runtime:** 10 minutes
+**Runtime:** 10-15 minutes (first run with enrichment), 10 minutes (subsequent runs with cache)
 
 **Outputs:**
 
 - `shiny_app/data/predictions.csv` (includes external resources)
 - `shiny_app/data/predictions.db`
+- `others/OtherResources_enriched.csv` (cached enriched external resources)
 
 **External Resources (optional):**
 
-Place these files in `others/` directory to include curated self-loop data:
-- `others/OmniAll.xlsx` (OmniPath)
-- `others/Signor.xlsx` (SIGNOR)
-- `others/TRUST.xlsx` (TRRUST)
+Place this file in `others/` directory to include curated self-loop data:
 
-If files are missing, the script continues without them.
+- `others/OtherResources.xlsx` (preprocessed OmniPath, SIGNOR, TRRUST data)
+
+The script will automatically enrich this file with metadata on first run and cache the results.
+To re-enrich from scratch, delete `others/OtherResources_enriched.csv`.
+
+If the file is missing, the script continues without external resources.
 
 ---
 
@@ -282,6 +286,7 @@ run_full_pipeline.sh (orchestrator)
     |
     +-> run_merge_and_deploy.sh
         +-> merge_enriched_predictions.py
+        +-> enrich_external_resources.py  <-- NEW (enrich OtherResources.xlsx)
         +-> integrate_external_resources.py  <-- NEW (OmniPath, SIGNOR, TRRUST)
         +-> create_sqlite_db.py
         +-> rsync + ssh (deploy)

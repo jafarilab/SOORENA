@@ -901,7 +901,7 @@ ui <- navbarPage(
 			                   "Data Source",
 			                   choices = c("All" = "all",
 			                               "UniProt" = "UniProt",
-			                               "Non-UniProt" = "Non-UniProt",
+			                               "Predicted" = "Predicted",
 			                               "OmniPath" = "OmniPath",
 			                               "SIGNOR" = "SIGNOR",
 			                               "TRRUST" = "TRRUST"),
@@ -2293,9 +2293,9 @@ server <- function(input, output, session) {
 	      res <- data.frame(label = character(0), n = numeric(0))
 	    }
 		    res$label <- ifelse(is.na(res$label) | res$label == "", "Unknown", res$label)
-		    res$label <- factor(res$label, levels = c("UniProt", "Non-UniProt", "OmniPath", "SIGNOR", "TRRUST", "Unknown"))
+		    res$label <- factor(res$label, levels = c("UniProt", "Predicted", "OmniPath", "SIGNOR", "TRRUST", "Unknown"))
 		    res <- res[order(res$label), ]
-		    color_map <- c("UniProt" = "#d97742", "Non-UniProt" = "#1a2332", "OmniPath" = "#3498db", "SIGNOR" = "#27ae60", "TRRUST" = "#9b59b6", "Unknown" = "#94a3b8")
+		    color_map <- c("UniProt" = "#d97742", "Predicted" = "#1a2332", "OmniPath" = "#3498db", "SIGNOR" = "#27ae60", "TRRUST" = "#9b59b6", "Unknown" = "#94a3b8")
 		    text_size <- if (is_mobile) 10 else 12
 		    text_info <- if (is_mobile) "percent" else "label+percent"
 

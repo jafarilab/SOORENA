@@ -241,6 +241,13 @@ def main():
     original_count = len(predictions_df)
     print(f"  Existing rows: {original_count:,}")
 
+    # Rename Non-UniProt → Predicted for clarity
+    if 'Source' in predictions_df.columns:
+        non_uniprot_count = (predictions_df['Source'] == 'Non-UniProt').sum()
+        if non_uniprot_count > 0:
+            predictions_df['Source'] = predictions_df['Source'].replace('Non-UniProt', 'Predicted')
+            print(f"  Renamed 'Non-UniProt' → 'Predicted' ({non_uniprot_count:,} rows)")
+
     # Remove any existing external resource entries to prevent duplicates on re-run
     # Include all possible variations (with/without versions, case variations)
     external_sources = ['OmniPath', 'SIGNOR', 'SIGNOR 3.0', 'Signor', 'TRRUST', 'TRRUST v2', 'ORegAnno', 'HTRIdb']
@@ -254,17 +261,24 @@ def main():
     # Get existing columns for alignment
     existing_columns = predictions_df.columns.tolist()
 
-    # Read preprocessed external resources file
+    # Read preprocessed external resources file (prefer enriched CSV if available)
     print("\nReading external resources...")
     others_dir = Path(args.others_dir)
-    external_file = others_dir / 'OtherResources.xlsx'
+    enriched_file = others_dir / 'OtherResources_enriched.csv'
+    raw_file = others_dir / 'OtherResources.xlsx'
 
-    if not external_file.exists():
-        print(f"  Error: {external_file} not found")
-        print("  External resources file is required for integration.")
+    if enriched_file.exists():
+        print(f"  Using enriched file: {enriched_file}")
+        external_df = pd.read_csv(enriched_file)
+    elif raw_file.exists():
+        print(f"  Using raw file: {raw_file}")
+        print(f"  (Run enrich_external_resources.py to add Title, Abstract, etc.)")
+        external_df = pd.read_excel(raw_file)
+    else:
+        print(f"  Error: No external resources file found")
+        print(f"  Expected: {enriched_file} or {raw_file}")
         return
 
-    external_df = pd.read_excel(external_file)
     print(f"  Loaded {len(external_df):,} external resource entries")
 
     # Map Term Probability to Polarity
@@ -299,6 +313,15 @@ def main():
         'Mechanism Probability': float(1.0),
         'Type Confidence': float(1.0),
         'OS': external_df['OS'],
+        # Add enriched metadata (if available in enriched CSV)
+        'Title': external_df.get('Title', pd.Series([None] * len(external_df))),
+        'Abstract': external_df.get('Abstract', pd.Series([None] * len(external_df))),
+        'Journal': external_df.get('Journal', pd.Series([None] * len(external_df))),
+        'Authors': external_df.get('Authors', pd.Series([None] * len(external_df))),
+        'PublicationDate': external_df.get('Date Published', pd.Series([None] * len(external_df))),
+        'Protein_Name': external_df.get('Protein Name', pd.Series([None] * len(external_df))),
+        'Protein_ID': external_df.get('Protein ID', pd.Series([None] * len(external_df))),
+        'UniProtKB_accessions': external_df.get('UniProtKB_accessions', pd.Series([None] * len(external_df))),
     })
 
     # Ensure float columns are explicitly float type
@@ -361,10 +384,11 @@ def main():
         pmid = row['PMID']
         source = row.get('Source', 'Unknown')
 
-        # Source code: U=UniProt, P=Predicted (Non-UniProt), external sources use first letter
+        # Source code: U=UniProt, P=Predicted, external sources use first letter
         source_codes = {
             'UniProt': 'U',
-            'Non-UniProt': 'P',
+            'Predicted': 'P',
+            'Non-UniProt': 'P',  # Legacy support
             'OmniPath': 'O',
             'SIGNOR': 'S',
             'TRRUST': 'T',

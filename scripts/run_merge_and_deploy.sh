@@ -40,7 +40,7 @@ if [ -d "others" ]; then
     fi
 fi
 
-echo "[1/4] Merging enriched datasets..."
+echo "[1/5] Merging enriched datasets..."
 python scripts/python/data_processing/merge_enriched_predictions.py \
   --base results/unused_predictions_autoregulatory_only_metadata_enriched.csv \
   --new results/new_predictions_autoregulatory_only_enriched.csv \
@@ -48,8 +48,25 @@ python scripts/python/data_processing/merge_enriched_predictions.py \
 echo "Complete."
 echo ""
 
-echo "[2/4] Integrating external resources (OmniPath, SIGNOR, TRRUST)..."
-if [ $EXTERNAL_RESOURCES -eq 1 ]; then
+echo "[2/5] Enriching external resources metadata..."
+if [ -f "others/OtherResources.xlsx" ]; then
+    if [ ! -f "others/OtherResources_enriched.csv" ]; then
+        echo "Enriching OtherResources.xlsx with Title, Abstract, Journal, Authors, Date, Protein Name..."
+        python scripts/python/data_processing/enrich_external_resources.py \
+          --input others/OtherResources.xlsx \
+          --output others/OtherResources_enriched.csv
+        echo "Complete."
+    else
+        echo "Using cached enriched file: others/OtherResources_enriched.csv"
+        echo "(Delete this file to re-enrich from scratch)"
+    fi
+else
+    echo "No OtherResources.xlsx found. Skipping enrichment."
+fi
+echo ""
+
+echo "[3/5] Integrating external resources (OmniPath, SIGNOR, TRRUST)..."
+if [ $EXTERNAL_RESOURCES -eq 1 ] || [ -f "others/OtherResources.xlsx" ]; then
     python scripts/python/data_processing/integrate_external_resources.py \
       --input shiny_app/data/predictions.csv \
       --output shiny_app/data/predictions.csv \
@@ -57,11 +74,11 @@ if [ $EXTERNAL_RESOURCES -eq 1 ]; then
     echo "Complete."
 else
     echo "Warning: No external resources found in others/ directory. Skipping."
-    echo "To add external resources, place OmniAll.xlsx, Signor.xlsx, and TRUST.xlsx in others/"
+    echo "To add external resources, place OtherResources.xlsx in others/"
 fi
 echo ""
 
-echo "[3/4] Building SQLite database..."
+echo "[4/5] Building SQLite database..."
 python scripts/python/data_processing/create_sqlite_db.py \
   --input shiny_app/data/predictions.csv \
   --output shiny_app/data/predictions.db
@@ -70,7 +87,7 @@ DB_SIZE=$(du -h shiny_app/data/predictions.db | cut -f1)
 echo "Complete. Database size: $DB_SIZE"
 echo ""
 
-echo "[4/4] Deploy to production?"
+echo "[5/5] Deploy to production?"
 echo "Target: 143.198.38.37"
 echo ""
 read -p "Deploy now? (y/N): " -n 1 -r
