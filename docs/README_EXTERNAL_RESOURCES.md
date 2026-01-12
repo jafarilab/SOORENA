@@ -13,7 +13,7 @@ SOORENA predictions are enhanced with curated self-loop/autoregulation data from
 - Adds curated, high-confidence entries to complement ML predictions
 - Provides cross-validation with established databases
 - Increases coverage of known autoregulatory mechanisms
-- Allows users to filter by data source (predicted vs. curated)
+- Allows users to filter by data source (Predicted vs. UniProt vs. curated databases)
 
 ---
 
@@ -25,17 +25,7 @@ SOORENA predictions are enhanced with curated self-loop/autoregulation data from
 
 **Source:** https://omnipathdb.org/
 
-**Data extraction:**
-- Self-loops identified where `source_genesymbol == target_genesymbol`
-- PMIDs extracted from `references` column
-- Includes kinase-substrate relationships
-
-**File:** `others/OmniAll.xlsx`
-
-**Columns used:**
-- `source_genesymbol`, `target_genesymbol` (gene names)
-- `references` (contains PMIDs in format `DB:PMID`)
-- `is_stimulation`, `is_inhibition` (polarity)
+**Entries in SOORENA:** 10 self-loops
 
 ---
 
@@ -45,19 +35,7 @@ SOORENA predictions are enhanced with curated self-loop/autoregulation data from
 
 **Source:** https://signor.uniroma2.it/
 
-**Data extraction:**
-- Self-loops identified where `ENTITYA == ENTITYB`
-- Direct PMID column available
-- Rich mechanism annotations (phosphorylation, ubiquitination, etc.)
-
-**File:** `others/Signor.xlsx`
-
-**Columns used:**
-- `ENTITYA`, `ENTITYB` (entity names)
-- `PMID` (direct PubMed ID)
-- `MECHANISM` (e.g., phosphorylation)
-- `EFFECT` (up-regulates, down-regulates)
-- `origin` (organism)
+**Entries in SOORENA:** 394 self-loops (phosphorylation, ubiquitination, etc.)
 
 ---
 
@@ -67,63 +45,51 @@ SOORENA predictions are enhanced with curated self-loop/autoregulation data from
 
 **Source:** https://www.grnpedia.org/trrust/
 
-**Data extraction:**
-- Self-loops identified where `V1 == V2` (TF regulates itself)
-- PMIDs in `V4` column
-- Includes activation/repression annotations
-
-**File:** `others/TRUST.xlsx`
-
-**Columns used:**
-- `V1`, `V2` (gene symbols)
-- `V3` (effect: Activation/Repression)
-- `V4` (PMID)
-- `origin` (mouse/human)
+**Entries in SOORENA:** 61 transcriptional autoregulation entries
 
 ---
 
-## Mechanism Type Mapping
+## Data Files
 
-External database mechanisms are mapped to SOORENA's 7 autoregulatory categories:
+**Current Approach (Recommended):**
 
-| External Mechanism | SOORENA Type |
-|-------------------|--------------|
-| phosphorylation, autophosphorylation | Autophosphorylation |
-| ubiquitination | Autoubiquitination |
-| cleavage, proteolysis | Autolysis |
-| catalytic, catalysis | Autocatalytic |
-| Activation (TRRUST) | Autoregulation |
-| Repression (TRRUST) | Autoregulation |
-| inhibition | Autoinhibition |
-| (default) | Autoregulation |
+All external resources are preprocessed and combined into a single file:
+
+- **File:** `others/OtherResources.xlsx`
+- **Format:** Pre-deduplicated, standardized columns
+- **Columns:** PMID, Gene Name, OS, Source, Autoregulatory Type, Term Probability
+
+This file is then **enriched** with metadata (Title, Abstract, Journal, Authors, Date, Protein Name) using PubTator, PubMed, and UniProt APIs.
 
 ---
 
-## Polarity Mapping
+## Enrichment Pipeline
 
-Effects are mapped to SOORENA polarity symbols:
+**Step 1: Enrich External Resources**
 
-| Effect | Polarity |
-|--------|----------|
-| up-regulates, activation, stimulation | + |
-| down-regulates, repression, inhibition | – |
-| unknown/context-dependent | ± |
+Before integration, external resources are enriched with publication and protein metadata:
+
+```bash
+python scripts/python/data_processing/enrich_external_resources.py \
+  --input others/OtherResources.xlsx \
+  --output others/OtherResources_enriched.csv
+```
+
+**What this does:**
+- Fetches **Title + Abstract** from PubTator (96.5% coverage)
+- Fetches **Journal + Authors + Date** from PubMed E-utilities (96.5% coverage)
+- Fetches **Protein Name + Protein ID** from UniProt by gene name (98.9% coverage)
+- Caches results in `.cache/uniprot_cache.sqlite` for fast re-runs
+
+**Output:** `others/OtherResources_enriched.csv` (cached, reused on subsequent runs)
+
+**To re-enrich from scratch:** Delete `others/OtherResources_enriched.csv`
 
 ---
 
-## Running the Integration
+**Step 2: Integrate into Predictions**
 
-### Prerequisites
-
-1. External resource files in `others/` directory:
-   - `others/OmniAll.xlsx`
-   - `others/Signor.xlsx`
-   - `others/TRUST.xlsx`
-
-2. Merged predictions file exists:
-   - `shiny_app/data/predictions.csv`
-
-### Command
+After enrichment, external resources are merged with SOORENA predictions:
 
 ```bash
 python scripts/python/data_processing/integrate_external_resources.py \
@@ -132,133 +98,209 @@ python scripts/python/data_processing/integrate_external_resources.py \
   --others-dir others/
 ```
 
-### Arguments
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `--input` | Input predictions CSV | Required |
-| `--output` | Output predictions CSV (can be same as input) | Required |
-| `--others-dir` | Directory containing Excel files | `others/` |
-
----
-
-## Output
-
-The script adds new rows to the predictions dataset with:
-
-| Column | Value |
-|--------|-------|
-| `Source` | "OmniPath", "SIGNOR", or "TRRUST" |
-| `Mechanism_Probability` | 1.0 (curated, not predicted) |
-| `Type_Confidence` | 1.0 (curated, not predicted) |
-| `Has_Mechanism` | "Yes" |
-| `Autoregulatory_Type` | Mapped mechanism type |
-| `Polarity` | Mapped polarity symbol |
-| `Gene_Name` | Gene symbol from external DB |
-| `AC` | `SOORENA-<SourceCode>-<PMID>-<n>` |
-
-**Source codes in AC:**
-- `O` = OmniPath
-- `S` = SIGNOR
-- `T` = TRRUST
-- `U` = UniProt (original training data)
-- `P` = Predicted (Non-UniProt)
+**What this does:**
+- Reads enriched CSV if available, otherwise falls back to raw XLSX
+- Renames "Non-UniProt" → "Predicted" for clarity
+- Removes duplicate external entries (same PMID + Source + Gene)
+- Maps Term Probability (Activation/Repression/Unknown) → Polarity (+/–/±)
+- Cleans empty autoregulatory types → "Unknown"
+- Regenerates AC identifiers for all entries
 
 ---
 
-## Updating External Resources
+## Mechanism Type Handling
 
-To update external resources with newer versions:
+**Important:** External database mechanisms are **NOT mapped** to SOORENA's 7 categories. They are kept as-is:
 
-### OmniPath
+| Raw Mechanism | Count | Notes |
+|---------------|-------|-------|
+| phosphorylation | 1,658 | SIGNOR |
+| transcriptional | 69 | TRRUST, OmniPath |
+| binding | 62 | OmniPath |
+| dephosphorylation | 20 | SIGNOR |
+| ubiquitination | 18 | SIGNOR |
+| Unknown | 12 | Empty or "-" values |
+| (others) | <10 each | Various PTMs |
 
-```r
-library(OmnipathR)
-library(dplyr)
-library(writexl)
-
-# Get all interactions
-all_data <- all_interactions(dorothea_levels = c("A", "B"))
-
-# Filter self-loops
-self_loops <- all_data %>%
-  filter(source_genesymbol == target_genesymbol)
-
-# Save
-write_xlsx(self_loops, "others/OmniAll.xlsx")
-```
-
-### SIGNOR
-
-1. Download from https://signor.uniroma2.it/downloads.php
-2. Filter for self-loops where ENTITYA == ENTITYB
-3. Save as `others/Signor.xlsx`
-
-### TRRUST
-
-1. Download from https://www.grnpedia.org/trrust/downloadnetwork.php
-2. Filter for self-loops where column 1 == column 2
-3. Save as `others/TRUST.xlsx`
+This preserves the original specificity from external databases. Users can filter by these raw mechanism types in the Shiny app.
 
 ---
 
-## Pipeline Integration
+## Polarity Mapping
 
-The external resources integration is part of the merge & deploy pipeline:
+Term Probability values are mapped to polarity symbols:
 
-```
-1. merge_enriched_predictions.py    → shiny_app/data/predictions.csv
-2. integrate_external_resources.py  → shiny_app/data/predictions.csv (updated)
-3. create_sqlite_db.py              → shiny_app/data/predictions.db
-```
+| Term Probability | Polarity Symbol | Meaning |
+|-----------------|----------------|---------|
+| Activation, up-regulates, stimulation | + | Positive/activating |
+| Repression, down-regulates, inhibition | – | Negative/inhibiting |
+| Unknown, empty | ± | Context-dependent |
 
-### Using the Shell Script
+---
 
-The `run_merge_and_deploy.sh` script automatically runs the integration:
+## Running the Full Pipeline
+
+The recommended way to integrate external resources is through the automated pipeline:
 
 ```bash
 ./scripts/run_merge_and_deploy.sh
 ```
 
-This will:
-1. Merge enriched datasets
-2. Integrate external resources (if files exist in `others/`)
-3. Build SQLite database
-4. Optionally deploy to production
+This runs:
+1. **Merge enriched datasets** → `shiny_app/data/predictions.csv`
+2. **Enrich external resources** (cached) → `others/OtherResources_enriched.csv`
+3. **Integrate external resources** → `shiny_app/data/predictions.csv` (updated)
+4. **Build SQLite database** → `shiny_app/data/predictions.db`
+5. **Optionally deploy** to production server
+
+---
+
+## Output Format
+
+External resource entries are added with:
+
+| Column | Value |
+|--------|-------|
+| `Source` | "OmniPath", "SIGNOR", or "TRRUST" |
+| `Mechanism Probability` | 1.0 (curated, not predicted) |
+| `Type Confidence` | 1.0 (curated, not predicted) |
+| `Has Mechanism` | "Yes" |
+| `Autoregulatory Type` | Raw mechanism (phosphorylation, transcriptional, etc.) |
+| `Polarity` | + / – / ± |
+| `Gene_Name` | Gene symbol from external DB |
+| `Title` | Publication title (enriched) |
+| `Abstract` | Publication abstract (enriched) |
+| `Journal` | Journal name (enriched) |
+| `Authors` | Author list (enriched) |
+| `Protein_Name` | Protein name (enriched) |
+| `AC` | `SOORENA-<SourceCode>-<PMID>-<n>` |
+
+**Source codes in AC:**
+- `U` = UniProt (original training data)
+- `P` = Predicted (ML predictions from PubMed)
+- `O` = OmniPath
+- `S` = SIGNOR
+- `T` = TRRUST
+
+---
+
+## Enrichment Results
+
+After running the enrichment pipeline:
+
+| Metadata Field | Coverage | Source |
+|---------------|----------|--------|
+| Title | 96.5% | PubTator |
+| Abstract | 96.2% | PubTator |
+| Journal | 96.5% | PubMed E-utilities |
+| Authors | 96.5% | PubMed E-utilities |
+| Date Published | 96.5% | PubMed E-utilities |
+| Protein Name | 98.9% | UniProt (by gene name) |
+| Protein ID | 98.9% | UniProt (by gene name) |
+
+**Note:** OmniPath entries have invalid PMIDs ("-"), so they lack publication metadata but retain gene and protein information.
 
 ---
 
 ## Data Statistics
 
-Approximate counts from each external resource:
+Current external resource entries in SOORENA:
 
-| Database | Total Self-Loops | With PMIDs |
-|----------|-----------------|------------|
-| OmniPath | ~76 | ~70+ |
-| SIGNOR | ~3,274 | ~3,200+ |
-| TRRUST | ~59 | ~59 |
+| Database | Total Self-Loops (Raw) | Deduplicated Entries | With Enriched Metadata |
+|----------|----------------------|---------------------|----------------------|
+| OmniPath | 68 | 10 | 0 (invalid PMIDs) |
+| SIGNOR | 1,813 | 394 | 394 (100%) |
+| TRRUST | 61 | 61 | 61 (100%) |
+| **Total** | **1,942** | **465** | **455 (97.8%)** |
 
-Note: Some entries may share PMIDs with existing predictions. These are kept as separate rows to show both the prediction and the external validation.
+**Deduplication:** Removes entries with same PMID + Source + Gene Name. 1,477 duplicates removed.
+
+**Overlap with predictions:** 318 external entries share PMIDs with existing SOORENA predictions. These are kept as separate rows to show both prediction and external validation.
+
+---
+
+## Updating External Resources
+
+To update `OtherResources.xlsx` with newer data:
+
+### Using the R preprocessing script
+
+See `others/OtherResources.Rmd` for the data extraction pipeline:
+
+1. **OmniPath** - Uses OmnipathR package to fetch all interactions, filters self-loops
+2. **SIGNOR** - Downloads TSV files from SIGNOR website, filters self-loops
+3. **TRRUST** - Downloads TSV files, filters self-loops
+
+The script combines all sources into `OtherResources.xlsx` with standardized columns.
+
+### Manual update
+
+1. Download latest data from each source
+2. Filter for self-loops (source == target)
+3. Combine into single Excel file with columns:
+   - PMID, Gene Name, OS, Source, Autoregulatory Type, Term Probability
+4. Save as `others/OtherResources.xlsx`
+5. Delete cached enriched file: `rm others/OtherResources_enriched.csv`
+6. Re-run pipeline to enrich and integrate
 
 ---
 
 ## Troubleshooting
 
-**Issue:** "Warning: others/OmniAll.xlsx not found, skipping"
+### Issue: "No external resources found"
 
-**Solution:** Ensure Excel files are in the `others/` directory with exact filenames.
-
----
-
-**Issue:** Missing columns in output
-
-**Solution:** The script aligns columns with the existing predictions. Missing columns are filled with `None`.
+**Solution:** Ensure `others/OtherResources.xlsx` exists in the repository.
 
 ---
 
-**Issue:** Duplicate entries
+### Issue: "HTTP Error 400: Bad Request" during enrichment
 
-**Solution:** The script removes duplicates within each external resource (same PMID + Source + Gene), but keeps entries that exist in both predictions and external resources as separate rows.
+**Solution:** The script automatically handles invalid PMIDs by trying individual fetches. Some entries (like OmniPath with "-" PMIDs) will be skipped for publication metadata but retain gene/protein information.
+
+---
+
+### Issue: Low enrichment coverage
+
+**Solution:**
+1. Check internet connection
+2. Check PubTator/PubMed API status
+3. Delete cache and re-run: `rm -rf .cache/uniprot_cache.sqlite`
+
+---
+
+### Issue: "Non-UniProt" still showing instead of "Predicted"
+
+**Solution:** The integration script automatically renames on every run. If you see "Non-UniProt" in the app, rebuild the database:
+
+```bash
+python scripts/python/data_processing/create_sqlite_db.py \
+  --input shiny_app/data/predictions.csv \
+  --output shiny_app/data/predictions.db
+```
+
+---
+
+## Advanced Usage
+
+### Enrich only (without integration)
+
+```bash
+python scripts/python/data_processing/enrich_external_resources.py \
+  --input others/OtherResources.xlsx \
+  --output others/OtherResources_enriched.csv \
+  --batch-size 50 \
+  --sleep 0.4
+```
+
+### Use raw data (skip enrichment)
+
+Delete the enriched cache file before running integration:
+
+```bash
+rm others/OtherResources_enriched.csv
+```
+
+The integration script will fall back to raw `OtherResources.xlsx` (0% metadata coverage).
 
 ---
 
@@ -266,4 +308,5 @@ Note: Some entries may share PMIDs with existing predictions. These are kept as 
 
 - Main workflow: `docs/README.md`
 - Prediction guide: `docs/README_PREDICTION_NEW_DATA.md`
+- Scripts overview: `scripts/README.md`
 - Architecture: `docs/README_ARCHITECTURE.md`
