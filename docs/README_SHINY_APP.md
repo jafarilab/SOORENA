@@ -53,7 +53,8 @@ The Shiny app database is **autoregulatory-only** (no “non-autoregulatory” r
 
 Two accession concepts exist:
 
-- `AC` = **SOORENA record ID** (unique per row): `SOORENA_<PMID>_<n>`
+- `AC` = **SOORENA record ID** (unique per row): `SOORENA-{SourceCode}-{PMID}-{Counter}`
+  - See [AC Format Documentation](README_AC_FORMAT.md) for details
 - `UniProtKB_accessions` = **UniProtKB accession number(s)** (comma-separated when available)
 
 Polarity is derived directly from the mechanism type:

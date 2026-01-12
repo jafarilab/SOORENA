@@ -172,6 +172,7 @@ What this produces:
 - A **database-specific unique row identifier**:
   - `AC = SOORENA-<SourceCode>-<PMID>-<n>` (duplicate PMIDs are kept as separate rows)
   - Source codes: `U`=UniProt, `P`=Predicted (Non-UniProt), `O`=OmniPath, `S`=SIGNOR, `T`=TRRUST
+  - For detailed explanation of the AC format, see [AC Format Documentation](README_AC_FORMAT.md)
 - `UniProtKB_accessions` remains as the comma-separated UniProtKB accession numbers (when available).
 
 ### D) Integrate external resources (OmniPath, SIGNOR, TRRUST)

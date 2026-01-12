@@ -41,25 +41,60 @@ def ensure_source_column(df: pd.DataFrame, default_value: str) -> pd.DataFrame:
     return df
 
 
-def generate_unique_row_ac(df: pd.DataFrame, pmid_col: str, prefix: str) -> pd.DataFrame:
-    """Create a deterministic, unique per-row AC column.
+def generate_unique_row_ac(df: pd.DataFrame, pmid_col: str = 'PMID', source_col: str = 'Source', prefix: str = 'SOORENA') -> pd.DataFrame:
+    """Create a deterministic, unique per-row AC column with source codes and dash format.
 
-    AC is generated as: {prefix}_{PMID}_{n} where n is the 1-based row index within each PMID group
-    after stable sorting. This guarantees uniqueness even when duplicate PMIDs exist.
+    AC is generated as: {prefix}-{SourceCode}-{PMID}-{Counter}
+
+    Format example: SOORENA-P-12345678-1
+    - SourceCode: Single letter (U=UniProt, P=Predicted, O=OmniPath, S=SIGNOR, T=TRRUST)
+    - PMID: PubMed ID or 'UNKNOWN' for invalid PMIDs
+    - Counter: Sequential number (1, 2, 3...) for duplicate PMIDs within same source
+
+    This guarantees uniqueness and makes the source immediately visible in the AC.
     """
+    def sanitize_pmid(pmid):
+        """Sanitize PMID for AC generation."""
+        pmid_str = str(pmid).strip()
+        if not pmid_str or pmid_str == '-' or pmid_str == 'nan' or pmid_str == 'None':
+            return 'UNKNOWN'
+        return pmid_str
+
     df = df.copy()
     df[pmid_col] = df[pmid_col].astype(str)
 
-    sort_cols = [pmid_col]
-    for candidate in ["Source", "UniProtKB_accessions", "Protein_ID", "Autoregulatory Type", "Autoregulatory_Type"]:
-        if candidate in df.columns:
-            sort_cols.append(candidate)
+    # Sort by PMID and Source for consistent ordering
+    df = df.sort_values([pmid_col, source_col]).reset_index(drop=True)
 
-    df["_orig_order"] = range(len(df))
-    df = df.sort_values(sort_cols + ["_orig_order"], kind="mergesort")
-    df["_pmid_rank"] = df.groupby(pmid_col).cumcount() + 1
-    df["AC"] = prefix + "_" + df[pmid_col].astype(str) + "_" + df["_pmid_rank"].astype(str)
-    df = df.drop(columns=["_orig_order", "_pmid_rank"])
+    # Source code mapping
+    source_codes = {
+        'UniProt': 'U',
+        'Predicted': 'P',
+        'Non-UniProt': 'P',  # Legacy support
+        'OmniPath': 'O',
+        'SIGNOR': 'S',
+        'TRRUST': 'T',
+        'Signor': 'S',
+        'ORegAnno': 'R',
+        'HTRIdb': 'H'
+    }
+
+    ac_list = []
+    pmid_source_counts = {}
+
+    for _, row in df.iterrows():
+        pmid = sanitize_pmid(row[pmid_col])
+        source = row.get(source_col, 'Unknown')
+        source_code = source_codes.get(source, source[0] if source and source != 'Unknown' else 'X')
+
+        # Create unique key for counting (pmid + source)
+        key = f"{pmid}_{source}"
+        pmid_source_counts[key] = pmid_source_counts.get(key, 0) + 1
+
+        ac = f"{prefix}-{source_code}-{pmid}-{pmid_source_counts[key]}"
+        ac_list.append(ac)
+
+    df['AC'] = ac_list
     return df
 
 

@@ -136,7 +136,8 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
         if s.empty:
             return False
         sample = s.head(500)
-        if (sample.str.startswith("SOORENA_").mean() > 0.5) or (sample.str.contains("_").mean() > 0.5):
+        # Reject if it looks like SOORENA identifiers (dash or underscore format)
+        if (sample.str.startswith("SOORENA-").mean() > 0.5) or (sample.str.startswith("SOORENA_").mean() > 0.5):
             return False
         # Basic "comma-separated accessions" shape check.
         pattern = r"^[A-Za-z0-9]+(?:,\\s*[A-Za-z0-9]+)*$"
@@ -146,14 +147,27 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
         df["UniProtKB_accessions"] = df["AC"].fillna("")
         df.drop(columns=["AC"], inplace=True)
 
-    # Ensure a unique per-row AC exists; if missing (or duplicated), generate deterministically from PMID.
-    if "AC" not in df.columns or df["AC"].isna().all() or df["AC"].duplicated().any():
-        pmid = df["PMID"].astype(str).fillna("")
-        df["_orig_order"] = range(len(df))
-        df = df.sort_values(["PMID", "_orig_order"], kind="mergesort")
-        df["_pmid_rank"] = df.groupby("PMID").cumcount() + 1
-        df["AC"] = "SOORENA_" + pmid + "_" + df["_pmid_rank"].astype(str)
-        df.drop(columns=["_orig_order", "_pmid_rank"], inplace=True)
+    # Validate AC column - must exist and be unique (no fallback generation)
+    if "AC" not in df.columns:
+        print("\n⚠️  ERROR: AC column is missing from the dataset")
+        print("    Please regenerate ACs upstream using:")
+        print("    python scripts/python/data_processing/integrate_external_resources.py")
+        sys.exit(1)
+
+    missing_ac = df["AC"].isna() | (df["AC"].str.strip() == "")
+    if missing_ac.any():
+        print(f"\n⚠️  ERROR: {missing_ac.sum():,} rows have missing AC identifiers")
+        print("    Please regenerate ACs upstream using:")
+        print("    python scripts/python/data_processing/integrate_external_resources.py")
+        sys.exit(1)
+
+    duplicate_ac = df["AC"].duplicated()
+    if duplicate_ac.any():
+        print(f"\n⚠️  ERROR: {duplicate_ac.sum():,} rows have duplicate AC identifiers")
+        print(f"    First few duplicates:")
+        print(df[duplicate_ac][['AC', 'PMID', 'Source']].head() if 'Source' in df.columns else df[duplicate_ac][['AC', 'PMID']].head())
+        print("    Please regenerate ACs upstream.")
+        sys.exit(1)
 
     # Map prediction-style columns to app-style if needed
     if "has_mechanism" in df.columns:

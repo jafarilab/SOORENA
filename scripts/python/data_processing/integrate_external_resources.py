@@ -377,11 +377,23 @@ def main():
     merged_df['PMID'] = merged_df['PMID'].astype(str)
     merged_df = merged_df.sort_values(['PMID', 'Source']).reset_index(drop=True)
 
+    # Helper function to sanitize PMIDs for AC generation
+    def sanitize_pmid(pmid):
+        """Sanitize PMID for AC generation.
+
+        Converts invalid/missing PMIDs to 'UNKNOWN' to ensure valid AC format.
+        Examples: '-', 'nan', '', None → 'UNKNOWN'
+        """
+        pmid_str = str(pmid).strip()
+        if not pmid_str or pmid_str == '-' or pmid_str == 'nan' or pmid_str == 'None':
+            return 'UNKNOWN'
+        return pmid_str
+
     # Generate new AC with source indicator
     ac_list = []
     pmid_counts = {}
     for _, row in merged_df.iterrows():
-        pmid = row['PMID']
+        pmid = sanitize_pmid(row['PMID'])  # Sanitize PMID
         source = row.get('Source', 'Unknown')
 
         # Source code: U=UniProt, P=Predicted, external sources use first letter
