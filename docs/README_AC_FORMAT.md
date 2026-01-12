@@ -35,8 +35,8 @@ Components are separated by **dashes** (`-`), not underscores.
 | **O** | OmniPath | Protein-protein interactions database | SOORENA-O-UNKNOWN-1 |
 | **S** | SIGNOR | Signaling network database | SOORENA-S-10037717-1 |
 | **T** | TRRUST | Transcription factor database | SOORENA-T-11032029-1 |
-| **R** | ORegAnno | Regulatory annotation database | SOORENA-R-15234567-1 |
-| **H** | HTRIdb | Human transcriptional regulation database | SOORENA-H-16789012-1 |
+
+**Note**: The code also supports R (ORegAnno) and H (HTRIdb) for potential future external databases, but these are not currently used.
 
 ## Counter Explanation
 
