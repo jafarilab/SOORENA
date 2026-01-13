@@ -900,7 +900,7 @@ ui <- navbarPage(
 			             div(class = "source-select",
 			                 selectInput(
 			                   "source_mode",
-			                   "Data Source",
+			                   "Source of Autoregulation Data",
 			                   choices = c("All" = "all",
 			                               "UniProt" = "UniProt",
 			                               "Predicted" = "Predicted",
@@ -3121,7 +3121,7 @@ server <- function(input, output, session) {
         "    'Authors': 'List of publication authors',",
         "    'Year': 'Publication year',",
         "    'Month': 'Publication month',",
-        "    'Source': 'Data source: UniProt (curated), Predicted (ML predictions), OmniPath/SIGNOR/TRRUST (external databases)',",
+        "    'Source': 'Source of autoregulation data: UniProt (curated), Predicted (ML predictions), OmniPath/SIGNOR/TRRUST (external databases)',",
         "    'Protein Name': 'Full name of the protein from UniProt',",
         "    'Gene Name': 'Gene symbol for the protein',",
         "    'Protein ID': 'UniProt protein identifier',",
@@ -3219,14 +3219,15 @@ server <- function(input, output, session) {
 	        Shiny.setInputValue('show_full_text', { field: field, row_id: row_id }, {priority: 'event'});
 	      });
 	    ")
-	  )
+	  ) %>%
+	  formatRound(columns = c("Mechanism Probability", "Type Confidence"), digits = 3)
 	})
 
 
 
   # Patch Notes Table Data
   patch_notes_data <- data.frame(
-    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11", "0.0.12"),
+    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11", "0.0.12", "0.0.13"),
     Description = c(
       paste(
         "<ul>",
@@ -3341,9 +3342,15 @@ server <- function(input, output, session) {
         "<li><strong>Smart Filter Detection:</strong> Threshold filters only activate when slider moves above minimum data value, preventing unnecessary filtering at baseline</li>",
         "<li><strong>Reset Improvements:</strong> Reset Filters button now correctly returns thresholds to data minimums rather than zero</li>",
         "</ul>"
+      ),
+      paste(
+        "<ul>",
+        "<li><strong>Label Clarity Improvement:</strong> Changed 'Data Source' filter label to 'Source of Autoregulation Data' for better clarity and specificity</li>",
+        "<li><strong>Probability Precision:</strong> Rounded Mechanism Probability and Type Confidence values to 3 decimal places (e.g., 0.644 instead of 0.6438683271408081) for improved readability</li>",
+        "</ul>"
       )
     ),
-    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08", "2025-12-27", "2026-01-12"),
+    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08", "2025-12-27", "2026-01-12", "2026-01-13"),
     stringsAsFactors = FALSE
   )
 
