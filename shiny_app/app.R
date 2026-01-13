@@ -3332,6 +3332,14 @@ server <- function(input, output, session) {
         "<li><strong>AC Format Standardization:</strong> Updated SOORENA accession IDs to consistent dash format (SOORENA-{Source}-{PMID}-{Counter}) with clear source codes (U=UniProt, P=Predicted, O=OmniPath, S=SIGNOR, T=TRRUST)</li>",
         "<li><strong>AC Documentation:</strong> Added comprehensive AC format documentation explaining the ID structure, source codes, and counter meaning</li>",
         "<li><strong>Invalid PMID Handling:</strong> External resource entries with missing PMIDs now use 'UNKNOWN' for clarity instead of invalid placeholders</li>",
+        "<li><strong>Abstract Display Fix:</strong> Fixed issue where long abstracts were truncated in modal popups. Now uses database queries instead of HTML attributes to ensure complete text displays for all fields (Abstract, Title, Journal, Authors, etc.)</li>",
+        "<li><strong>Probability Distribution Visualizations:</strong> Added interactive histograms in Statistics tab showing Mechanism Probability and Type Confidence distributions with mean/median statistics</li>",
+        "<li><strong>Interactive Threshold Filters:</strong> Added Model Confidence section in Advanced Filters with sliders for Minimum Mechanism Probability and Minimum Type Confidence</li>",
+        "<li><strong>Visual Threshold Feedback:</strong> Distribution plots now display red dashed threshold lines when filters are active, showing real-time count and percentage of entries above threshold</li>",
+        "<li><strong>Dynamic Filter Ranges:</strong> Threshold sliders automatically adjust to actual data ranges instead of hardcoded 0-1, maximizing usable slider space</li>",
+        "<li><strong>Side-by-Side Statistics:</strong> Mechanism Probability and Type Confidence histograms displayed side-by-side for easy comparison</li>",
+        "<li><strong>Smart Filter Detection:</strong> Threshold filters only activate when slider moves above minimum data value, preventing unnecessary filtering at baseline</li>",
+        "<li><strong>Reset Improvements:</strong> Reset Filters button now correctly returns thresholds to data minimums rather than zero</li>",
         "</ul>"
       )
     ),
