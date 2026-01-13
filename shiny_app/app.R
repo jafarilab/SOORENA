@@ -946,6 +946,23 @@ ui <- navbarPage(
 		          column(4, textInput("ac", "UniProt AC", placeholder = "Search UniProt accession...")),
 		          column(4, textInput("record_ac", "AC (Record ID)", placeholder = "Search record AC..."))
 		        )
+		      ),
+		      div(class = "filter-card",
+		        h4("Model Confidence"),
+		        fluidRow(
+		          column(6,
+		                 sliderInput("min_mechanism_prob",
+		                            "Minimum Mechanism Probability",
+		                            min = 0, max = 1, value = 0, step = 0.05,
+		                            width = "100%")),
+		          column(6,
+		                 sliderInput("min_type_conf",
+		                            "Minimum Type Confidence",
+		                            min = 0, max = 1, value = 0, step = 0.05,
+		                            width = "100%"))
+		        ),
+		        div(style = "margin-top: -10px; padding: 8px 12px; background: #f9f6f1; border-radius: 6px; font-size: 13px; color: #666;",
+		            HTML("💡 <b>Tip:</b> Use the <i>Statistics</i> tab to view probability distribution and choose an appropriate threshold"))
 		      )
 		    )
 		  ),
@@ -1559,6 +1576,10 @@ server <- function(input, output, session) {
     if (is.null(size) || is.na(size)) DEFAULT_PAGE_SIZE else size
   })
 
+  # Store minimum probability values for filter comparison
+  min_mechanism_probability <- reactiveVal(0)
+  min_type_confidence <- reactiveVal(0)
+
   is_mobile_output <- function(output_id) {
     width <- session$clientData[[paste0("output_", output_id, "_width")]]
     if (is.null(width)) {
@@ -1770,6 +1791,18 @@ server <- function(input, output, session) {
 	      }
 	    }
 
+	    # Mechanism Probability threshold (apply only if above minimum)
+	    if (!is.null(input$min_mechanism_prob) && input$min_mechanism_prob > min_mechanism_probability()) {
+	      query <- paste(query, "AND Mechanism_Probability >= ?")
+	      params <- c(params, input$min_mechanism_prob)
+	    }
+
+	    # Type Confidence threshold (apply only if above minimum)
+	    if (!is.null(input$min_type_conf) && input$min_type_conf > min_type_confidence()) {
+	      query <- paste(query, "AND Type_Confidence >= ?")
+	      params <- c(params, input$min_type_conf)
+	    }
+
     list(where = query, params = params)
   }
 
@@ -1851,6 +1884,39 @@ server <- function(input, output, session) {
       choices = year_choices,
       selected = "",
       server = FALSE)
+
+    # Get min/max values for probability sliders
+    prob_range <- dbGetQuery(conn,
+      "SELECT
+         MIN(Mechanism_Probability) as min_mech,
+         MAX(Mechanism_Probability) as max_mech,
+         MIN(Type_Confidence) as min_type,
+         MAX(Type_Confidence) as max_type
+       FROM predictions
+       WHERE Mechanism_Probability IS NOT NULL
+         AND Type_Confidence IS NOT NULL")
+
+    if (nrow(prob_range) > 0) {
+      # Round to 2 decimal places for cleaner display
+      min_mech <- floor(prob_range$min_mech * 100) / 100
+      max_mech <- ceiling(prob_range$max_mech * 100) / 100
+      min_type <- floor(prob_range$min_type * 100) / 100
+      max_type <- ceiling(prob_range$max_type * 100) / 100
+
+      # Store minimum values for filter comparison
+      min_mechanism_probability(min_mech)
+      min_type_confidence(min_type)
+
+      # Update slider ranges with actual data bounds
+      updateSliderInput(session, "min_mechanism_prob",
+                       min = min_mech,
+                       max = max_mech,
+                       value = min_mech)
+      updateSliderInput(session, "min_type_conf",
+                       min = min_type,
+                       max = max_type,
+                       value = min_type)
+    }
   })
 
   observeEvent(input$result_table_order, {
@@ -1992,6 +2058,8 @@ server <- function(input, output, session) {
 			    updateSelectizeInput(session, "month", selected = character(0))
 			    updateCheckboxInput(session, "match_exact", value = FALSE)
 			    updateTextInput(session, "search", value = "")
+			    updateSliderInput(session, "min_mechanism_prob", value = min_mechanism_probability())
+			    updateSliderInput(session, "min_type_conf", value = min_type_confidence())
 			    table_sort(NULL)
 			    current_page(1)
 			  })
@@ -2057,6 +2125,9 @@ server <- function(input, output, session) {
     if (!is.null(input$pmid) && nzchar(trimws(input$pmid))) active <- active + 1
     if (!is.null(input$ac) && nzchar(trimws(input$ac))) active <- active + 1
     if (!is.null(input$record_ac) && nzchar(trimws(input$record_ac))) active <- active + 1
+
+    if (!is.null(input$min_mechanism_prob) && input$min_mechanism_prob > min_mechanism_probability()) active <- active + 1
+    if (!is.null(input$min_type_conf) && input$min_type_conf > min_type_confidence()) active <- active + 1
 
     if (active > 0) {
       paste0("More filters (", active, ")")
@@ -2583,9 +2654,9 @@ server <- function(input, output, session) {
       return(apply_plotly_config(p, is_mobile))
     }
 
-    # Create bins for histogram (0-1 range, 20 bins)
+    # Create bins for histogram using actual data range
     probs <- res$Mechanism_Probability
-    probs <- probs[!is.na(probs) & probs >= 0 & probs <= 1]
+    probs <- probs[!is.na(probs)]
 
     if (length(probs) == 0) {
       p <- plot_ly() %>%
@@ -2602,9 +2673,23 @@ server <- function(input, output, session) {
       return(apply_plotly_config(p, is_mobile))
     }
 
-    # Calculate statistics for annotation
+    # Calculate statistics and range for annotation
     mean_prob <- mean(probs)
     median_prob <- median(probs)
+    min_prob <- min(probs)
+    max_prob <- max(probs)
+
+    # Get current threshold from filter
+    threshold <- if (!is.null(input$min_mechanism_prob)) input$min_mechanism_prob else min_prob
+
+    # Check if threshold is actually active (above minimum, with small tolerance for floating point)
+    threshold_active <- (threshold - min_prob) > 0.001
+
+    # Calculate counts above/below threshold
+    total_count <- length(probs)
+    above_threshold <- sum(probs >= threshold)
+    below_threshold <- sum(probs < threshold)
+    pct_above <- (above_threshold / total_count) * 100
 
     # Create histogram
     p <- plot_ly(
@@ -2616,11 +2701,40 @@ server <- function(input, output, session) {
         line = list(color = 'white', width = 1)
       ),
       hovertemplate = "Probability: %{x:.2f}<br>Count: %{y}<extra></extra>"
-    ) %>%
+    )
+
+    # Add vertical line for threshold if active
+    if (threshold_active) {
+      p <- p %>%
+        add_trace(
+          x = c(threshold, threshold),
+          y = c(0, max(hist(probs, breaks = 20, plot = FALSE)$counts) * 1.1),
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = '#e63946', width = 3, dash = 'dash'),
+          name = sprintf("Threshold: %.2f", threshold),
+          hovertemplate = sprintf("Threshold: %.2f<extra></extra>", threshold),
+          showlegend = FALSE
+        )
+    }
+
+    # Build annotation text
+    if (threshold_active) {
+      anno_text <- sprintf(
+        "Mean: %.3f | Median: %.3f<br>Threshold: %.2f<br>≥ Threshold: %s (%s%%)",
+        mean_prob, median_prob, threshold,
+        format(above_threshold, big.mark = ","),
+        format(round(pct_above, 1), nsmall = 1)
+      )
+    } else {
+      anno_text <- sprintf("Mean: %.3f<br>Median: %.3f", mean_prob, median_prob)
+    }
+
+    p <- p %>%
       layout(
         xaxis = list(
           title = if (is_mobile) "Probability" else "Mechanism Probability",
-          range = c(0, 1),
+          range = c(min_prob - 0.01, max_prob + 0.01),  # Add small padding
           tickfont = list(size = if (is_mobile) 10 else 12)
         ),
         yaxis = list(
@@ -2640,15 +2754,15 @@ server <- function(input, output, session) {
             y = 0.98,
             xref = "paper",
             yref = "paper",
-            text = sprintf("Mean: %.3f<br>Median: %.3f", mean_prob, median_prob),
+            text = anno_text,
             showarrow = FALSE,
             xanchor = "right",
             yanchor = "top",
-            bgcolor = "rgba(255, 255, 255, 0.8)",
-            bordercolor = "#d97742",
-            borderwidth = 1,
+            bgcolor = "rgba(255, 255, 255, 0.9)",
+            bordercolor = if (threshold_active) "#e63946" else "#d97742",
+            borderwidth = if (threshold_active) 2 else 1,
             borderpad = 4,
-            font = list(size = if (is_mobile) 10 else 11)
+            font = list(size = if (is_mobile) 9 else 10)
           )
         )
       )
