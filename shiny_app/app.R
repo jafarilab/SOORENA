@@ -748,7 +748,8 @@ ui <- navbarPage(
             #stat_type_plot,
             #stat_year_plot,
             #stat_journal_plot,
-            #stat_probability_plot {
+            #stat_probability_plot,
+            #stat_type_confidence_plot {
               height: 260px !important;
             }
             .modebar {
@@ -1041,14 +1042,22 @@ ui <- navbarPage(
             withSpinner(plotlyOutput("stat_journal_plot", height = "320px"), type = 6, color = "#2c3e50")
           )
         ),
-        div(class = "stats-grid stats-grid--one",
+        div(class = "stats-grid stats-grid--two",
           div(class = "stat-card stat-card--wide",
             div(class = "stat-card__header",
               h4("Mechanism Probability Distribution", class = "stat-card__title"),
               span(class = "stat-card__meta", "Stage 1 model confidence scores")
             ),
-            div(class = "chart-note", "Distribution of confidence scores (0-1) for autoregulatory mechanism detection. Use this to inform filtering thresholds."),
+            div(class = "chart-note", "Distribution of confidence scores for autoregulatory mechanism detection. Use this to inform filtering thresholds."),
             withSpinner(plotlyOutput("stat_probability_plot", height = "340px"), type = 6, color = "#2c3e50")
+          ),
+          div(class = "stat-card stat-card--wide",
+            div(class = "stat-card__header",
+              h4("Type Confidence Distribution", class = "stat-card__title"),
+              span(class = "stat-card__meta", "Stage 2 model confidence scores")
+            ),
+            div(class = "chart-note", "Distribution of confidence scores for mechanism type classification. Use this to inform filtering thresholds."),
+            withSpinner(plotlyOutput("stat_type_confidence_plot", height = "340px"), type = 6, color = "#2c3e50")
           )
         )
       ),
@@ -2735,6 +2744,154 @@ server <- function(input, output, session) {
         xaxis = list(
           title = if (is_mobile) "Probability" else "Mechanism Probability",
           range = c(min_prob - 0.01, max_prob + 0.01),  # Add small padding
+          tickfont = list(size = if (is_mobile) 10 else 12)
+        ),
+        yaxis = list(
+          title = if (is_mobile) "Count" else "Number of Predictions",
+          tickfont = list(size = if (is_mobile) 10 else 12)
+        ),
+        margin = list(
+          l = if (is_mobile) 40 else 60,
+          r = if (is_mobile) 20 else 40,
+          t = if (is_mobile) 30 else 40,
+          b = if (is_mobile) 40 else 50
+        ),
+        bargap = 0.05,
+        annotations = list(
+          list(
+            x = 0.98,
+            y = 0.98,
+            xref = "paper",
+            yref = "paper",
+            text = anno_text,
+            showarrow = FALSE,
+            xanchor = "right",
+            yanchor = "top",
+            bgcolor = "rgba(255, 255, 255, 0.9)",
+            bordercolor = if (threshold_active) "#e63946" else "#d97742",
+            borderwidth = if (threshold_active) 2 else 1,
+            borderpad = 4,
+            font = list(size = if (is_mobile) 9 else 10)
+          )
+        )
+      )
+
+    apply_plotly_config(p, is_mobile)
+  })
+
+  output$stat_type_confidence_plot <- renderPlotly({
+    is_mobile <- is_mobile_output("stat_type_confidence_plot")
+    filters <- build_filter_query()
+
+    # Query to get all Type_Confidence values
+    query <- paste(
+      "SELECT Type_Confidence",
+      filters$where,
+      "AND Type_Confidence IS NOT NULL"
+    )
+
+    res <- if (length(filters$params) > 0) {
+      dbGetQuery(conn, query, params = filters$params)
+    } else {
+      dbGetQuery(conn, query)
+    }
+
+    if (nrow(res) == 0 || all(is.na(res$Type_Confidence))) {
+      p <- plot_ly() %>%
+        layout(
+          annotations = list(
+            text = "No confidence data available",
+            showarrow = FALSE,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5
+          )
+        )
+      return(apply_plotly_config(p, is_mobile))
+    }
+
+    # Create bins for histogram using actual data range
+    confs <- res$Type_Confidence
+    confs <- confs[!is.na(confs)]
+
+    if (length(confs) == 0) {
+      p <- plot_ly() %>%
+        layout(
+          annotations = list(
+            text = "No valid confidence data",
+            showarrow = FALSE,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5
+          )
+        )
+      return(apply_plotly_config(p, is_mobile))
+    }
+
+    # Calculate statistics and range for annotation
+    mean_conf <- mean(confs)
+    median_conf <- median(confs)
+    min_conf <- min(confs)
+    max_conf <- max(confs)
+
+    # Get current threshold from filter
+    threshold <- if (!is.null(input$min_type_conf)) input$min_type_conf else min_conf
+
+    # Check if threshold is actually active (above minimum, with small tolerance for floating point)
+    threshold_active <- (threshold - min_conf) > 0.001
+
+    # Calculate counts above/below threshold
+    total_count <- length(confs)
+    above_threshold <- sum(confs >= threshold)
+    below_threshold <- sum(confs < threshold)
+    pct_above <- (above_threshold / total_count) * 100
+
+    # Create histogram
+    p <- plot_ly(
+      x = confs,
+      type = 'histogram',
+      nbinsx = 20,
+      marker = list(
+        color = '#d97742',
+        line = list(color = 'white', width = 1)
+      ),
+      hovertemplate = "Confidence: %{x:.2f}<br>Count: %{y}<extra></extra>"
+    )
+
+    # Add vertical line for threshold if active
+    if (threshold_active) {
+      p <- p %>%
+        add_trace(
+          x = c(threshold, threshold),
+          y = c(0, max(hist(confs, breaks = 20, plot = FALSE)$counts) * 1.1),
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = '#e63946', width = 3, dash = 'dash'),
+          name = sprintf("Threshold: %.2f", threshold),
+          hovertemplate = sprintf("Threshold: %.2f<extra></extra>", threshold),
+          showlegend = FALSE
+        )
+    }
+
+    # Build annotation text
+    if (threshold_active) {
+      anno_text <- sprintf(
+        "Mean: %.3f | Median: %.3f<br>Threshold: %.2f<br>≥ Threshold: %s (%s%%)",
+        mean_conf, median_conf, threshold,
+        format(above_threshold, big.mark = ","),
+        format(round(pct_above, 1), nsmall = 1)
+      )
+    } else {
+      anno_text <- sprintf("Mean: %.3f<br>Median: %.3f", mean_conf, median_conf)
+    }
+
+    p <- p %>%
+      layout(
+        xaxis = list(
+          title = if (is_mobile) "Confidence" else "Type Confidence",
+          range = c(min_conf - 0.01, max_conf + 0.01),  # Add small padding
           tickfont = list(size = if (is_mobile) 10 else 12)
         ),
         yaxis = list(
