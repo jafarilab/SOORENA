@@ -60,7 +60,7 @@ def map_mechanism_to_type(mechanism, effect=None, db_type=None):
 
     # Cleavage/proteolysis
     if 'cleavage' in mechanism_lower or 'proteolysis' in mechanism_lower:
-        return 'Autolysis'
+        return 'Autocatalytic'
 
     # Catalytic
     if 'catalytic' in mechanism_lower or 'catalysis' in mechanism_lower:
@@ -301,21 +301,23 @@ def main():
         else:
             return '±'
 
-    # Clean up dashes and empty values in Autoregulatory Type
-    def clean_autoregulatory_type(raw_type):
+    # Clean up and map mechanism types to SOORENA ontology
+    def process_autoregulatory_type(raw_type):
         if pd.isna(raw_type):
             return 'Unknown'
         raw_str = str(raw_type).strip()
         if raw_str == '-' or raw_str == '':
             return 'Unknown'
-        return raw_str
+        # Map external mechanism to SOORENA ontology
+        mapped_type = map_mechanism_to_type(raw_str, effect=None, db_type=None)
+        return mapped_type if mapped_type else raw_str
 
     # Process and rename columns to match predictions format
     external_combined = pd.DataFrame({
         'PMID': external_df['PMID'].astype(str),
         'Source': external_df['Source'],
         'Gene_Name': external_df['Gene Name'],
-        'Autoregulatory Type': external_df['Autoregulatory Type'].apply(clean_autoregulatory_type),
+        'Autoregulatory Type': external_df['Autoregulatory Type'].apply(process_autoregulatory_type),
         'Polarity': external_df['Term Probability'].apply(map_term_probability_to_polarity),
         'Has Mechanism': 'Yes',
         'Mechanism Probability': float(1.0),

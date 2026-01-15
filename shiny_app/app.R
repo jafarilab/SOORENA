@@ -1204,6 +1204,9 @@ ui <- navbarPage(
                   div(style = "font-weight: 600; color: #1a2332; margin-bottom: 6px; font-size: 15px;", "Protein self-modification (post-translational)"),
                   div(style = "margin-left: 15px; margin-top: 8px;",
                     div(tags$a(href = '#autophosphorylation', class = 'tree-link', style = "font-size: 14px;", "→ Autophosphorylation (+)")),
+                    div(tags$a(href = '#autodephosphorylation', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autodephosphorylation (–)")),
+                    div(tags$a(href = '#autoacetylation', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoacetylation (+)")),
+                    div(tags$a(href = '#autodemethylation', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autodemethylation (±)")),
                     div(tags$a(href = '#autoubiquitination', class = 'tree-link', style = "font-size: 14px; margin-top: 4px; display: block;", "→ Autoubiquitination (–)"))
                   )
                 )
@@ -1301,10 +1304,85 @@ ui <- navbarPage(
               )
           ),
 
-          # 3. Autoubiquitination
+          # 3. Autodephosphorylation
+          div(id = "autodephosphorylation", class = "mechanism-box",
+              style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("3. Autodephosphorylation (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              p(style = "color: #555; margin-bottom: 15px;",
+                "The process by which a protein removes phosphate groups from itself, typically through intrinsic phosphatase activity or conformational changes that reverse autophosphorylation."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
+                tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
+                  tags$li(tags$b("is-a:"), " protein self-modification event"),
+                  tags$li(tags$b("part-of:"), " post-translational regulation"),
+                  tags$li(tags$b("regulates:"), " phosphatase activity and deactivation"),
+                  tags$li(tags$b("has-input:"), " phosphorylated protein"),
+                  tags$li(tags$b("has-output:"), " dephosphorylated protein + Pi"),
+                  tags$li(tags$b("related-to:"), " autophosphorylation (reverse process)")
+                )
+              ),
+
+              p(tags$b("Key References:"), style = "color: #2c3e50; margin-top: 15px;"),
+              tags$ul(style = "margin: 5px 0; padding-left: 20px; color: #666; font-size: 14px;",
+                tags$li("Related to intrinsic phosphatase activity in dual-function kinases")
+              )
+          ),
+
+          # 4. Autoacetylation
+          div(id = "autoacetylation", class = "mechanism-box",
+              style = "margin: 30px 0; padding: 25px; background: #f0f2f5; border-radius: 8px; border-left: 5px solid #1a2332; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("4. Autoacetylation (+)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
+              p(style = "color: #555; margin-bottom: 15px;",
+                "The process where an acetyltransferase acetylates itself, adding acetyl groups to its own lysine residues, often affecting protein activity or stability."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
+                tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
+                  tags$li(tags$b("is-a:"), " protein self-modification event"),
+                  tags$li(tags$b("part-of:"), " post-translational regulation"),
+                  tags$li(tags$b("regulates:"), " acetyltransferase activity and protein function"),
+                  tags$li(tags$b("has-input:"), " acetyltransferase + acetyl-CoA"),
+                  tags$li(tags$b("has-output:"), " acetylated protein + CoA"),
+                  tags$li(tags$b("related-to:"), " histone modification, lysine acetylation")
+                )
+              ),
+
+              p(tags$b("Key References:"), style = "color: #2c3e50; margin-top: 15px;"),
+              tags$ul(style = "margin: 5px 0; padding-left: 20px; color: #666; font-size: 14px;",
+                tags$li("Related to intrinsic acetyltransferase activity")
+              )
+          ),
+
+          # 5. Autodemethylation
+          div(id = "autodemethylation", class = "mechanism-box",
+              style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
+              h4("5. Autodemethylation (±)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              p(style = "color: #555; margin-bottom: 15px;",
+                "The process by which a protein removes methyl groups from itself through intrinsic demethylase activity, reversing the effects of methylation."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
+                tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
+                  tags$li(tags$b("is-a:"), " protein self-modification event"),
+                  tags$li(tags$b("part-of:"), " post-translational regulation"),
+                  tags$li(tags$b("regulates:"), " demethylase activity and epigenetic state"),
+                  tags$li(tags$b("has-input:"), " methylated protein"),
+                  tags$li(tags$b("has-output:"), " demethylated protein"),
+                  tags$li(tags$b("related-to:"), " protein methylation, epigenetic regulation")
+                )
+              ),
+
+              p(tags$b("Key References:"), style = "color: #2c3e50; margin-top: 15px;"),
+              tags$ul(style = "margin: 5px 0; padding-left: 20px; color: #666; font-size: 14px;",
+                tags$li("Related to intrinsic demethylase activity")
+              )
+          ),
+
+          # 6. Autoubiquitination
           div(id = "autoubiquitination", class = "mechanism-box",
               style = "margin: 30px 0; padding: 25px; background: #fef5f0; border-radius: 8px; border-left: 5px solid #d97742; box-shadow: 0 2px 4px rgba(0,0,0,0.08);",
-              h4("3. Autoubiquitination (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
+              h4("6. Autoubiquitination (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "An E3 ubiquitin ligase attaches ubiquitin to itself, altering its stability, proteasomal targeting, and signaling functions depending on chain type and site."),
 
@@ -2026,7 +2104,25 @@ server <- function(input, output, session) {
 
   # Show Full text - query database by AC to avoid HTML attribute length limits
     observeEvent(input$show_full_text, {
-      req(input$show_full_text$row_id, input$show_full_text$field)
+      req(input$show_full_text$field)
+
+      field_display <- input$show_full_text$field
+
+      # Special handling for Autoregulatory Type with pre-rendered ontology text
+      if (field_display == "Autoregulatory Type" && !is.null(input$show_full_text$text) && input$show_full_text$text != "") {
+        showModal(modalDialog(
+          title = "Ontology Details",
+          HTML(paste0("<div style='font-family: sans-serif; line-height: 1.6;'>",
+                      input$show_full_text$text, "</div>")),
+          easyClose = TRUE,
+          footer = modalButton("Close"),
+          size = "l"
+        ))
+        return()
+      }
+
+      # Regular handling for other fields that need database lookup
+      req(input$show_full_text$row_id)
 
       # Map display field names to database column names
       field_map <- c(
@@ -2042,7 +2138,6 @@ server <- function(input, output, session) {
         "UniProt AC" = "UniProtKB_accessions"
       )
 
-      field_display <- input$show_full_text$field
       field_db <- field_map[[field_display]]
 
       if (is.null(field_db)) {
@@ -3237,7 +3332,8 @@ server <- function(input, output, session) {
 	      table.on('click', '.view-btn', function() {
 	        var row_id = $(this).data('row-id');
 	        var field = $(this).data('field');
-	        Shiny.setInputValue('show_full_text', { field: field, row_id: row_id }, {priority: 'event'});
+	        var text = $(this).data('text');
+	        Shiny.setInputValue('show_full_text', { field: field, row_id: row_id, text: text }, {priority: 'event'});
 	      });
 	    ")
 	  ) %>%
@@ -3248,7 +3344,7 @@ server <- function(input, output, session) {
 
   # Patch Notes Table Data
   patch_notes_data <- data.frame(
-    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11", "0.0.12", "0.0.13"),
+    Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11", "0.0.12", "0.0.13", "0.0.14"),
     Description = c(
       paste(
         "<ul>",
@@ -3369,9 +3465,17 @@ server <- function(input, output, session) {
         "<li><strong>Label Clarity Improvement:</strong> Changed 'Data Source' filter label to 'Source of Autoregulation Data' for better clarity and specificity</li>",
         "<li><strong>Probability Precision:</strong> Rounded Mechanism Probability and Type Confidence values to 3 decimal places (e.g., 0.644 instead of 0.6438683271408081) for improved readability</li>",
         "</ul>"
+      ),
+      paste(
+        "<ul>",
+        "<li><strong>External Resource Deduplication Fix:</strong> Updated deduplication strategy to preserve species and mechanism variants. SIGNOR entries increased from 394 to 995 (+601 entries), OmniPath from 10 to 20 (+10 entries). Previous aggressive deduplication by PMID+Source+Gene incorrectly removed valid biological variants (e.g., human vs mouse, phosphorylation vs dephosphorylation)</li>",
+        "<li><strong>New Ontology Terms:</strong> Added three new autoregulatory mechanism types to ontology: Autodephosphorylation (9 entries from SIGNOR), Autoacetylation (1 entry from SIGNOR), and Autodemethylation (2 entries from SIGNOR) under 'Enzymatic Self-Modification' category</li>",
+        "<li><strong>External Mechanism Mapping:</strong> Implemented systematic mapping of external database mechanism types to SOORENA ontology (e.g., phosphorylation → Autophosphorylation, cleavage → Autocatalytic, transcriptional → Autoregulation) for consistent classification across all data sources</li>",
+        "<li><strong>Ontology Tab Updates:</strong> Added Autodephosphorylation (–), Autoacetylation (+), and Autodemethylation (±) to ontology hierarchy visualization with full ontology relations, definitions, synonyms, antonyms, and references</li>",
+        "</ul>"
       )
     ),
-    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08", "2025-12-27", "2026-01-12", "2026-01-13"),
+    Date = c("2025-05-29", "2025-06-01", "2025-06-04", "2025-06-19", "2025-06-24", "2025-07-02", "2025-07-10", "2025-11-04", "2025-12-07", "2025-12-08", "2025-12-27", "2026-01-12", "2026-01-13", "2026-01-15"),
     stringsAsFactors = FALSE
   )
 

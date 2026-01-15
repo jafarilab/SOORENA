@@ -117,17 +117,19 @@ External database mechanisms are **mapped** to SOORENA's ontology categories to 
 
 | External Mechanism | SOORENA Ontology Term | Count (approx.) | Sources |
 |-------------------|----------------------|-----------------|---------|
-| phosphorylation | Autophosphorylation | ~800 | SIGNOR, OmniPath |
-| dephosphorylation | Autodephosphorylation | ~20 | SIGNOR |
-| acetylation | Autoacetylation | ~5 | SIGNOR |
-| demethylation | Autodemethylation | ~3 | SIGNOR |
-| ubiquitination | Autoubiquitination | ~18 | SIGNOR |
-| sumoylation | Autosumoylation | ~5 | SIGNOR |
-| methylation | Automethylation | <5 | SIGNOR |
-| cleavage | Autocleavage | ~10 | SIGNOR |
-| transcriptional regulation | Transcriptional Autoregulation | ~69 | TRRUST, OmniPath |
-| binding | Protein Binding | ~62 | OmniPath |
-| (others) | Unknown | ~12 | Various |
+| phosphorylation | Autophosphorylation | 854 | SIGNOR, OmniPath |
+| dephosphorylation | Autodephosphorylation | 9 | SIGNOR |
+| acetylation | Autoacetylation | 1 | SIGNOR |
+| demethylation | Autodemethylation | 2 | SIGNOR |
+| ubiquitination | Autoubiquitination | 18 | SIGNOR |
+| polyubiquitination | Autoubiquitination | 11 | SIGNOR |
+| cleavage | Autocatalytic | 5 | SIGNOR |
+| transcriptional | Autoregulation | 69 | TRRUST, OmniPath |
+| transcriptional regulation | Autoregulation | 27 | TRRUST, OmniPath |
+| binding | Autoregulation | 62 | OmniPath |
+| post translational modification | Autoregulation | 2 | Various |
+| post_translational | Autoregulation | 3 | Various |
+| (others) | Unknown | 15 | Various |
 
 ### New Ontology Terms Added
 
@@ -164,11 +166,8 @@ When Term Probability is not specified, polarity is inferred from the mechanism 
 | Autoacetylation | + | Generally activating |
 | Autodemethylation | ± | Context-dependent (can be activating or inhibiting) |
 | Autoubiquitination | – | Generally leads to degradation |
-| Autosumoylation | ± | Context-dependent |
-| Automethylation | + | Generally activating |
-| Autocleavage | + | Generally activating (proteolytic activation) |
-| Transcriptional Autoregulation | ± | Can be positive or negative feedback |
-| Protein Binding | ± | Context-dependent |
+| Autocatalytic | + | Generally activating (proteolytic activation) |
+| Autoregulation | ± | Context-dependent (includes transcriptional regulation, binding, PTM) |
 | Unknown | ± | No information available |
 
 ---

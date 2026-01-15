@@ -238,6 +238,17 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
         "Gene Name": "Gene_Name"
     })
 
+    # Normalize Autoregulatory_Type to ensure consistent capitalization (capitalize first letter)
+    if "Autoregulatory_Type" in df_renamed.columns:
+        df_renamed["Autoregulatory_Type"] = (
+            df_renamed["Autoregulatory_Type"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.title()  # Capitalize first letter of each word
+            .replace("", None)  # Convert empty strings back to None
+        )
+
     print("  ✓ Columns normalized")
     print()
 
