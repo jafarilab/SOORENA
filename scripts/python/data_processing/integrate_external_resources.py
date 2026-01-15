@@ -38,13 +38,25 @@ def map_mechanism_to_type(mechanism, effect=None, db_type=None):
     effect_lower = str(effect).lower() if pd.notna(effect) else ""
     db_type_lower = str(db_type).lower() if pd.notna(db_type) else ""
 
-    # Phosphorylation-related (includes dephosphorylation)
-    if 'phosphorylation' in mechanism_lower or 'autophosphorylation' in mechanism_lower:
+    # Phosphorylation (exclude dephosphorylation)
+    if 'phosphorylation' in mechanism_lower and 'dephosphorylation' not in mechanism_lower:
         return 'Autophosphorylation'
+
+    # Dephosphorylation (NEW)
+    if 'dephosphorylation' in mechanism_lower:
+        return 'Autodephosphorylation'
 
     # Ubiquitination (includes polyubiquitination)
     if 'ubiquitination' in mechanism_lower:
         return 'Autoubiquitination'
+
+    # Acetylation (NEW - exclude deacetylation)
+    if 'acetylation' in mechanism_lower and 'deacetylation' not in mechanism_lower:
+        return 'Autoacetylation'
+
+    # Demethylation (NEW)
+    if 'demethylation' in mechanism_lower:
+        return 'Autodemethylation'
 
     # Cleavage/proteolysis
     if 'cleavage' in mechanism_lower or 'proteolysis' in mechanism_lower:
@@ -64,10 +76,6 @@ def map_mechanism_to_type(mechanism, effect=None, db_type=None):
 
     # Post-translational modification (general)
     if 'post' in mechanism_lower and 'translational' in mechanism_lower:
-        return 'Autoregulation'
-
-    # Acetylation/methylation/demethylation
-    if 'acetylation' in mechanism_lower or 'methylation' in mechanism_lower:
         return 'Autoregulation'
 
     # Transcriptional regulation from effect (TRRUST)

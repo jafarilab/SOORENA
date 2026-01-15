@@ -100,6 +100,24 @@ ontology_info <- list(
     Synonym = "self-regulation, autonomous regulation, homeostatic control",
     Antonym = "heteroregulation, external regulation",
     Related = "homeostasis, feedback control"
+  ),
+  Autodephosphorylation = list(
+    Definition = "The process by which a protein removes phosphate groups from itself, typically through intrinsic phosphatase activity or conformational changes that reverse autophosphorylation.",
+    Synonym = "self-dephosphorylation, autophosphatase activity, intrinsic phosphatase",
+    Antonym = "autophosphorylation, heterophosphatase",
+    Related = "autophosphorylation, phosphatase activity"
+  ),
+  Autoacetylation = list(
+    Definition = "The process where an acetyltransferase acetylates itself, adding acetyl groups to its own lysine residues, often affecting protein activity or stability.",
+    Synonym = "self-acetylation, cis-acetylation, intrinsic acetyltransferase activity",
+    Antonym = "deacetylation, heteroacetylation",
+    Related = "histone modification, lysine acetylation, protein acetylation"
+  ),
+  Autodemethylation = list(
+    Definition = "The process by which a protein removes methyl groups from itself through intrinsic demethylase activity, reversing the effects of methylation.",
+    Synonym = "self-demethylation, intrinsic demethylase activity",
+    Antonym = "automethylation, heteromethylation",
+    Related = "protein methylation, demethylase activity, epigenetic regulation"
   )
 )
 
@@ -115,6 +133,9 @@ ontology_key_map <- c(
 polarity_symbol_map <- c(
   Autocatalysis = "+",
   Autophosphorylation = "+",
+  Autodephosphorylation = "–",
+  Autoacetylation = "+",
+  Autodemethylation = "±",
   Autoubiquitination = "–",
   Autoregulation = "±",
   Autoinhibition = "–",
@@ -130,7 +151,7 @@ get_polarity_symbol <- function(key) {
 
 # Ontology path helper for display
 get_ontology_path <- function(key) {
-  enzymatic <- c("Autokinase","Autophosphorylation","Autoubiquitination","Autolysis","Autocatalysis")
+  enzymatic <- c("Autokinase","Autophosphorylation","Autodephosphorylation","Autoacetylation","Autodemethylation","Autoubiquitination","Autolysis","Autocatalysis")
   expression <- c("Autoactivation","Autoinhibition","Autoinduction","Autofeedback","Autoregulation")
   if (key %in% enzymatic)   return(paste("Autoregulatory Mechanisms (Root) → Enzymatic Self-Modification →", key))
   if (key %in% expression)  return(paste("Autoregulatory Mechanisms (Root) → Expression Control →", key))

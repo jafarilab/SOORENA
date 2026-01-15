@@ -25,7 +25,7 @@ SOORENA predictions are enhanced with curated self-loop/autoregulation data from
 
 **Source:** https://omnipathdb.org/
 
-**Entries in SOORENA:** 10 self-loops
+**Entries in SOORENA:** ~20 self-loops
 
 ---
 
@@ -35,7 +35,7 @@ SOORENA predictions are enhanced with curated self-loop/autoregulation data from
 
 **Source:** https://signor.uniroma2.it/
 
-**Entries in SOORENA:** 394 self-loops (phosphorylation, ubiquitination, etc.)
+**Entries in SOORENA:** ~995 self-loops (phosphorylation, ubiquitination, etc.)
 
 ---
 
@@ -101,7 +101,8 @@ python scripts/python/data_processing/integrate_external_resources.py \
 **What this does:**
 - Reads enriched CSV if available, otherwise falls back to raw XLSX
 - Renames "Non-UniProt" → "Predicted" for clarity
-- Removes duplicate external entries (same PMID + Source + Gene)
+- Removes only true duplicate entries (identical across all columns) to preserve species and mechanism variants
+- Maps external mechanism types to SOORENA ontology categories
 - Maps Term Probability (Activation/Repression/Unknown) → Polarity (+/–/±)
 - Cleans empty autoregulatory types → "Unknown"
 - Regenerates AC identifiers for all entries
@@ -110,31 +111,65 @@ python scripts/python/data_processing/integrate_external_resources.py \
 
 ## Mechanism Type Handling
 
-**Important:** External database mechanisms are **NOT mapped** to SOORENA's 7 categories. They are kept as-is:
+External database mechanisms are **mapped** to SOORENA's ontology categories to ensure consistent classification across all data sources. The mapping preserves biological specificity while integrating with SOORENA's hierarchical ontology structure.
 
-| Raw Mechanism | Count | Notes |
-|---------------|-------|-------|
-| phosphorylation | 1,658 | SIGNOR |
-| transcriptional | 69 | TRRUST, OmniPath |
-| binding | 62 | OmniPath |
-| dephosphorylation | 20 | SIGNOR |
-| ubiquitination | 18 | SIGNOR |
-| Unknown | 12 | Empty or "-" values |
-| (others) | <10 each | Various PTMs |
+### Mechanism Type Mappings
 
-This preserves the original specificity from external databases. Users can filter by these raw mechanism types in the Shiny app.
+| External Mechanism | SOORENA Ontology Term | Count (approx.) | Sources |
+|-------------------|----------------------|-----------------|---------|
+| phosphorylation | Autophosphorylation | ~800 | SIGNOR, OmniPath |
+| dephosphorylation | Autodephosphorylation | ~20 | SIGNOR |
+| acetylation | Autoacetylation | ~5 | SIGNOR |
+| demethylation | Autodemethylation | ~3 | SIGNOR |
+| ubiquitination | Autoubiquitination | ~18 | SIGNOR |
+| sumoylation | Autosumoylation | ~5 | SIGNOR |
+| methylation | Automethylation | <5 | SIGNOR |
+| cleavage | Autocleavage | ~10 | SIGNOR |
+| transcriptional regulation | Transcriptional Autoregulation | ~69 | TRRUST, OmniPath |
+| binding | Protein Binding | ~62 | OmniPath |
+| (others) | Unknown | ~12 | Various |
+
+### New Ontology Terms Added
+
+To accommodate external resource data, three new terms were added to the SOORENA ontology under "Enzymatic Self-Modification":
+
+1. **Autodephosphorylation** - The process by which a protein removes phosphate groups from itself (intrinsic phosphatase activity)
+2. **Autoacetylation** - The process by which a protein acetylates itself (intrinsic acetyltransferase activity)
+3. **Autodemethylation** - The process by which a protein demethylates itself (intrinsic demethylase activity)
+
+These complement existing ontology terms (Autophosphorylation, Autoubiquitination, etc.) to provide comprehensive coverage of post-translational modification mechanisms found in curated databases.
 
 ---
 
 ## Polarity Mapping
 
-Term Probability values are mapped to polarity symbols:
+### From Term Probability Field
+
+Term Probability values from external databases are mapped to polarity symbols:
 
 | Term Probability | Polarity Symbol | Meaning |
 |-----------------|----------------|---------|
 | Activation, up-regulates, stimulation | + | Positive/activating |
 | Repression, down-regulates, inhibition | – | Negative/inhibiting |
 | Unknown, empty | ± | Context-dependent |
+
+### By Mechanism Type
+
+When Term Probability is not specified, polarity is inferred from the mechanism type:
+
+| Mechanism Type | Polarity | Rationale |
+|---------------|----------|-----------|
+| Autophosphorylation | + | Generally activating |
+| Autodephosphorylation | – | Generally inhibiting (removes activating phosphates) |
+| Autoacetylation | + | Generally activating |
+| Autodemethylation | ± | Context-dependent (can be activating or inhibiting) |
+| Autoubiquitination | – | Generally leads to degradation |
+| Autosumoylation | ± | Context-dependent |
+| Automethylation | + | Generally activating |
+| Autocleavage | + | Generally activating (proteolytic activation) |
+| Transcriptional Autoregulation | ± | Can be positive or negative feedback |
+| Protein Binding | ± | Context-dependent |
+| Unknown | ± | No information available |
 
 ---
 
@@ -208,14 +243,20 @@ Current external resource entries in SOORENA:
 
 | Database | Total Self-Loops (Raw) | Deduplicated Entries | With Enriched Metadata |
 |----------|----------------------|---------------------|----------------------|
-| OmniPath | 68 | 10 | 0 (invalid PMIDs) |
-| SIGNOR | 1,813 | 394 | 394 (100%) |
+| OmniPath | 68 | ~20 | 0 (invalid PMIDs) |
+| SIGNOR | 1,813 | ~995 | ~995 (100%) |
 | TRRUST | 61 | 61 | 61 (100%) |
-| **Total** | **1,942** | **465** | **455 (97.8%)** |
+| **Total** | **1,942** | **~1,076** | **~1,056 (98.1%)** |
 
-**Deduplication:** Removes entries with same PMID + Source + Gene Name. 1,477 duplicates removed.
+**Deduplication Strategy (Updated):** The integration process now removes **only true duplicates** (entries identical across all columns). Previous versions used aggressive deduplication by PMID+Source+Gene, which incorrectly removed valid species variants (e.g., human vs mouse) and mechanism variants (e.g., phosphorylation vs dephosphorylation). The new approach preserves these important biological distinctions while eliminating redundant entries.
 
-**Overlap with predictions:** 318 external entries share PMIDs with existing SOORENA predictions. These are kept as separate rows to show both prediction and external validation.
+**Impact of Deduplication Change:**
+
+- SIGNOR: Increased from 394 to ~995 entries (+601 entries restored, representing species and mechanism variants)
+- OmniPath: Increased from 10 to ~20 entries (+10 entries restored)
+- TRRUST: Unchanged at 61 entries (no species/mechanism variants)
+
+**Overlap with predictions:** External entries may share PMIDs with existing SOORENA predictions. These are kept as separate rows to show both ML predictions and external database validation for the same publications.
 
 ---
 

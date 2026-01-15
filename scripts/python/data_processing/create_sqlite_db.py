@@ -96,6 +96,9 @@ def create_database(csv_file, db_file, keep_non_autoregulatory=False):
     polarity_map = {
         "autocatalytic": "+",
         "autophosphorylation": "+",
+        "autodephosphorylation": "–",
+        "autoacetylation": "+",
+        "autodemethylation": "±",
         "autoinducer": "+",
         "autoregulation": "±",
         "autoinhibition": "–",
