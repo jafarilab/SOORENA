@@ -1261,6 +1261,15 @@ ui <- navbarPage(
                 "A chemical reaction in which its product or intermediate accelerates the same reaction. Supports nonlinear self-reinforcement and chemical self-organization."),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-catalysis, autocatalysis, self-reinforcing reaction"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "heterocatalysis, enzyme-catalyzed"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "chemical oscillation, nonlinear dynamics")
+              ),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
                 tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
                   tags$li(tags$b("is-a:"), " chemical reaction"),
@@ -1284,6 +1293,15 @@ ui <- navbarPage(
               h4("2. Autophosphorylation (+)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "A protein kinase phosphorylates its own amino acid residues (cis or trans), tuning its conformation, catalytic activity, localization, and signaling dynamics."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-phosphorylation, cis-phosphorylation, intramolecular phosphorylation"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "dephosphorylation, heterophosphorylation"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "autokinase")
+              ),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
@@ -1312,6 +1330,15 @@ ui <- navbarPage(
                 "The process by which a protein removes phosphate groups from itself, typically through intrinsic phosphatase activity or conformational changes that reverse autophosphorylation."),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-dephosphorylation, autophosphatase activity, intrinsic phosphatase"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "autophosphorylation, heterophosphatase"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "autophosphorylation, phosphatase activity")
+              ),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
                 tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
                   tags$li(tags$b("is-a:"), " protein self-modification event"),
@@ -1335,6 +1362,15 @@ ui <- navbarPage(
               h4("4. Autoacetylation (+)", style = "color: #1a2332; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "The process where an acetyltransferase acetylates itself, adding acetyl groups to its own lysine residues, often affecting protein activity or stability."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-acetylation, cis-acetylation, intrinsic acetyltransferase activity"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "deacetylation, heteroacetylation"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "histone modification, lysine acetylation, protein acetylation")
+              ),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
@@ -1362,6 +1398,15 @@ ui <- navbarPage(
                 "The process by which a protein removes methyl groups from itself through intrinsic demethylase activity, reversing the effects of methylation."),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-demethylation, intrinsic demethylase activity"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "automethylation, heteromethylation"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "protein methylation, demethylase activity, epigenetic regulation")
+              ),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
                 tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
                   tags$li(tags$b("is-a:"), " protein self-modification event"),
@@ -1385,6 +1430,15 @@ ui <- navbarPage(
               h4("6. Autoubiquitination (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "An E3 ubiquitin ligase attaches ubiquitin to itself, altering its stability, proteasomal targeting, and signaling functions depending on chain type and site."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-ubiquitination, cis-ubiquitination, auto-ubiquitylation"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "deubiquitination, heteroubiquitination"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "protein degradation")
+              ),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
@@ -1413,6 +1467,15 @@ ui <- navbarPage(
                 "A gene product regulates transcription of the same gene through positive or negative feedback, tuning gene expression dynamics, noise, and homeostasis."),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-regulation, autonomous regulation, homeostatic control"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "heteroregulation, external regulation"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "homeostasis, feedback control")
+              ),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
                 tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
                   tags$li(tags$b("is-a:"), " gene regulatory feedback motif"),
@@ -1437,6 +1500,15 @@ ui <- navbarPage(
               h4("5. Autoinducer Molecules in Quorum Sensing (+)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Small diffusible molecules synthesized and detected by bacteria. Their accumulation with increasing cell density triggers coordinated community-wide transcriptional changes."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-induction, auto-stimulation, positive feedback induction"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "autorepression, negative feedback"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "autoactivation, positive feedback")
+              ),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
@@ -1465,6 +1537,15 @@ ui <- navbarPage(
                 "Intrinsic structural interactions prevent inappropriate activation of a protein, maintaining it in an inactive state until relieved by ligand binding, structural rearrangement, or post-translational modification."),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-inhibition, negative autoregulation, self-repression"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "autoactivation, positive autoregulation"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "negative feedback, autorepression")
+              ),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
                 tags$ul(style = "margin: 0; padding-left: 20px; color: #555;",
                   tags$li(tags$b("is-a:"), " intrinsic negative regulatory process"),
@@ -1489,6 +1570,15 @@ ui <- navbarPage(
               h4("7. Autolysis (–)", style = "color: #d97742; margin-bottom: 15px; font-weight: 600;"),
               p(style = "color: #555; margin-bottom: 15px;",
                 "Self-degradation mediated by endogenous lytic enzymes, occurring during programmed cell death, post-mortem breakdown, or engineered microbial lysis systems."),
+
+              div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
+                h5("Synonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "self-cleavage, autocatalytic cleavage, self-proteolysis"),
+                h5("Antonyms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0 0 12px 0; padding-left: 10px; color: #666; font-size: 14px;", "heterolysis, trans-cleavage"),
+                h5("Related Terms", style = "color: #2c3e50; font-size: 14px; margin-bottom: 8px;"),
+                p(style = "margin: 0; padding-left: 10px; color: #666; font-size: 14px;", "autocatalysis")
+              ),
 
               div(style = "background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #f0f0f0;",
                 h5("Core Ontology Relations", style = "color: #2c3e50; font-size: 14px; margin-bottom: 10px;"),
