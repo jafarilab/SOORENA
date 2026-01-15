@@ -333,13 +333,10 @@ def main():
 
     print(f"  Total external entries: {len(external_combined):,}")
 
-    # Remove duplicates within external data (same PMID + Source + Gene)
+    # Remove completely identical rows only (keep meaningful variants like different species/mechanisms)
     before_dedup = len(external_combined)
-    external_combined = external_combined.drop_duplicates(
-        subset=['PMID', 'Source', 'Gene_Name'],
-        keep='first'
-    )
-    print(f"  After deduplication: {len(external_combined):,} (removed {before_dedup - len(external_combined):,} duplicates)")
+    external_combined = external_combined.drop_duplicates(keep='first')
+    print(f"  After removing true duplicates: {len(external_combined):,} (removed {before_dedup - len(external_combined):,} identical copies)")
 
     # Check for PMIDs already in predictions
     existing_pmids = set(predictions_df['PMID'].astype(str))
