@@ -1,8 +1,43 @@
-# SOORENA Deployment Guide (DigitalOcean)
+# SOORENA Deployment Guide
 
-This directory contains deployment scripts and documentation for the SOORENA Shiny application on DigitalOcean.
+This directory contains deployment scripts and documentation for the SOORENA Shiny application.
 
 ---
+
+## Deployment Options
+
+Choose the deployment guide that matches your target environment:
+
+### 1. University of Helsinki Institutional Server
+
+**→ See [HELSINKI_DEPLOYMENT.md](HELSINKI_DEPLOYMENT.md)**
+
+Complete step-by-step guide for deploying to University of Helsinki server with:
+- Ubuntu 24.04 LTS
+- Nginx reverse proxy with SSL/HTTPS
+- SSL certificates provided by Helsinki IT
+- Comprehensive beginner-friendly instructions
+- Estimated deployment time: 45-60 minutes
+
+**Files for Helsinki deployment:**
+- [HELSINKI_DEPLOYMENT.md](HELSINKI_DEPLOYMENT.md) - Main deployment guide
+- [helsinki_server_setup.sh](helsinki_server_setup.sh) - Automated server setup script
+- [helsinki_deploy_app.sh](helsinki_deploy_app.sh) - Application deployment script
+- [configs/nginx_helsinki.conf](configs/nginx_helsinki.conf) - Nginx configuration
+- [configs/shiny-server_helsinki.conf](configs/shiny-server_helsinki.conf) - Shiny Server configuration
+
+### 2. DigitalOcean Cloud Deployment
+
+**→ Continue reading this document**
+
+Instructions for deploying to DigitalOcean cloud servers with:
+- GitHub Actions CI/CD automation
+- Manual deployment scripts
+- Support for existing or new droplets
+
+---
+
+## DigitalOcean Deployment
 
 ## Recommended: CI/CD (GitHub Actions)
 
