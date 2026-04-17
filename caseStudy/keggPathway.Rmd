@@ -1,0 +1,113 @@
+---
+title: "caseStudy"
+output: html_document
+date: "2026-04-17"
+---
+
+# Install/load required packages
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install(c("KEGGREST", "igraph"))
+
+library(KEGGREST)
+library(igraph)
+```
+
+# Choose KEGG pathway (JAK–STAT signaling)
+```{r}
+pathway_id <- "hsa04630"
+```
+
+# Get pathway genes (protein-coding gene IDs)
+```{r}
+kegg_path <- keggGet(pathway_id)[[1]]
+
+genes <- kegg_path$GENE
+
+# KEGG returns alternating structure:
+# [EntrezID, gene name, EntrezID, gene name, ...]
+entrez_ids <- genes[seq(1, length(genes), 2)]
+gene_names <- genes[seq(2, length(genes), 2)]
+
+gene_df <- data.frame(
+  entrez = entrez_ids,
+  name = gene_names
+)
+
+head(gene_df)
+```
+# Extract pathway network edges (KGML parsing)
+
+KEGG stores interactions in KGML format.
+
+```{r}
+BiocManager::install("KEGGgraph")
+
+library(KEGGREST)
+library(KEGGgraph)
+
+pathway_id <- "hsa04630"
+
+# download KGML manually
+pathway_id <- "hsa04630"
+
+kgml_url <- paste0("https://rest.kegg.jp/get/", pathway_id, "/kgml")
+
+kgml_file <- tempfile(fileext = ".xml")
+
+download.file(kgml_url, kgml_file, method = "libcurl")
+```
+# parse KGML into graph
+```{r}
+library(KEGGgraph)
+
+g <- parseKGML2Graph(kgml_file, expandGenes = TRUE)
+```
+
+# Convert to igraph object
+```{r}
+g_igraph <- igraph.from.graphNEL(g)
+
+g_igraph
+
+edges <- as.data.frame(get.edgelist(g_igraph))
+colnames(edges) <- c("from", "to")
+
+head(edges)
+```
+
+```{r}
+nodes <- data.frame(
+  id = V(g_igraph)$name
+)
+
+head(nodes)
+nodes$kegg_id <- nodes$id
+
+gene_idx <- grepl("^hsa:", nodes$kegg_id)
+
+gene_ids <- gsub("hsa:", "", nodes$kegg_id[gene_idx])
+
+gene_info <- keggGet(paste0("hsa:", gene_ids))
+
+gene_symbols <- sapply(gene_info, function(x) {
+  if (!is.null(x$SYMBOL)) {
+    strsplit(x$SYMBOL, ", ")[[1]][1]
+  } else {
+    NA
+  }
+})
+
+
+nodes$symbol <- NA
+nodes$symbol[gene_idx] <- gene_symbols
+```
+
+```{r}
+V(g_igraph)$label <- nodes$symbol
+V(g_igraph)$label[is.na(V(g_igraph)$label)] <- ""
+plot(g_igraph, vertex.label = V(g_igraph)$label)
+```
+
