@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE gxl SYSTEM "http://gin.univ-mrs.fr/GINsim/GINML_2_1.dtd">
+<gxl xmlns:xlink="http://www.w3.org/1999/xlink">
+	<graph id="TCR40" class="regulatory" nodeorder="CD45 CD8 TCRlig TCRbind PAGCsk LCK Fyn cCbl TCRphos Rlk ZAP70 LAT Gads Itk IP3 Ca Calcin NFAT CRE AP1 NFkB CREB Rsk ERK Fos Jun MEK Raf Ras Grb2Sos Slp76 PLCg_b PLCg_a DAG PKCth RasGRP1 IkB IKK JNK SEK">
+<node id="ZAP70" name="ZAP70" maxvalue="1">
+  <parameter idActiveInteractions=" TCRphos:ZAP70 LCK:ZAP70" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="87" y="302" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="PLCg_b" name="PLCg(bind)" maxvalue="1">
+  <parameter idActiveInteractions=" LAT:PLCg_b" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="306" y="435" width="63" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="LAT" name="LATphosp" maxvalue="1">
+  <parameter idActiveInteractions=" ZAP70:LAT" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="68" y="401" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Fyn" name="Fyn" maxvalue="1">
+  <parameter idActiveInteractions=" CD45:Fyn LCK:Fyn" val="1"/>
+  <parameter idActiveInteractions=" CD45:Fyn TCRbind:Fyn" val="1"/>
+  <parameter idActiveInteractions=" CD45:Fyn LCK:Fyn TCRbind:Fyn" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="275" y="177" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Rsk" name="Rsk" maxvalue="1">
+  <parameter idActiveInteractions=" ERK:Rsk" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="52" y="715" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="PAGCsk" name="PAGCsk" maxvalue="1">
+  <parameter val="1"/>
+  <parameter idActiveInteractions=" Fyn:PAGCsk" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="115" y="108" width="59" height="25" backgroundColor="#ff9999" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="TCRbind" name="TCRbind" maxvalue="1">
+  <parameter idActiveInteractions=" TCRlig:TCRbind" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="192" y="76" width="61" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="CD8" name="CD8" maxvalue="1">
+  <parameter idActiveInteractions=" CD8:CD8" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="78" y="31" width="50" height="25" backgroundColor="#99ff99" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="JNK" name="JNK" maxvalue="1">
+  <parameter idActiveInteractions=" SEK:JNK" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="272" y="699" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="DAG" name="DAG" maxvalue="1">
+  <parameter idActiveInteractions=" PLCg_a:DAG" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="273" y="475" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="LCK" name="LCK" maxvalue="1">
+  <parameter idActiveInteractions=" CD8:LCK CD45:LCK" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="82" y="208" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="CRE" name="CRE" maxvalue="1">
+  <parameter idActiveInteractions=" CREB:CRE" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="50" y="831" width="50" height="25" backgroundColor="#cc99ff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="IKK" name="IKKbeta" maxvalue="1">
+  <parameter idActiveInteractions=" PKCth:IKK" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="345" y="646" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="MEK" name="MEK" maxvalue="1">
+  <parameter idActiveInteractions=" Raf:MEK" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="135" y="592" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Raf" name="Raf" maxvalue="1">
+  <parameter idActiveInteractions=" Ras:Raf" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="57" y="591" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="cCbl" name="cCbl" maxvalue="1">
+  <parameter idActiveInteractions=" ZAP70:cCbl" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="335" y="301" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Fos" name="Fos" maxvalue="1">
+  <parameter idActiveInteractions=" ERK:Fos" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="138" y="710" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="NFAT" name="NFAT" maxvalue="1">
+  <parameter idActiveInteractions=" Calcin:NFAT" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="438" y="831" width="50" height="25" backgroundColor="#cc99ff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="PLCg_a" name="PLCg(act)" maxvalue="1">
+  <parameter idActiveInteractions=" ZAP70:PLCg_a Slp76:PLCg_a PLCg_b:PLCg_a Itk:PLCg_a" val="1"/>
+  <parameter idActiveInteractions=" ZAP70:PLCg_a Slp76:PLCg_a PLCg_b:PLCg_a Rlk:PLCg_a" val="1"/>
+  <parameter idActiveInteractions=" ZAP70:PLCg_a Slp76:PLCg_a PLCg_b:PLCg_a Itk:PLCg_a Rlk:PLCg_a" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="416" y="469" width="73" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Rlk" name="Rlk" maxvalue="1">
+  <parameter idActiveInteractions=" LCK:Rlk" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="447" y="222" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Jun" name="Jun" maxvalue="1">
+  <parameter idActiveInteractions=" JNK:Jun" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="272" y="751" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="ERK" name="ERK" maxvalue="1">
+  <parameter idActiveInteractions=" MEK:ERK" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="136" y="645" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="SEK" name="SEK" maxvalue="1">
+  <parameter idActiveInteractions=" PKCth:SEK" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="273" y="637" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Calcin" name="Calcin" maxvalue="1">
+  <parameter idActiveInteractions=" Ca:Calcin" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="437" y="665" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="CREB" name="CREB" maxvalue="1">
+  <parameter idActiveInteractions=" Rsk:CREB" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="51" y="774" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="TCRlig" name="TCRlig" maxvalue="1">
+  <parameter idActiveInteractions=" TCRlig:TCRlig" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="195" y="29" width="50" height="25" backgroundColor="#99ff99" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="PKCth" name="PKCth" maxvalue="1">
+  <parameter idActiveInteractions=" DAG:PKCth" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="272" y="531" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Ras" name="Ras" maxvalue="1">
+  <parameter idActiveInteractions=" Grb2Sos:Ras RasGRP1:Ras" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="57" y="535" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="AP1" name="AP1" maxvalue="1">
+  <parameter idActiveInteractions=" Fos:AP1 Jun:AP1" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="140" y="833" width="50" height="25" backgroundColor="#cc99ff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="IP3" name="IP3" maxvalue="1">
+  <parameter idActiveInteractions=" PLCg_a:IP3" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="439" y="536" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="RasGRP1" name="RasGRP1" maxvalue="1">
+  <parameter idActiveInteractions=" DAG:RasGRP1 PKCth:RasGRP1" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="144" y="534" width="69" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Grb2Sos" name="Grb2Sos" maxvalue="1">
+  <parameter idActiveInteractions=" LAT:Grb2Sos" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="54" y="484" width="64" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Slp76" name="Slp76" maxvalue="1">
+  <parameter idActiveInteractions=" Gads:Slp76" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="242" y="402" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="CD45" name="CD45" maxvalue="1">
+  <parameter idActiveInteractions=" CD45:CD45" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="11" y="31" width="50" height="25" backgroundColor="#99ff99" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Ca" name="Ca+" maxvalue="1">
+  <parameter idActiveInteractions=" IP3:Ca" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="439" y="599" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="NFkB" name="NFkB" maxvalue="1">
+  <parameter val="1"/>
+
+			<nodevisualsetting>
+				<rect x="347" y="831" width="50" height="25" backgroundColor="#cc99ff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="TCRphos" name="TCRphos" maxvalue="1">
+  <parameter idActiveInteractions=" Fyn:TCRphos" val="1"/>
+  <parameter idActiveInteractions=" TCRbind:TCRphos LCK:TCRphos" val="1"/>
+  <parameter idActiveInteractions=" Fyn:TCRphos TCRbind:TCRphos" val="1"/>
+  <parameter idActiveInteractions=" Fyn:TCRphos LCK:TCRphos" val="1"/>
+  <parameter idActiveInteractions=" Fyn:TCRphos TCRbind:TCRphos LCK:TCRphos" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="203" y="261" width="59" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Gads" name="Gads" maxvalue="1">
+  <parameter idActiveInteractions=" LAT:Gads" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="145" y="402" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="Itk" name="Itk" maxvalue="1">
+  <parameter idActiveInteractions=" ZAP70:Itk Slp76:Itk" val="1"/>
+
+			<nodevisualsetting>
+				<rect x="242" y="355" width="50" height="25" backgroundColor="#99ccff" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+<node id="IkB" name="IkB" maxvalue="1">
+  <parameter val="1"/>
+
+			<nodevisualsetting>
+				<rect x="346" y="728" width="50" height="25" backgroundColor="#ff9999" foregroundColor="#000000"/>
+			</nodevisualsetting>
+</node>
+		<edge id="ZAP70:PLCg_a" from="ZAP70" to="PLCg_a" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="124,330 124,347 459,347 459,466" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="ZAP70:Itk" from="ZAP70" to="Itk" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="109,330 109,366 239,366" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="ZAP70:cCbl" from="ZAP70" to="cCbl" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="140,305 282,305 332,305" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="ZAP70:LAT" from="ZAP70" to="LAT" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="96,330 96,382 96,398" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="PLCg_b:PLCg_a" from="PLCg_b" to="PLCg_a" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="344,463 344,477 413,477" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="LAT:Gads" from="LAT" to="Gads" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="121,413 142,413" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="LAT:Grb2Sos" from="LAT" to="Grb2Sos" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="77,429 77,440 77,481" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="LAT:PLCg_b" from="LAT" to="PLCg_b" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="102,429 102,450 303,450" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Fyn:PAGCsk" from="Fyn" to="PAGCsk" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="272,178 172,136" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Fyn:TCRphos" from="Fyn" to="TCRphos" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="314,205 314,272 265,272" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Rsk:CREB" from="Rsk" to="CREB" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="76,743 76,771" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="PAGCsk:LCK" from="PAGCsk" to="LCK" minvalue="1" sign="negative">
+			<edgevisualsetting>
+				<polyline points="123,136 123,169 123,205" line_style="straight" line_color="#ff0000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="TCRbind:Fyn" from="TCRbind" to="Fyn" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="256,99 296,99 296,174" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="TCRbind:TCRphos" from="TCRbind" to="TCRphos" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="219,104 219,169 219,258" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="TCRbind:PAGCsk" from="TCRbind" to="PAGCsk" minvalue="1" sign="negative">
+			<edgevisualsetting>
+				<polyline points="189,82 146,82 146,105" line_style="straight" line_color="#ff0000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="CD8:LCK" from="CD8" to="LCK" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="92,59 92,103 92,205" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="CD8:CD8" from="CD8" to="CD8" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="93,31 100,11 106,11 113,31" line_style="curve" line_color="#000000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="JNK:Jun" from="JNK" to="Jun" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="297,727 297,748" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="DAG:PKCth" from="DAG" to="PKCth" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="297,503 297,528" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="DAG:RasGRP1" from="DAG" to="RasGRP1" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="270,487 182,487 182,531" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="LCK:Fyn" from="LCK" to="Fyn" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="135,220 287,220 287,205" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="LCK:Rlk" from="LCK" to="Rlk" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="135,230 336,230 444,230" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="LCK:TCRphos" from="LCK" to="TCRphos" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="116,236 116,267 200,267" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="LCK:ZAP70" from="LCK" to="ZAP70" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="96,236 96,267 96,299" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="IKK:IkB" from="IKK" to="IkB" minvalue="1" sign="negative">
+			<edgevisualsetting>
+				<polyline points="370,674 370,725" line_style="straight" line_color="#ff0000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="MEK:ERK" from="MEK" to="ERK" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="160,620 160,642" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Raf:MEK" from="Raf" to="MEK" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="110,603 132,603" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="cCbl:TCRbind" from="cCbl" to="TCRbind" minvalue="1" sign="negative">
+			<edgevisualsetting>
+				<polyline points="373,298 373,85 256,85" line_style="straight" line_color="#ff0000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="cCbl:ZAP70" from="cCbl" to="ZAP70" minvalue="1" sign="negative">
+			<edgevisualsetting>
+				<polyline points="332,320 296,320 140,320" line_style="straight" line_color="#ff0000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Fos:AP1" from="Fos" to="AP1" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="154,738 154,778 154,830" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="PLCg_a:DAG" from="PLCg_a" to="DAG" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="413,491 361,491 326,491" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="PLCg_a:IP3" from="PLCg_a" to="IP3" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="461,497 461,514 461,533" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Rlk:PLCg_a" from="Rlk" to="PLCg_a" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="480,250 480,376 480,466" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Jun:AP1" from="Jun" to="AP1" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="269,764 173,764 173,830" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="ERK:Fos" from="ERK" to="Fos" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="161,673 162,707" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="ERK:Rsk" from="ERK" to="Rsk" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="133,659 83,659 83,712" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="SEK:JNK" from="SEK" to="JNK" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="297,665 297,696" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Calcin:NFAT" from="Calcin" to="NFAT" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="462,693 462,828" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="CREB:CRE" from="CREB" to="CRE" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="75,802 75,828" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="TCRlig:TCRbind" from="TCRlig" to="TCRbind" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="220,57 221,73" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="TCRlig:TCRlig" from="TCRlig" to="TCRlig" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="210,29 217,9 223,9 230,29" line_style="curve" line_color="#000000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="PKCth:RasGRP1" from="PKCth" to="RasGRP1" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="269,544 227,544 216,544" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="PKCth:IKK" from="PKCth" to="IKK" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="325,544 370,544 370,643" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="PKCth:SEK" from="PKCth" to="SEK" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="297,559 297,634" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Ras:Raf" from="Ras" to="Raf" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="82,563 82,588" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="IP3:Ca" from="IP3" to="Ca" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="464,564 464,596" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="RasGRP1:Ras" from="RasGRP1" to="Ras" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="141,546 110,546" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Grb2Sos:Ras" from="Grb2Sos" to="Ras" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="78,512 78,539 78,539" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Slp76:PLCg_a" from="Slp76" to="PLCg_a" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="295,414 424,414 424,466" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Slp76:Itk" from="Slp76" to="Itk" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="267,399 267,383" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="CD45:Fyn" from="CD45" to="Fyn" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="48,59 48,190 272,190" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="CD45:LCK" from="CD45" to="LCK" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="31,59 31,219 79,219" line_style="straight" line_color="#33cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="CD45:CD45" from="CD45" to="CD45" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="26,31 33,11 39,11 46,31" line_style="curve" line_color="#000000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Ca:Calcin" from="Ca" to="Calcin" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="463,627 462,662" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="TCRphos:ZAP70" from="TCRphos" to="ZAP70" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="200,280 117,280 117,299" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Gads:Slp76" from="Gads" to="Slp76" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="198,414 239,414" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="Itk:PLCg_a" from="Itk" to="PLCg_a" minvalue="1" sign="positive">
+			<edgevisualsetting>
+				<polyline points="295,367 442,367 442,466" line_style="straight" line_color="#00cc00" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+		<edge id="IkB:NFkB" from="IkB" to="NFkB" minvalue="1" sign="negative">
+			<edgevisualsetting>
+				<polyline points="371,756 371,828" line_style="straight" line_color="#ff0000" line_width="2" routage="auto"/>
+			</edgevisualsetting>
+		</edge>
+	</graph>
+</gxl>

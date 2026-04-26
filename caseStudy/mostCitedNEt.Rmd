@@ -1,0 +1,107 @@
+---
+title: "mostCitedNet"
+output: html_document
+date: "2026-04-18"
+---
+
+```{r}
+# Install if needed
+if (!requireNamespace("BoolNet", quietly = TRUE)) {
+  install.packages("BoolNet")
+}
+library(BoolNet)
+
+# ---------------------------
+# EGFR Boolean network model
+# ---------------------------
+egfr_rules <- c(
+  "targets, factors",
+  "EGF, EGF",                     # input node (self-loop)
+  "EGFR, EGF",
+  "RAS, EGFR",
+  "RAF, RAS",
+  "MEK, RAF",
+  "ERK, MEK",
+  "PI3K, EGFR",
+  "AKT, PI3K",
+  "MTOR, AKT",
+  "PROLIFERATION, ERK | MTOR"
+)
+
+egfr_net <- loadNetwork(textConnection(egfr_rules))
+
+print(egfr_net)
+# Simulate dynamics
+(sim <- generateTimeSeries(
+  egfr_net,
+  numSeries = 1,
+  numMeasurements = 20
+))
+```
+
+
+```{r}
+library(reshape2)
+
+mat <- sim[[1]]
+df <- melt(mat)
+
+colnames(df) <- c("gene", "time", "state")
+
+ggplot(df, aes(x = time, y = gene, fill = factor(state))) +
+  geom_tile() +
+  scale_fill_manual(values = c("white", "red")) +
+  labs(
+    title = "EGFR Boolean State Dynamics",
+    x = "Time",
+    y = "Gene"
+  ) +
+  theme_minimal()
+```
+
+
+```{r}
+# Attractors (steady states)
+attr <- getAttractors(egfr_net)
+plotAttractors(attr)
+print(attr)
+
+# Perturbation: EGFR inhibition
+egfr_ko <- fixGenes(egfr_net, genes = "EGFR", values = 0)
+egfr_attr_ko <- getAttractors(egfr_ko)
+plotAttractors(egfr_attr_ko)
+
+```
+
+
+
+```{r}
+library(xml2)
+
+unzip("/Users/nvd448/Documents/SOORENA/caseStudy/TCRsig40.zginml",
+      exdir = "/Users/nvd448/Documents/SOORENA/caseStudy")
+doc <- read_xml("~/Documents/SOORENA/caseStudy/regulatoryGraph.ginml")
+
+# Extract nodes
+nodes <- xml_find_all(doc, ".//node")
+node_ids <- xml_attr(nodes, "id")
+
+# Extract edges
+edges <- xml_find_all(doc, ".//edge")
+from <- xml_attr(edges, "from")
+to <- xml_attr(edges, "to")
+
+data.frame(from, to)
+
+edges <- xml_find_all(doc, ".//edge")
+
+df <- data.frame(
+  from = xml_attr(edges, "from"),
+  to   = xml_attr(edges, "to")
+)
+
+g <- graph_from_data_frame(df)
+
+plot(g)
+```
+

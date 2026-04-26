@@ -1,0 +1,349 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+
+# ---------------------------
+# Helper functions
+# ---------------------------
+
+bin_to_str <- function(v) paste(v, collapse="")
+
+# Generate all states
+states <- lapply(0:7, function(i) as.integer(intToBits(i))[1:3])
+state_labels <- sapply(states, bin_to_str)
+
+# ---------------------------
+# NEW Boolean networks
+# ---------------------------
+
+# Model 1: rotation (no self-loop)
+net1 <- function(x) {
+  c(
+    x[3],
+    x[1],
+    x[2]
+  )
+}
+
+# Model 2: self-loop on x2
+net2 <- function(x) {
+  c(
+    x[3],
+    x[1] | x[2],
+    x[2]
+  )
+}
+
+# ---------------------------
+# Canonical cycle representation
+# (important for clean heatmap)
+# ---------------------------
+
+canonical_cycle <- function(cycle_states) {
+  strs <- apply(cycle_states, 1, bin_to_str)
+  
+  # remove duplicate last state if present
+  if (length(strs) > 1 && strs[1] == strs[length(strs)]) {
+    strs <- strs[-length(strs)]
+  }
+  
+  # generate all rotations
+  rotations <- sapply(seq_along(strs), function(i) {
+    paste(c(strs[i:length(strs)], strs[1:(i-1)]), collapse="→")
+  })
+  
+  # pick lexicographically smallest string
+  return(min(rotations))
+}
+
+# ---------------------------
+# Simulation until attractor
+# ---------------------------
+
+simulate_to_attractor <- function(net, init, max_steps=20) {
+  history <- matrix(NA, nrow=max_steps, ncol=3)
+  history[1,] <- init
+  
+  for (t in 2:max_steps) {
+    history[t,] <- net(history[t-1,])
+    
+    # FIXED POINT
+    if (all(history[t,] == history[t-1,])) {
+      return(bin_to_str(history[t,]))
+    }
+    
+    # CYCLE DETECTION
+    for (i in 1:(t-1)) {
+      if (all(history[t,] == history[i,])) {
+        cycle <- history[i:(t-1), , drop=FALSE]
+        return(canonical_cycle(cycle))
+      }
+    }
+  }
+  
+  return("NA")
+}
+
+# ---------------------------
+# Run models
+# ---------------------------
+
+run_model <- function(net, model_name) {
+  data.frame(
+    init = state_labels,
+    model = model_name,
+    attractor = sapply(states, function(s) simulate_to_attractor(net, s))
+  )
+}
+
+df1 <- run_model(net1, "No self-loop")
+df2 <- run_model(net2, "With self-loop")
+
+df <- rbind(df1, df2)
+
+# ---------------------------
+# Factor ordering
+# ---------------------------
+
+df$init <- factor(df$init, levels = state_labels)
+df$model <- factor(df$model, levels = c("No self-loop", "With self-loop"))
+
+#write.csv(df, "attractorsToy.csv", row.names = FALSE)
+df <- read.csv("attractorsToy.csv", colClasses = "character")
+# ---------------------------
+# Plot heatmap
+# ---------------------------
+
+df$attractor <- sapply(df$attractor, clean_cycle)
+attr <- ggplot(df, aes(x=model, y=init, fill=attractor)) +
+  geom_tile(color="white", linewidth=0.6) +
+  geom_text(aes(label=attractor), size=4) +
+  scale_fill_brewer(palette="Set3") +
+  labs(
+    title="Attractor Mapping: Effect of Self-loop",
+    x="Model",
+    y="Initial State"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle=20, hjust=1)
+  )
+
+attr
+```
+
+```{r}
+library(igraph)
+
+# ---------------------------
+# helper: detect attractor nodes
+# ---------------------------
+
+is_attractor <- function(edges) {
+  tab <- table(edges$from, edges$to)
+  diag_vals <- diag(tab)
+  names(diag_vals) <- rownames(tab)
+  diag_vals > 0
+}
+
+# ---------------------------
+# recompute graphs
+# ---------------------------
+
+g1 <- graph_from_data_frame(edges1, directed=TRUE, vertices=basin1)
+g2 <- graph_from_data_frame(edges2, directed=TRUE, vertices=basin2)
+
+# ---------------------------
+# colors (basins)
+# ---------------------------
+
+V(g1)$color <- get_colors(basin1)
+V(g2)$color <- get_colors(basin2)
+
+# ---------------------------
+# highlight attractors (fixed points)
+# ---------------------------
+
+V(g1)$size <- ifelse(V(g1)$name %in% c("000","111"), 45, 30)
+V(g2)$size <- ifelse(V(g2)$name %in% c("000","111"), 45, 30)
+
+# ---------------------------
+# edge styling: emphasize self-loops
+# ---------------------------
+
+E(g1)$width <- ifelse(get.edgelist(g1)[,1] == get.edgelist(g1)[,2], 2, 0.7)
+E(g2)$width <- ifelse(get.edgelist(g2)[,1] == get.edgelist(g2)[,2], 2, 0.7)
+
+E(g1)$arrow.size <- 0.5
+E(g2)$arrow.size <- 0.5
+
+# ---------------------------
+# layout (fixed for comparison)
+# ---------------------------
+
+layout <- layout_with_fr(g1)
+
+# ---------------------------
+# plot
+# ---------------------------
+
+par(mfrow=c(1,2), mar=c(1,1,3,1))
+
+plot(
+  g1,
+  layout = layout,
+  main = "Model 1: No self-loop (Basin STG)",
+  vertex.label.cex = 0.9
+)
+
+plot(
+  g2,
+  layout = layout,
+  main = "Model 2: With self-loop (Basin STG)",
+  vertex.label.cex = 0.9
+)
+
+```
+
+```{r}
+library(ggplot2)
+library(igraph)
+library(RColorBrewer)
+
+# ---------------------------
+# Boolean models
+# ---------------------------
+
+net1 <- function(x) c(x[3], x[1], x[2])                 # rotation
+net2 <- function(x) c(x[3], x[1] | x[2], x[2])          # self-loop
+
+# ---------------------------
+# state space
+# ---------------------------
+
+states <- lapply(0:7, function(i) as.integer(intToBits(i))[1:3])
+state_names <- sapply(states, paste0, collapse="")
+
+# ---------------------------
+# attractor simulation
+# ---------------------------
+
+simulate_to_attractor <- function(net, init, max_steps=20) {
+  hist <- matrix(NA, nrow=max_steps, ncol=3)
+  hist[1,] <- init
+  
+  for (t in 2:max_steps) {
+    hist[t,] <- net(hist[t-1,])
+    
+    # fixed point
+    if (all(hist[t,] == hist[t-1,])) {
+      return(paste(hist[t,], collapse=""))
+    }
+    
+    # cycle detection
+    for (i in 1:(t-1)) {
+      if (all(hist[t,] == hist[i,])) {
+        cyc <- hist[i:(t-1), , drop=FALSE]
+        return(paste(apply(cyc,1,paste0,collapse=""), collapse="→"))
+      }
+    }
+  }
+  "NA"
+}
+
+# ---------------------------
+# basin computation
+# ---------------------------
+
+get_basin <- function(net) {
+  data.frame(
+    state = state_names,
+    basin = sapply(states, function(s) simulate_to_attractor(net, s))
+  )
+}
+
+basin1 <- get_basin(net1)
+basin2 <- get_basin(net2)
+
+# ---------------------------
+# CONSISTENT attractor palette (Set3 like ggplot)
+# ---------------------------
+
+all_attr <- sort(unique(c(basin1$basin, basin2$basin)))
+cols <- brewer.pal(max(3, length(all_attr)), "Set3")[1:length(all_attr)]
+attr_col <- setNames(cols, all_attr)
+
+# ---------------------------
+# edge builder
+# ---------------------------
+
+build_edges <- function(net) {
+  do.call(rbind, lapply(states, function(s) {
+    data.frame(
+      from = paste(s, collapse=""),
+      to   = paste(net(s), collapse="")
+    )
+  }))
+}
+
+edges1 <- build_edges(net1)
+edges2 <- build_edges(net2)
+
+# ---------------------------
+# graphs
+# ---------------------------
+
+g1 <- graph_from_data_frame(edges1, directed=TRUE)
+g2 <- graph_from_data_frame(edges2, directed=TRUE)
+
+V(g1)$basin <- basin1$basin
+V(g2)$basin <- basin2$basin
+
+V(g1)$color <- attr_col[V(g1)$basin]
+V(g2)$color <- attr_col[V(g2)$basin]
+
+V(g1)$size <- ifelse(V(g1)$name %in% c("000","111"), 45, 30)
+V(g2)$size <- ifelse(V(g2)$name %in% c("000","111"), 45, 30)
+
+# ---------------------------
+# layout (shared)
+# ---------------------------
+
+layout <- layout_with_fr(g1)
+
+# ---------------------------
+# HEATMAP (same colors)
+# ---------------------------
+
+df <- read.csv("attractorsToy.csv", colClasses = "character")
+
+p <- ggplot(df, aes(x=model, y=init, fill=attractor)) +
+  geom_tile(color="white") +
+  geom_text(aes(label=attractor), size=3) +
+  scale_fill_manual(values=attr_col) +
+  labs(title="Attractor Mapping (Consistent with STG)", x="Model", y="State") +
+  theme_minimal()
+
+print(p)
+
+# ---------------------------
+# STG (same colors)
+# ---------------------------
+
+par(mfrow=c(1,2), mar=c(1,1,3,1))
+
+plot(g1, layout=layout, main="Model 1: No self-loop",
+     vertex.label.cex=0.9, edge.arrow.size=0.5)
+
+plot(g2, layout=layout, main="Model 2: With self-loop",
+     vertex.label.cex=0.9, edge.arrow.size=0.5)
+```
+
+
+
