@@ -188,6 +188,12 @@ ui <- navbarPage(
         tags$style(HTML("
           body {
             background-color: #f9f9f9;
+          }.navbar {
+            background-color:  #f2f2f2;
+            border-color: #1f4e79;
+          }.navbar .navbar-nav > li > a,
+           .navbar .navbar-brand {
+           color: black;
           }
           :root {
             --stats-bg: #f5f1e8;
@@ -943,10 +949,10 @@ ui <- navbarPage(
 		                                multiple = TRUE,
 		                                options = list(placeholder = "Select journal..."))),
 		          column(3,
-		                 selectizeInput("os", "OS",
+		                 selectizeInput("os", "Organism",
 		                                choices = NULL,
 		                                multiple = TRUE,
-		                                options = list(placeholder = "Select OS..."))),
+		                                options = list(placeholder = "Select Organism..."))),
 		          column(3, textInput("author", "Author", placeholder = "Search author...")),
 		          column(3,
 		                 selectizeInput("month", "Publication Month",
@@ -1608,12 +1614,12 @@ ui <- navbarPage(
 
 
 
-  # Tab: Patch Notes
+  # Tab: Updates
   tabPanel(
-    title = "Patch Notes",
+    title = "Updates",
     fluidPage(
       header_ui,
-      h2("Patch Notes"),
+      h2("Updates"),
       withSpinner(
         DT::dataTableOutput("patch_notes_table"),
         type = 6,
@@ -2224,7 +2230,7 @@ server <- function(input, output, session) {
         "Protein Name" = "Protein_Name",
         "Gene Name" = "Gene_Name",
         "Protein ID" = "Protein_ID",
-        "OS" = "OS",
+        "Organism" = "OS",
         "UniProt AC" = "UniProtKB_accessions"
       )
 
@@ -2395,7 +2401,7 @@ server <- function(input, output, session) {
 		      "Protein Name" = list(expr = "Protein_Name", missing = "Protein_Name IS NULL OR TRIM(Protein_Name) = ''"),
 		      "Gene Name" = list(expr = "Gene_Name", missing = "Gene_Name IS NULL OR TRIM(Gene_Name) = ''"),
 		      "Protein ID" = list(expr = "Protein_ID", missing = "Protein_ID IS NULL OR TRIM(Protein_ID) = ''"),
-		      "OS" = list(expr = "OS", missing = "OS IS NULL OR TRIM(OS) = ''")
+		      "Organism" = list(expr = "OS", missing = "OS IS NULL OR TRIM(OS) = ''")
 		    )
 
 		    order_clause <- "ORDER BY Title IS NULL, CAST(PMID AS INTEGER)"
@@ -3432,7 +3438,7 @@ server <- function(input, output, session) {
 
 
 
-  # Patch Notes Table Data
+  # Updates Table Data
   patch_notes_data <- data.frame(
     Version = c("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5", "0.0.6", "0.0.7", "0.0.8", "0.0.9", "0.0.10", "0.0.11", "0.0.12", "0.0.13", "0.0.14"),
     Description = c(
@@ -3569,7 +3575,7 @@ server <- function(input, output, session) {
     stringsAsFactors = FALSE
   )
 
-  # Render Patch Notes Table
+  # Render Updates Table
   output$patch_notes_table <- DT::renderDataTable({
     DT::datatable(
       patch_notes_data[nrow(patch_notes_data):1, ],  # Reverse order: latest first
