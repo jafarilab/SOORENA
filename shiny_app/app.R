@@ -1,4 +1,4 @@
-library(shiny)       # for building the interactive web app
+library(shiny)        # for building the interactive web app
 library(DT)          # for rendering interactive data tables
 library(dplyr)       # for data manipulation
 library(DBI)         # for database interface
